@@ -19,6 +19,10 @@ namespace MyWallet.Infrastructure.Persistence.DbConfigurations
                 .IsRequired()
                 .HasMaxLength(100);
 
+            builder.Property(r => r.NameUpperCase)
+                .IsRequired()
+                .HasMaxLength(100);
+
             // BaseEntity
             builder.Property(r => r.CreatedAt)
                 .IsRequired()
@@ -26,6 +30,11 @@ namespace MyWallet.Infrastructure.Persistence.DbConfigurations
 
             builder.Property(r => r.Status)
                 .HasDefaultValue(true);
+
+            builder.HasMany(r => r.UserRoles)
+                .WithOne(ur => ur.Role)
+                .HasForeignKey(ur => ur.RoleId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             // Index
             builder.HasIndex(r => r.Name)
