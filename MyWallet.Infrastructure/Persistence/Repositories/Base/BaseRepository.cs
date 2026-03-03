@@ -108,8 +108,11 @@ namespace MyWallet.Infrastructure.Persistence.Repositories.Base
                 throw new ArgumentNullException(nameof(entity));
 
             var properties = typeof(TEntity).GetProperties()
-                .Where(p => p.Name != "Id" && p.CanRead)
-                .ToList();
+            .Where(p => p.Name != "Id"
+                   && p.CanRead
+                   && (p.PropertyType.IsValueType || p.PropertyType == typeof(string)))
+            .ToList();
+
 
             var setClause = string.Join(", ", properties.Select(p => $"{p.Name} = @{p.Name}"));
 
