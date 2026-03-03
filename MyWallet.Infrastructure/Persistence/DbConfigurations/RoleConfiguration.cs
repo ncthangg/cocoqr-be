@@ -1,0 +1,36 @@
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using MyWallet.Domain.Entities;
+
+namespace MyWallet.Infrastructure.Persistence.DbConfigurations
+{
+    public class RoleConfiguration : IEntityTypeConfiguration<Role>
+    {
+        public void Configure(EntityTypeBuilder<Role> builder)
+        {
+            // Table name
+            builder.ToTable("Roles");
+
+            // Primary key
+            builder.HasKey(r => r.Id);
+
+            // Properties
+            builder.Property(r => r.Name)
+                .IsRequired()
+                .HasMaxLength(100);
+
+            // BaseEntity
+            builder.Property(r => r.CreatedAt)
+                .IsRequired()
+                .HasDefaultValueSql("GETUTCDATE()");
+
+            builder.Property(r => r.Status)
+                .HasDefaultValue(true);
+
+            // Index
+            builder.HasIndex(r => r.Name)
+                .IsUnique()
+                .HasDatabaseName("IX_Roles_Name");
+        }
+    }
+}

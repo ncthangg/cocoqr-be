@@ -60,6 +60,11 @@ namespace MyWallet.Infrastructure.Persistence.DbConfigurations
                 .HasForeignKey(t => t.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            builder.HasMany(u => u.UserRoles)
+                .WithOne(t => t.User)
+                .HasForeignKey(t => t.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             // Indexes
             builder.HasIndex(u => u.Email)
                 .IsUnique()

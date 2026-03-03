@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace MyWallet.Domain.Entities
+﻿namespace MyWallet.Domain.Entities
 {
     public class Account : BaseEntity
     {
@@ -16,7 +10,7 @@ namespace MyWallet.Domain.Entities
         public string AccountType { get; set; } = string.Empty;
 
         public decimal? Balance { get; set; }
-        public bool IsActive { get; set; } = true; 
+        public bool IsActive { get; set; } = true;
 
         // Navigation properties
         public virtual User? User { get; set; }
