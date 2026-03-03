@@ -1,20 +1,14 @@
 ﻿using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.OAuth;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using MyWallet.API.Configurations;
 using MyWallet.API.Validators;
 using MyWallet.Domain.Constants;
-using StackExchange.Redis;
-using System.Configuration;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace MyWallet.API.DependencyInjection
 {
@@ -88,7 +82,7 @@ namespace MyWallet.API.DependencyInjection
                 o.Cookie.SecurePolicy = CookieSecurePolicy.Always;
                 o.Cookie.HttpOnly = true;
                 o.Cookie.Name = "GoogleOAuthTemp";
-                o.LoginPath = "/api/auths/google-auth/signin"; 
+                o.LoginPath = "/api/auths/google-auth/signin";
                 o.LogoutPath = "/api/auths/signout";
             })
             .AddGoogle(o =>

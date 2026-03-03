@@ -1,7 +1,6 @@
 ﻿using MyWallet.API.Mapper;
 using MyWallet.Domain.Constants;
 using MyWallet.Domain.Exceptions;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using ApplicationException = MyWallet.Application.Exceptions.ApplicationException;

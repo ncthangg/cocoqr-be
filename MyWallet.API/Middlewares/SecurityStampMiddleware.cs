@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
-using MyWallet.Application.Contracts.IServices;
-using MyWallet.Domain.Entities;
+﻿using MyWallet.Application.Contracts.IServices;
 
 namespace MyWallet.API.Middlewares
 {
