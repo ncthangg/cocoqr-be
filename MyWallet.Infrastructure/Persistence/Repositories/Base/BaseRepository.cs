@@ -1,5 +1,4 @@
 ﻿using Dapper;
-using MyWallet.Domain.Entities;
 using MyWallet.Domain.Interface.IDbContext;
 using MyWallet.Domain.Interface.IRepositories.Base;
 using System.Data;

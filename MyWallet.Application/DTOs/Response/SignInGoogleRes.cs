@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace MyWallet.Application.DTOs.Response
+﻿namespace MyWallet.Application.DTOs.Response
 {
     public class SignInGoogleRes
     {
@@ -20,5 +14,6 @@ namespace MyWallet.Application.DTOs.Response
     public class RoleRes
     {
         public string RoleName { get; set; } = string.Empty;
+        public string RoleNameUppercase { get; set; } = string.Empty;
     }
 }

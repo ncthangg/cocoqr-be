@@ -1,11 +1,4 @@
-﻿using MyWallet.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace MyWallet.Domain.Interface.IRepositories.Base
+﻿namespace MyWallet.Domain.Interface.IRepositories.Base
 {
     public interface IRepository<T>
     {

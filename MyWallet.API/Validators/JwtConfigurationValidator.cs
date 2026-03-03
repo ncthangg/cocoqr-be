@@ -1,4 +1,4 @@
-﻿             using MyWallet.API.Configurations;
+﻿using MyWallet.API.Configurations;
 using MyWallet.Domain.Constants;
 using ApplicationException = MyWallet.Application.Exceptions.ApplicationException;
 

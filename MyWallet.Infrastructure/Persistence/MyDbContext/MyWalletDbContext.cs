@@ -1,12 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using MyWallet.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Reflection.Emit;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MyWallet.Infrastructure.Persistence.MyDbContext
 {
@@ -15,7 +8,7 @@ namespace MyWallet.Infrastructure.Persistence.MyDbContext
         public MyWalletDbContext() { }
 
         public MyWalletDbContext(DbContextOptions<MyWalletDbContext> options) : base(options) { }
-        
+
         public DbSet<User> Users { get; set; }
         public DbSet<Account> Accounts { get; set; }
         public DbSet<QRHistory> QRHistories { get; set; }

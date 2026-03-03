@@ -141,7 +141,7 @@ namespace MyWallet.Application.Common.Context
 
         public bool IsAdmin()
         {
-            return IsAuthenticated() && Role == RoleCategory.Admin.ToString();
+            return IsAuthenticated() && Role == RoleCategory.Admin.ToString().ToLower();
         }
     }
 }

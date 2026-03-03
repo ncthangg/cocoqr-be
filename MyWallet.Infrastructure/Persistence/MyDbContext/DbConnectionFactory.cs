@@ -1,13 +1,8 @@
 ﻿using Microsoft.Extensions.Configuration;
 using MyWallet.Domain.Constants;
 using MyWallet.Domain.Interface.IDbContext;
-using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MyWallet.Infrastructure.Persistence.MyDbContext
 {

@@ -1,23 +1,22 @@
 ﻿using MyWallet.Application.DTOs.Response;
 using MyWallet.Domain.Entities;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace MyWallet.Application.Common.Mapper
 {
-    public class BankInfoMapper
+    public class RoleMapper
     {
-        public static GetBankInfoRes ToGetBankInfoRes(BankInfo u, Dictionary<Guid, string>? userDict)
+        public static GetRoleRes ToGetRoleRes(Role u, Dictionary<Guid, string>? userDict)
         {
-            return new GetBankInfoRes
+            return new GetRoleRes
             {
                 Id = u.Id,
-                BankCode = u.BankCode,
-                NapasCode = u.NapasCode,
-                SwiftCode = u.SwiftCode,
-                BankName = u.BankName,
-
-                ShortName = u.ShortName,
-                LogoUrl = u.LogoUrl,
-                IsActive = u.IsActive,
+                Name = u.Name,
+                NameUpperCase = u.NameUpperCase,
 
                 Status = u.Status,
                 CreatedAt = u.CreatedAt,

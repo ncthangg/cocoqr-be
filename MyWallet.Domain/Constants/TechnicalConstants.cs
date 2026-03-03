@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace MyWallet.Domain.Constants
+﻿namespace MyWallet.Domain.Constants
 {
     public static class ConfigOrigins
     {

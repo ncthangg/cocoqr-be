@@ -1,7 +1,6 @@
 ﻿using MyWallet.Domain.Entities;
 using MyWallet.Domain.Interface.IRepositories;
 using MyWallet.Infrastructure.Persistence.Repositories.Base;
-using System.Buffers;
 using IDbConnectionFactory = MyWallet.Domain.Interface.IDbContext.IDbConnectionFactory;
 
 namespace MyWallet.Infrastructure.Persistence.Repositories

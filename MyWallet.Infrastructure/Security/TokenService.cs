@@ -20,7 +20,7 @@ namespace MyWallet.Infrastructure.Security
         private readonly IUserContext _userContext;
 
         public TokenService(IUnitOfWork unitOfWork,
-            ITokenConfiguration tokenConfig, 
+            ITokenConfiguration tokenConfig,
             IUserContext userContext)
         {
             _unitOfWork = unitOfWork;
@@ -105,7 +105,7 @@ namespace MyWallet.Infrastructure.Security
                 throw new ApplicationException(ErrorCode.ValidationError, "Invalid token format.");
 
             var jwtToken = handler.ReadJwtToken(oldRefreshToken);
-            var expiredClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Exp) 
+            var expiredClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Exp)
                 ?? throw new ApplicationException(ErrorCode.ValidationError, "Token does not contain expiry information.");
             var expiredTimeUnix = long.Parse(expiredClaim.Value);
             var expiredTime = DateTimeOffset.FromUnixTimeSeconds(expiredTimeUnix).UtcDateTime;

@@ -1,8 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using MyWallet.Domain.Entities;
-using StackExchange.Redis;
-using static Dapper.SqlMapper;
 
 namespace MyWallet.Infrastructure.Persistence.DbConfigurations
 {
