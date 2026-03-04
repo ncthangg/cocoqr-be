@@ -61,28 +61,6 @@ if (app.Environment.IsStaging())
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "My Portfolios API - STAGING")
     );
 }
-app.UseForwardedHeaders();
-
-app.UseForwardedHeaders(new ForwardedHeadersOptions
-{
-    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
-});
-
-var forwardOptions = new ForwardedHeadersOptions
-{
-    ForwardedHeaders =
-        ForwardedHeaders.XForwardedFor |
-        ForwardedHeaders.XForwardedProto |
-        ForwardedHeaders.XForwardedHost
-};
-
-// 🔥 CỰC KỲ QUAN TRỌNG
-forwardOptions.KnownNetworks.Clear();
-forwardOptions.KnownProxies.Clear();
-
-app.UseForwardedHeaders(forwardOptions);
-
-app.UseCustomForwardedHeaders();
 
 app.UseCustomForwardedHeaders();
 
