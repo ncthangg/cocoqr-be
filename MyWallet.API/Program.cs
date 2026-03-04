@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using MyWallet.API.DependencyInjection;
 using MyWallet.API.Extensions;
 using MyWallet.API.Middlewares;
@@ -81,6 +81,8 @@ forwardOptions.KnownNetworks.Clear();
 forwardOptions.KnownProxies.Clear();
 
 app.UseForwardedHeaders(forwardOptions);
+
+app.UseCustomForwardedHeaders();
 
 app.UseCustomForwardedHeaders();
 
