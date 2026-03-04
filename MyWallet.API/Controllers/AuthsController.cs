@@ -1,9 +1,6 @@
-﻿using Azure.Core;
-using Microsoft.AspNetCore.Authentication;
+﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Google;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using MyWallet.Application.Common.Extensions;
 using MyWallet.Application.Contracts.IServices;
@@ -11,8 +8,6 @@ using MyWallet.Application.Contracts.ISubServices;
 using MyWallet.Application.DTOs.Response;
 using MyWallet.Application.DTOs.Response.Base;
 using MyWallet.Domain.Constants;
-using Pipelines.Sockets.Unofficial.Buffers;
-using System.Configuration;
 
 namespace MyWallet.API.Controllers
 {
@@ -150,36 +145,6 @@ namespace MyWallet.API.Controllers
                 Console.WriteLine($"Logout error: {ex.Message}");
                 return BadRequest(new { error = ex.Message });
             }
-        }
-
-        private string BuildBaseUrl(HttpRequest request)
-        {
-            if (request == null)
-                throw new ArgumentNullException(nameof(request));
-
-            var scheme = request.Scheme;
-            var host = request.Host.Host;
-            var port = request.Host.Port;
-
-            // ✅ FIX: Check HasValue before using port
-            var portString = "";
-            if (port.HasValue)
-            {
-                var portValue = port.Value;
-                var isStandardPort = (scheme == "https" && portValue == 443) ||
-                                     (scheme == "http" && portValue == 80);
-
-                if (!isStandardPort)
-                {
-                    portString = $":{portValue}";
-                }
-            }
-
-            var baseUrl = $"{scheme}://{host}{portString}";
-
-            Console.WriteLine($"[BuildBaseUrl] Scheme: {scheme}, Host: {host}, Port: {port}, Result: {baseUrl}");
-
-            return baseUrl;
         }
     }
 }

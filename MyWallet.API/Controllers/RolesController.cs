@@ -10,20 +10,20 @@ namespace MyWallet.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class BankInfosController : ControllerBase
+    public class RolesController : ControllerBase
     {
-        private readonly IBankInfoService _bankInfoService;
-        public BankInfosController(IBankInfoService bankInfoService)
+        private readonly IRoleService _roleService;
+        public RolesController(IRoleService roleService)
         {
-            _bankInfoService = bankInfoService;
+            _roleService = roleService;
         }
         [HttpGet]
         [Authorize]
-        public async Task<IActionResult> Get(int pageNumber = 1, int pageSize = 10, bool? isActive = true, string? searchValue = null)
+        public async Task<IActionResult> Get()
         {
-            PagingVM<GetBankInfoRes> result = await _bankInfoService.GetsAsync(pageNumber, pageSize, isActive, searchValue);
+            IEnumerable<GetRoleRes> result = await _roleService.GetAllAsync();
 
-            return Ok(new BaseResponseModel<PagingVM<GetBankInfoRes>>(
+            return Ok(new BaseResponseModel<IEnumerable<GetRoleRes>>(
                 code: SuccessCode.Success,
                 data: result,
                 message: null));
@@ -32,17 +32,17 @@ namespace MyWallet.API.Controllers
         [Authorize]
         public async Task<IActionResult> GetById(Guid id)
         {
-            GetBankInfoRes result = await _bankInfoService.GetByIdAsync(id);
-            return Ok(new BaseResponseModel<GetBankInfoRes>(
+            GetRoleRes result = await _roleService.GetByIdAsync(id);
+            return Ok(new BaseResponseModel<GetRoleRes>(
                 code: SuccessCode.Success,
                 data: result,
                 message: null));
         }
         [HttpPost]
         [Authorize]
-        public async Task<IActionResult> Post([FromForm] PostBankInfoReq request)
+        public async Task<IActionResult> Post([FromForm] PostRoleReq request)
         {
-            await _bankInfoService.PostAsync(request);
+            await _roleService.PostAsync(request);
             return Ok(new BaseResponseModel<string>(
                 code: SuccessCode.Success,
                 data: null,
@@ -50,9 +50,9 @@ namespace MyWallet.API.Controllers
         }
         [HttpPut("{id}")]
         [Authorize]
-        public async Task<IActionResult> Put(Guid id, [FromForm] PutBankInfoReq request)
+        public async Task<IActionResult> Put(Guid id, [FromForm] PutRoleReq request)
         {
-            await _bankInfoService.PutAsync(id, request);
+            await _roleService.PutAsync(id, request);
             return Ok(new BaseResponseModel<string>(
                code: SuccessCode.Success,
                data: null,
@@ -62,7 +62,7 @@ namespace MyWallet.API.Controllers
         [Authorize]
         public async Task<IActionResult> Delete(Guid id)
         {
-            await _bankInfoService.DeleteAsync(id);
+            await _roleService.DeleteAsync(id);
             return Ok(new BaseResponseModel<string>(
               code: SuccessCode.Success,
               data: null,
