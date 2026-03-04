@@ -22,6 +22,14 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+if (args.Contains("--migrate"))
+{
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<MyWalletDbContext>();
+    await db.Database.MigrateAsync();
+    return;
+}
+
 if (app.Environment.IsDevelopment())
 {
     using (var scope = app.Services.CreateScope())
