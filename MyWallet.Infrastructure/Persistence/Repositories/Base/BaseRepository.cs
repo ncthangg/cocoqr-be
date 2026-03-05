@@ -34,10 +34,7 @@ namespace MyWallet.Infrastructure.Persistence.Repositories.Base
                     connection.Open();
                 }
 
-                return await connection.QueryFirstOrDefaultAsync<TEntity>(
-                    sql,
-                    new { Id = id }
-                );
+                return await connection.QueryFirstOrDefaultAsync<TEntity>(sql,new { Id = id });
             }
         }
 
@@ -164,7 +161,7 @@ namespace MyWallet.Infrastructure.Persistence.Repositories.Base
         /// </summary>
         protected async Task<TResult> QuerySingleAsync<TResult>(
             string sql,
-            object parameters = null)
+            object? parameters = null)
         {
             using (var connection = _connectionFactory.CreateConnection())
             {
@@ -183,7 +180,7 @@ namespace MyWallet.Infrastructure.Persistence.Repositories.Base
         /// </summary>
         protected async Task<IEnumerable<TResult>> QueryAsync<TResult>(
             string sql,
-            object parameters = null)
+            object? parameters = null)
         {
             using (var connection = _connectionFactory.CreateConnection())
             {
@@ -198,7 +195,7 @@ namespace MyWallet.Infrastructure.Persistence.Repositories.Base
 
         protected async Task<(IEnumerable<T>, int)> QueryPagedAsync<T>(
             string sql,
-            object parameters = null)
+            object? parameters = null)
         {
             using (var connection = _connectionFactory.CreateConnection())
             {
@@ -220,7 +217,7 @@ namespace MyWallet.Infrastructure.Persistence.Repositories.Base
         /// Execute command (INSERT, UPDATE, DELETE)
         /// ⚡ SAFE - Parametrized automatically
         /// </summary>
-        protected async Task<int> ExecuteAsync(string sql, object parameters = null)
+        protected async Task<int> ExecuteAsync(string sql, object? parameters = null)
         {
             using (var connection = _connectionFactory.CreateConnection())
             {

@@ -78,7 +78,7 @@ namespace MyWallet.Application.Services
 
             if (string.IsNullOrWhiteSpace(email))
                 throw new ApplicationException(ErrorCode.BadRequest, "Không tìm thấy email Google!");
-
+             
             User? user = await _userRepository.GetByEmailAsync(email);
 
             if (user == null)

@@ -11,6 +11,7 @@ using MyWallet.Domain.Interface.IRepositories;
 using MyWallet.Domain.Interface.IUnitOfWork;
 using MyWallet.Infrastructure.Persistence.MyDbContext;
 using MyWallet.Infrastructure.Persistence.Repositories;
+using MyWallet.Infrastructure.Persistence.Seeder;
 using MyWallet.Infrastructure.Persistence.UnitOfWork;
 using MyWallet.Infrastructure.Security;
 using MyWallet.Infrastructure.SubService;
@@ -27,6 +28,7 @@ namespace MyWallet.Infrastructure.DependencyInjection
             services.AddRepo();
             services.AddDatabase(configuration);
             services.AddSubServices();
+            services.AddSeeder();
             services.AddConfig(configuration);
             services.ConfigRedis(configuration);
         }
@@ -68,7 +70,12 @@ namespace MyWallet.Infrastructure.DependencyInjection
 
             services.AddScoped<IGoogleService, GoogleService>();
             services.AddScoped<ITokenService, TokenService>();
+            services.AddScoped<IFileStorageService, LocalFileStorageService>();
             services.AddScoped<IIdGenerator, SqlServerIdGenerator>();
+        }
+        private static void AddSeeder(this IServiceCollection services)
+        {
+            services.AddScoped<BankSeeder>();
         }
         private static void AddConfig(this IServiceCollection services, IConfiguration configuration)
         {

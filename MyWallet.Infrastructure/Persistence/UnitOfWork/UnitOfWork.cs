@@ -6,24 +6,19 @@ using IDbConnectionFactory = MyWallet.Domain.Interface.IDbContext.IDbConnectionF
 
 namespace MyWallet.Infrastructure.Persistence.UnitOfWork
 {
-    public class UnitOfWork : IUnitOfWork
+    public class UnitOfWork(IDbConnectionFactory connectionFactory) : IUnitOfWork
     {
-        private readonly IDbConnectionFactory _connectionFactory;
+        private readonly IDbConnectionFactory _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
         private IDbConnection? _connection;
         private IDbTransaction? _transaction;
 
-        private IUserRepository _userRepository;
-        private IAccountRepository _accountRepository;
-        private IRoleRepository _roleRepository;
-        private IUserTokenRepository _userTokenRepository;
-        private IUserRoleRepository _userRoleRepository;
-        private IQRHistoryRepository _qrHistoryRepository;
-        private IBankInfoRepository _bankInfoRepository;
-
-        public UnitOfWork(IDbConnectionFactory connectionFactory)
-        {
-            _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-        }
+        private IUserRepository? _userRepository;
+        private IAccountRepository? _accountRepository;
+        private IRoleRepository? _roleRepository;
+        private IUserTokenRepository? _userTokenRepository;
+        private IUserRoleRepository? _userRoleRepository;
+        private IQRHistoryRepository? _qrHistoryRepository;
+        private IBankInfoRepository? _bankInfoRepository;
 
         public IUserRepository Users
             => _userRepository ??= new UserRepository(_connectionFactory);

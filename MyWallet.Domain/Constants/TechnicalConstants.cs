@@ -46,4 +46,27 @@
         public const string ClientIdConfigPath = "Oauth:ClientId";
         public const string ClientSecretConfigPath = "Oauth:ClientSecret";
     }
+    public static class FileStorage
+    {
+        public static string RootPath { get; set; } = string.Empty;
+
+        public const long MaxFileSize = 10 * 1024 * 1024; // 10 MB
+
+        public static readonly HashSet<string> AllowedImageExtensions = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg"
+        };
+
+        public static readonly HashSet<string> AllowedDocumentExtensions = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".txt", ".csv"
+        };
+        public static class Folders
+        {
+            public const string Assets = "assets";
+            public const string QRs = "qrs";
+
+            public const string Banks = "banks";
+        }
+    }
 }

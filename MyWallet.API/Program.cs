@@ -5,6 +5,7 @@ using MyWallet.API.Middlewares;
 using MyWallet.Application.DependencyInjection;
 using MyWallet.Infrastructure.DependencyInjection;
 using MyWallet.Infrastructure.Persistence.MyDbContext;
+using MyWallet.Infrastructure.Persistence.Seeder;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -62,6 +63,12 @@ if (app.Environment.IsDevelopment())
     );
 }
 
+using (var scope = app.Services.CreateScope())
+{
+    var seeder = scope.ServiceProvider.GetRequiredService<BankSeeder>();
+    await seeder.SeedAsync();
+}
+
 if (app.Environment.IsStaging())
 {
     app.UseSwagger();
@@ -73,6 +80,8 @@ if (app.Environment.IsStaging())
 app.UseCustomForwardedHeaders();
 
 app.UseHttpsRedirection();
+
+app.UseStaticFiles();
 
 app.UseCors("AllowAll");
 

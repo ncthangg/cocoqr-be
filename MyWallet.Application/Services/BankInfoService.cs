@@ -1,4 +1,5 @@
-﻿using MyWallet.Application.Common.Mapper;
+﻿using Microsoft.IdentityModel.Tokens;
+using MyWallet.Application.Common.Mapper;
 using MyWallet.Application.Contracts.IContext;
 using MyWallet.Application.Contracts.IServices;
 using MyWallet.Application.Contracts.ISubServices;
@@ -9,6 +10,7 @@ using MyWallet.Domain.Constants;
 using MyWallet.Domain.Entities;
 using MyWallet.Domain.Helper;
 using MyWallet.Domain.Interface.IUnitOfWork;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 using ApplicationException = MyWallet.Application.Exceptions.ApplicationException;
 
 namespace MyWallet.Application.Services
@@ -18,12 +20,14 @@ namespace MyWallet.Application.Services
         private readonly IUnitOfWork _unitOfWork;
         private readonly IUserContext _userContext;
         private readonly IIdGenerator _idGenerator;
+        private readonly IFileStorageService _fileStorageService;
 
-        public BankInfoService(IUnitOfWork unitOfWork, IUserContext userContext, IIdGenerator idGenerator)
+        public BankInfoService(IUnitOfWork unitOfWork, IUserContext userContext, IIdGenerator idGenerator, IFileStorageService fileStorageService)
         {
             _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
             _userContext = userContext;
             _idGenerator = idGenerator;
+            _fileStorageService = fileStorageService;
         }
 
         public async Task<PagingVM<GetBankInfoRes>> GetsAsync(int pageNumber, int pageSize, bool? isActive, string? searchValue)
@@ -70,6 +74,13 @@ namespace MyWallet.Application.Services
             Guid userId = _userContext.UserId
                 ?? throw new ApplicationException(ErrorCode.Unauthorized, "User ID not found in context!");
 
+            string? logoUrl = null;
+
+            if (req.LogoUrl != null)
+            {
+                logoUrl = await _fileStorageService.UploadFileAsync(req.LogoUrl, $"{FileStorage.Folders.Assets}/{FileStorage.Folders.Banks}");
+            }
+
             var bank = new BankInfo()
             {
                 BankCode = req.BankCode,
@@ -77,7 +88,7 @@ namespace MyWallet.Application.Services
                 SwiftCode = req.SwiftCode,
                 BankName = req.BankName,
                 ShortName = req.ShortName,
-                LogoUrl = req.LogoUrl,
+                LogoUrl = logoUrl ?? null,
                 IsActive = req.IsActive,
             };
             bank.Initialize(_idGenerator.NewId(), userId);
@@ -102,12 +113,29 @@ namespace MyWallet.Application.Services
             var oldItem = await _unitOfWork.BankInfos.GetByIdAsync(id)
                ?? throw new ApplicationException(ErrorCode.NotFound, ErrorMessages.EntityNotFound);
 
+            string? imageUrl = oldItem.LogoUrl;
+
+            if (req.IsDeleteFile == true)
+            {
+                if (!string.IsNullOrEmpty(imageUrl))
+                    await _fileStorageService.DeleteFileAsync(imageUrl);
+
+                imageUrl = null;
+            }
+            else if (req.LogoUrl != null)
+            {
+                if (!string.IsNullOrEmpty(imageUrl))
+                    await _fileStorageService.DeleteFileAsync(imageUrl);
+
+                imageUrl = await _fileStorageService.UploadFileAsync(req.LogoUrl, $"{FileStorage.Folders.Assets}/{FileStorage.Folders.Banks}");
+            }
+
             oldItem.BankCode = req.BankCode;
             oldItem.NapasCode = req.NapasCode;
             oldItem.SwiftCode = req.SwiftCode;
             oldItem.BankName = req.BankName;
             oldItem.ShortName = req.ShortName;
-            oldItem.LogoUrl = req.LogoUrl;
+            oldItem.LogoUrl = imageUrl;
             oldItem.IsActive = req.IsActive;
             oldItem.SetUpdated(userId);
 
@@ -125,8 +153,11 @@ namespace MyWallet.Application.Services
             if (id == Guid.Empty)
                 throw new ApplicationException(ErrorCode.ValidationError, "Invalid bank ID");
 
-            _ = await _unitOfWork.BankInfos.GetByIdAsync(id)
+            var item = await _unitOfWork.BankInfos.GetByIdAsync(id)
                 ?? throw new ApplicationException(ErrorCode.NotFound, $"Bank {id} not found");
+
+            if (!string.IsNullOrEmpty(item.LogoUrl))
+                await _fileStorageService.DeleteFileAsync(item.LogoUrl);
 
             await _unitOfWork.BankInfos.DeleteAsync(id);
         }

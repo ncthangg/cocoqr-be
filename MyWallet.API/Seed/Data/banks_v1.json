@@ -1,0 +1,384 @@
+﻿[
+  {
+    "BankCode": "VCB",
+    "NapasCode": "970436",
+    "SwiftCode": "BFTVVNVX",
+    "BankName": "Vietcombank",
+    "ShortName": "VCB",
+    "LogoUrl": null,
+    "IsActive": true
+  },
+  {
+    "BankCode": "BIDV",
+    "NapasCode": "970418",
+    "SwiftCode": "BIDVVNVX",
+    "BankName": "BIDV",
+    "ShortName": "BIDV",
+    "LogoUrl": null,
+    "IsActive": true
+  },
+  {
+    "BankCode": "CTG",
+    "NapasCode": "970415",
+    "SwiftCode": "ICBVVNVX",
+    "BankName": "VietinBank",
+    "ShortName": "VietinBank",
+    "LogoUrl": null,
+    "IsActive": true
+  },
+  {
+    "BankCode": "ACB",
+    "NapasCode": "970416",
+    "SwiftCode": "ASCBVNVX",
+    "BankName": "Asia Commercial Bank",
+    "ShortName": "ACB",
+    "LogoUrl": null,
+    "IsActive": true
+  },
+  {
+    "BankCode": "TCB",
+    "NapasCode": "970407",
+    "SwiftCode": "TCBVVNVX",
+    "BankName": "Techcombank",
+    "ShortName": "Techcombank",
+    "LogoUrl": null,
+    "IsActive": true
+  },
+  {
+    "BankCode": "MBB",
+    "NapasCode": "970422",
+    "SwiftCode": "MSCBVNVX",
+    "BankName": "Military Bank",
+    "ShortName": "MB Bank",
+    "LogoUrl": null,
+    "IsActive": true
+  },
+  {
+    "BankCode": "VPB",
+    "NapasCode": "970432",
+    "SwiftCode": "VPBKVNVX",
+    "BankName": "VPBank",
+    "ShortName": "VPBank",
+    "LogoUrl": null,
+    "IsActive": true
+  },
+  {
+    "BankCode": "STB",
+    "NapasCode": "970403",
+    "SwiftCode": "SGTTVNVX",
+    "BankName": "Sacombank",
+    "ShortName": "Sacombank",
+    "LogoUrl": null,
+    "IsActive": true
+  },
+  {
+    "BankCode": "TPB",
+    "NapasCode": "970423",
+    "SwiftCode": "TPBVVNVX",
+    "BankName": "TPBank",
+    "ShortName": "TPBank",
+    "LogoUrl": null,
+    "IsActive": true
+  },
+  {
+    "BankCode": "EIB",
+    "NapasCode": "970431",
+    "SwiftCode": "EBVIVNVX",
+    "BankName": "Eximbank",
+    "ShortName": "Eximbank",
+    "LogoUrl": null,
+    "IsActive": true
+  },
+
+  {
+    "BankCode": "SHB",
+    "NapasCode": "970443",
+    "SwiftCode": "SHBAVNVX",
+    "BankName": "Saigon Hanoi Bank",
+    "ShortName": "SHB",
+    "LogoUrl": null,
+    "IsActive": true
+  },
+  {
+    "BankCode": "HDB",
+    "NapasCode": "970437",
+    "SwiftCode": "HDBCVNVX",
+    "BankName": "HDBank",
+    "ShortName": "HDBank",
+    "LogoUrl": null,
+    "IsActive": true
+  },
+  {
+    "BankCode": "VIB",
+    "NapasCode": "970441",
+    "SwiftCode": "VIBVVNVX",
+    "BankName": "Vietnam International Bank",
+    "ShortName": "VIB",
+    "LogoUrl": null,
+    "IsActive": true
+  },
+  {
+    "BankCode": "OCB",
+    "NapasCode": "970448",
+    "SwiftCode": "ORCOVNVX",
+    "BankName": "Orient Commercial Bank",
+    "ShortName": "OCB",
+    "LogoUrl": null,
+    "IsActive": true
+  },
+  {
+    "BankCode": "MSB",
+    "NapasCode": "970426",
+    "SwiftCode": "MSCBVNVX",
+    "BankName": "Maritime Bank",
+    "ShortName": "MSB",
+    "LogoUrl": null,
+    "IsActive": true
+  },
+  {
+    "BankCode": "SCB",
+    "NapasCode": "970429",
+    "SwiftCode": "SCBLVNVX",
+    "BankName": "Saigon Commercial Bank",
+    "ShortName": "SCB",
+    "LogoUrl": null,
+    "IsActive": true
+  },
+  {
+    "BankCode": "SEAB",
+    "NapasCode": "970440",
+    "SwiftCode": "SEAVVNVX",
+    "BankName": "SeABank",
+    "ShortName": "SeABank",
+    "LogoUrl": null,
+    "IsActive": true
+  },
+  {
+    "BankCode": "ABB",
+    "NapasCode": "970425",
+    "SwiftCode": "ABBKVNVX",
+    "BankName": "ABBank",
+    "ShortName": "ABBank",
+    "LogoUrl": null,
+    "IsActive": true
+  },
+  {
+    "BankCode": "NAB",
+    "NapasCode": "970428",
+    "SwiftCode": "NABVVNVX",
+    "BankName": "Nam A Bank",
+    "ShortName": "NamABank",
+    "LogoUrl": null,
+    "IsActive": true
+  },
+  {
+    "BankCode": "KLB",
+    "NapasCode": "970452",
+    "SwiftCode": "KLBVVNVX",
+    "BankName": "KienlongBank",
+    "ShortName": "KienlongBank",
+    "LogoUrl": null,
+    "IsActive": true
+  },
+
+  {
+    "BankCode": "PGB",
+    "NapasCode": "970430",
+    "SwiftCode": "PGBLVNVX",
+    "BankName": "PG Bank",
+    "ShortName": "PGBank",
+    "LogoUrl": null,
+    "IsActive": true
+  },
+  {
+    "BankCode": "BVB",
+    "NapasCode": "970438",
+    "SwiftCode": "BVBVVNVX",
+    "BankName": "BaoViet Bank",
+    "ShortName": "BaoVietBank",
+    "LogoUrl": null,
+    "IsActive": true
+  },
+  {
+    "BankCode": "LPB",
+    "NapasCode": "970449",
+    "SwiftCode": "LPBVVNVX",
+    "BankName": "LienVietPostBank",
+    "ShortName": "LPBank",
+    "LogoUrl": null,
+    "IsActive": true
+  },
+  {
+    "BankCode": "VAB",
+    "NapasCode": "970427",
+    "SwiftCode": "VABVVNVX",
+    "BankName": "VietABank",
+    "ShortName": "VietABank",
+    "LogoUrl": null,
+    "IsActive": true
+  },
+  {
+    "BankCode": "GPB",
+    "NapasCode": "970408",
+    "SwiftCode": "GPBVVNVX",
+    "BankName": "GPBank",
+    "ShortName": "GPBank",
+    "LogoUrl": null,
+    "IsActive": true
+  },
+  {
+    "BankCode": "VBB",
+    "NapasCode": "970433",
+    "SwiftCode": "VBBVVNVX",
+    "BankName": "VietBank",
+    "ShortName": "VietBank",
+    "LogoUrl": null,
+    "IsActive": true
+  },
+  {
+    "BankCode": "CBB",
+    "NapasCode": "970444",
+    "SwiftCode": "CBBVVNVX",
+    "BankName": "CB Bank",
+    "ShortName": "CBBank",
+    "LogoUrl": null,
+    "IsActive": true
+  },
+  {
+    "BankCode": "DOB",
+    "NapasCode": "970406",
+    "SwiftCode": "DOBKVNVX",
+    "BankName": "DongA Bank",
+    "ShortName": "DongABank",
+    "LogoUrl": null,
+    "IsActive": true
+  },
+  {
+    "BankCode": "OJB",
+    "NapasCode": "970434",
+    "SwiftCode": "OJBVVNVX",
+    "BankName": "OceanBank",
+    "ShortName": "OceanBank",
+    "LogoUrl": null,
+    "IsActive": true
+  },
+  {
+    "BankCode": "AGB",
+    "NapasCode": "970405",
+    "SwiftCode": "VBAAVNVX",
+    "BankName": "Agribank",
+    "ShortName": "Agribank",
+    "LogoUrl": null,
+    "IsActive": true
+  },
+
+  {
+    "BankCode": "HSBC",
+    "NapasCode": "999001",
+    "SwiftCode": "HSBCVNVX",
+    "BankName": "HSBC Vietnam",
+    "ShortName": "HSBC",
+    "LogoUrl": null,
+    "IsActive": true
+  },
+  {
+    "BankCode": "SCVN",
+    "NapasCode": "999002",
+    "SwiftCode": "SCBLVNVX",
+    "BankName": "Standard Chartered Vietnam",
+    "ShortName": "StandardChartered",
+    "LogoUrl": null,
+    "IsActive": true
+  },
+  {
+    "BankCode": "ANZ",
+    "NapasCode": "999003",
+    "SwiftCode": "ANZBVNVX",
+    "BankName": "ANZ Vietnam",
+    "ShortName": "ANZ",
+    "LogoUrl": null,
+    "IsActive": true
+  },
+  {
+    "BankCode": "CITI",
+    "NapasCode": "999004",
+    "SwiftCode": "CITIVNVX",
+    "BankName": "Citibank Vietnam",
+    "ShortName": "Citibank",
+    "LogoUrl": null,
+    "IsActive": true
+  },
+  {
+    "BankCode": "UOB",
+    "NapasCode": "999005",
+    "SwiftCode": "UOBVVNVX",
+    "BankName": "UOB Vietnam",
+    "ShortName": "UOB",
+    "LogoUrl": null,
+    "IsActive": true
+  },
+
+  {
+    "BankCode": "TEST01",
+    "NapasCode": "990001",
+    "SwiftCode": "TESTVNV1",
+    "BankName": "Test Bank 1",
+    "ShortName": "TestBank1",
+    "LogoUrl": null,
+    "IsActive": true
+  },
+  {
+    "BankCode": "TEST02",
+    "NapasCode": "990002",
+    "SwiftCode": "TESTVNV2",
+    "BankName": "Test Bank 2",
+    "ShortName": "TestBank2",
+    "LogoUrl": null,
+    "IsActive": true
+  },
+  {
+    "BankCode": "TEST03",
+    "NapasCode": "990003",
+    "SwiftCode": "TESTVNV3",
+    "BankName": "Test Bank 3",
+    "ShortName": "TestBank3",
+    "LogoUrl": null,
+    "IsActive": true
+  },
+  {
+    "BankCode": "TEST04",
+    "NapasCode": "990004",
+    "SwiftCode": "TESTVNV4",
+    "BankName": "Test Bank 4",
+    "ShortName": "TestBank4",
+    "LogoUrl": null,
+    "IsActive": true
+  },
+  {
+    "BankCode": "TEST05",
+    "NapasCode": "990005",
+    "SwiftCode": "TESTVNV5",
+    "BankName": "Test Bank 5",
+    "ShortName": "TestBank5",
+    "LogoUrl": null,
+    "IsActive": true
+  },
+  {
+    "BankCode": "TEST06",
+    "NapasCode": "990006",
+    "SwiftCode": "TESTVNV6",
+    "BankName": "Test Bank 6",
+    "ShortName": "TestBank6",
+    "LogoUrl": null,
+    "IsActive": true
+  },
+  {
+    "BankCode": "TEST07",
+    "NapasCode": "990007",
+    "SwiftCode": "TESTVNV7",
+    "BankName": "Test Bank 7",
+    "ShortName": "TestBank7",
+    "LogoUrl": null,
+    "IsActive": true
+  }
+]

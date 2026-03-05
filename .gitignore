@@ -420,3 +420,5 @@ FodyWeavers.xsd
 # Environment files
 appsettings.Development.json
 .env
+
+wwwroot/
