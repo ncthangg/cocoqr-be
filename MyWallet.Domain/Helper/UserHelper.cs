@@ -11,11 +11,10 @@ namespace MyWallet.Domain.Helper
             .Where(id => id.HasValue && id.Value != Guid.Empty).Select(id => id!.Value).Distinct().ToList();
 
             if (userIds.Count == 0)
-                return new Dictionary<Guid, string>();
+                return [];
 
             var users = await userRepository.GetUsersByIdsAsync(userIds);
-
-            return users.ToDictionary(u => u.Id, u => u.FullName);
+            return (users ?? Enumerable.Empty<User>()).ToDictionary(x => x.Id, x => x.FullName);
         }
         public static async Task<Dictionary<Guid, string>> GetUserNameDictAsync<T>(List<T> items, IUserRepository userRepository) where T : BaseEntity
         {
@@ -23,10 +22,10 @@ namespace MyWallet.Domain.Helper
                 .Where(id => id.HasValue && id.Value != Guid.Empty).Select(id => id!.Value).Distinct().ToList();
 
             if (userIds.Count == 0)
-                return new Dictionary<Guid, string>();
+                return [];
 
             var users = await userRepository.GetUsersByIdsAsync(userIds);
-            return users.ToDictionary(u => u.Id, u => u.FullName);
+            return (users ?? Enumerable.Empty<User>()).ToDictionary(x => x.Id, x => x.FullName);
         }
     }
 }

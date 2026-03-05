@@ -24,17 +24,10 @@ namespace MyWallet.Application.Common.Mapper
                 UpdatedAt = u.UpdatedAt,
                 DeletedAt = u.DeletedAt,
 
-                CreatedByName = GetUserName(u.CreatedBy, userDict),
-                UpdatedByName = GetUserName(u.UpdatedBy, userDict),
-                DeletedByName = GetUserName(u.DeletedBy, userDict),
+                CreatedByName = BaseMapper.GetUserName(u.CreatedBy, userDict),
+                UpdatedByName = BaseMapper.GetUserName(u.UpdatedBy, userDict),
+                DeletedByName = BaseMapper.GetUserName(u.DeletedBy, userDict),
             };
-        }
-        private static string? GetUserName(
-                Guid? userId,
-                IReadOnlyDictionary<Guid, string> dict)
-        {
-            if (userId == null || userId == Guid.Empty) { return null; }
-            return dict.TryGetValue(userId.Value, out var name) ? name : null;
         }
     }
 }
