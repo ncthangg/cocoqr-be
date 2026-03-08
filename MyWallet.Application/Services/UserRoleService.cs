@@ -85,7 +85,7 @@ namespace MyWallet.Application.Services
 
             return result > 0;
         }
-        public async Task<bool> RemoveUserFromRoleAsync(Guid userId, Guid roleId)
+        public async Task<bool> RemoveUserFromRoleAsync(RemoveUserFromRole req)
         {
             var isAdmin = _userContext.IsAdmin();
 
@@ -94,12 +94,12 @@ namespace MyWallet.Application.Services
                 throw new ApplicationException(ErrorCode.Unauthorized, ErrorMessages.Unauthorized);
             }
 
-            if (userId == Guid.Empty || roleId == Guid.Empty)
+            if (req.UserId == Guid.Empty || req.RoleId == Guid.Empty)
             {
                 throw new ApplicationException(ErrorCode.BadRequest, "UserId or RoleId is invalid");
             }
 
-            var affected = await _unitOfWork.UserRoles.RemoveUserFromRoleAsync(userId, roleId);
+            var affected = await _unitOfWork.UserRoles.RemoveUserFromRoleAsync(req.UserId, req.RoleId);
 
             if (affected == 0)
                 throw new ApplicationException(ErrorCode.NotFound, "User role not found");

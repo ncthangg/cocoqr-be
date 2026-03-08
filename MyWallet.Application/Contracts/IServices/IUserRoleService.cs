@@ -16,6 +16,6 @@ namespace MyWallet.Application.Contracts.IServices
         Task<PagingVM<GetUserRoleRes>> GetAllUserRoles(int pageNumber, int pageSize, Guid? roleId);
         Task<IEnumerable<GetRoleRes>> GetRolesByUserIdAsync(Guid userId);
         Task<bool> AddUserToRoleAsync(AddUserRoleReq req);
-        Task<bool> RemoveUserFromRoleAsync(Guid userId, Guid roleId);
+        Task<bool> RemoveUserFromRoleAsync(RemoveUserFromRole req);
     }
 }

@@ -11,4 +11,9 @@ namespace MyWallet.Application.DTOs.Request
         public required Guid UserId { get; set; }
         public required Guid RoleId { get; set; }
     }
+    public class RemoveUserFromRole
+    {
+        public required Guid UserId { get; set; }
+        public required Guid RoleId { get; set; }
+    }
 }

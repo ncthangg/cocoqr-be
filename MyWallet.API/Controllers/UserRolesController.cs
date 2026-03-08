@@ -11,10 +11,10 @@ namespace MyWallet.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class UserRoleController : ControllerBase
+    public class UserRolesController : ControllerBase
     {
         private readonly IUserRoleService _userRoleService;
-        public UserRoleController(IUserRoleService userRoleService)
+        public UserRolesController(IUserRoleService userRoleService)
         {
             _userRoleService = userRoleService;
         }
@@ -28,9 +28,9 @@ namespace MyWallet.API.Controllers
                 data: result,
                 message: null));
         }
-        [HttpGet("users/{userId}/roles")]
+        [HttpGet("{userId}/roles")]
         [Authorize]
-        public async Task<IActionResult> GetRolesByUserId(Guid userId)
+        public async Task<IActionResult> GetRolesByUserId([FromQuery] Guid userId)
         {
             var result = await _userRoleService.GetRolesByUserIdAsync(userId);
 
@@ -52,9 +52,9 @@ namespace MyWallet.API.Controllers
         }
         [HttpDelete]
         [Authorize]
-        public async Task<IActionResult> RemoveUserFromRole([FromQuery] Guid userId, [FromQuery] Guid roleId)
+        public async Task<IActionResult> RemoveUserFromRole([FromBody] RemoveUserFromRole req)
         {
-            var result = await _userRoleService.RemoveUserFromRoleAsync(userId, roleId);
+            var result = await _userRoleService.RemoveUserFromRoleAsync(req);
 
             return Ok(new BaseResponseModel<bool>(
                 code: SuccessCode.Success,
