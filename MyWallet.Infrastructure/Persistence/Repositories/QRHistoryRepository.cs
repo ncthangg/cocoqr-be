@@ -1,14 +1,15 @@
-﻿using MyWallet.Domain.Entities;
+﻿using Dapper;
+using MyWallet.Domain.Entities;
 using MyWallet.Domain.Interface.IRepositories;
+using MyWallet.Domain.Interface.IUnitOfWork;
 using MyWallet.Infrastructure.Persistence.Repositories.Base;
-using IDbConnectionFactory = MyWallet.Domain.Interface.IDbContext.IDbConnectionFactory;
 
 namespace MyWallet.Infrastructure.Persistence.Repositories
 {
     public class QRHistoryRepository : BaseRepository<QRHistory>, IQRHistoryRepository
     {
-        public QRHistoryRepository(IDbConnectionFactory connectionFactory)
-            : base(connectionFactory, "QRHistories")
+        public QRHistoryRepository(IUnitOfWork _unitOfWork)
+            : base(_unitOfWork, "QRHistories")
         {
         }
 
@@ -25,9 +26,12 @@ namespace MyWallet.Infrastructure.Persistence.Repositories
                 ORDER BY CreatedAt DESC
             ";
 
-            return await QueryAsync<QRHistory>(
-                sql,
-                new { AccountId = accountId, PageSize = pageSize }
+            return await QueryAsync<QRHistory>(sql,
+                new
+                {
+                    AccountId = accountId,
+                    PageSize = pageSize
+                }
             );
         }
 
@@ -50,8 +54,7 @@ namespace MyWallet.Infrastructure.Persistence.Repositories
                 ORDER BY CreatedAt DESC
             ";
 
-            return await QueryAsync<QRHistory>(
-                sql,
+            return await QueryAsync<QRHistory>(sql,
                 new
                 {
                     UserId = userId,
@@ -72,9 +75,11 @@ namespace MyWallet.Infrastructure.Persistence.Repositories
                 WHERE AccountId = @AccountId
             ";
 
-            return await QuerySingleAsync<decimal>(
-                sql,
-                new { AccountId = accountId }
+            return await QueryFirstOrDefaultAsync<decimal>(sql,
+                new
+                {
+                    AccountId = accountId
+                }
             );
         }
     }

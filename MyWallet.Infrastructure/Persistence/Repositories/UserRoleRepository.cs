@@ -1,16 +1,15 @@
 ﻿using Dapper;
-using MyWallet.Application.DTOs.Response;
 using MyWallet.Domain.Entities;
-using MyWallet.Domain.Interface.IDbContext;
 using MyWallet.Domain.Interface.IRepositories;
+using MyWallet.Domain.Interface.IUnitOfWork;
 using MyWallet.Infrastructure.Persistence.Repositories.Base;
 
 namespace MyWallet.Infrastructure.Persistence.Repositories
 {
     public class UserRoleRepository : BaseRepository<UserRole>, IUserRoleRepository
     {
-        public UserRoleRepository(IDbConnectionFactory connectionFactory)
-                       : base(connectionFactory, "UserRoles")
+        public UserRoleRepository(IUnitOfWork _unitOfWork)
+                       : base(_unitOfWork, "UserRoles")
         {
         }
         public async Task<(IEnumerable<UserRole>, int totalCount)> GetAllUserRolesAsync(int pageNumber, int pageSize, Guid? roleId)
@@ -45,14 +44,16 @@ namespace MyWallet.Infrastructure.Persistence.Repositories
             //    PageSize = pageSize,
             //    RoleId = roleId
             //});
-            using var connection = _connectionFactory.CreateConnection();
 
-            var multi = await connection.QueryMultipleAsync(sql, new
-            {
-                PageNumber = pageNumber,
-                PageSize = pageSize,
-                RoleId = roleId
-            });
+            var multi = await _unitOfWork.Connection.QueryMultipleAsync(sql,
+                new
+                {
+                    PageNumber = pageNumber,
+                    PageSize = pageSize,
+                    RoleId = roleId
+                },
+                _unitOfWork.Transaction
+            );
 
             var items = multi.Read<UserRole, Role, UserRole>(
                 (ur, role) =>
@@ -76,7 +77,12 @@ namespace MyWallet.Infrastructure.Persistence.Repositories
             WHERE ur.UserId = @UserId AND ur.Status = 1
         ";
 
-            return await QueryAsync<Role>(sql, new { UserId = userId });
+            return await QueryAsync<Role>(sql,
+                new
+                {
+                    UserId = userId
+                }
+            );
         }
         public async Task<int> AddUserToRoleAsync(Guid id, Guid userId, Guid roleId)
         {
@@ -85,12 +91,14 @@ namespace MyWallet.Infrastructure.Persistence.Repositories
             VALUES (@Id, @UserId, @RoleId, GETUTCDATE(), 1)
         ";
 
-            return await ExecuteAsync(sql, new
-            {
-                Id = id,
-                UserId = userId,
-                RoleId = roleId
-            });
+            return await ExecuteAsync(sql,
+                new
+                {
+                    Id = id,
+                    UserId = userId,
+                    RoleId = roleId
+                }
+            );
         }
         public async Task<int> RemoveUserFromRoleAsync(Guid userId, Guid roleId)
         {
@@ -99,11 +107,13 @@ namespace MyWallet.Infrastructure.Persistence.Repositories
             WHERE UserId = @UserId AND RoleId = @RoleId
         ";
 
-            return await ExecuteAsync(sql, new
-            {
-                UserId = userId,
-                RoleId = roleId
-            });
+            return await ExecuteAsync(sql,
+                new
+                {
+                    UserId = userId,
+                    RoleId = roleId
+                }
+            );
         }
         public async Task<bool> ExistsAsync(Guid userId, Guid roleId)
         {
@@ -111,9 +121,15 @@ namespace MyWallet.Infrastructure.Persistence.Repositories
         SELECT COUNT(1)
         FROM UserRoles
         WHERE UserId = @UserId AND RoleId = @RoleId
-    ";
+        ";
 
-            var count = await QuerySingleAsync<int>(sql, new { userId, roleId });
+            var count = await QueryFirstOrDefaultAsync<int>(sql,
+                new
+                {
+                    userId,
+                    roleId
+                }
+            );
 
             return count > 0;
         }

@@ -1,16 +1,16 @@
-﻿using MyWallet.Domain.Entities;
+﻿using Dapper;
+using MyWallet.Domain.Entities;
 using MyWallet.Domain.Interface.IRepositories;
+using MyWallet.Domain.Interface.IUnitOfWork;
 using MyWallet.Infrastructure.Persistence.Repositories.Base;
-using IDbConnectionFactory = MyWallet.Domain.Interface.IDbContext.IDbConnectionFactory;
 
 namespace MyWallet.Infrastructure.Persistence.Repositories
 {
     public class AccountRepository : BaseRepository<Account>, IAccountRepository
     {
-        public AccountRepository(IDbConnectionFactory connectionFactory)
-            : base(connectionFactory, "Accounts")
+        public AccountRepository(IUnitOfWork _unitOfWork)
+            : base(_unitOfWork, "Accounts")
         {
-
         }
 
         public async Task<(IEnumerable<Account>, int totalCount)> GetByUserIdAsync(Guid userId, int pageNumber, int pageSize, bool? isActive)
@@ -36,15 +36,17 @@ namespace MyWallet.Infrastructure.Persistence.Repositories
         WHERE 
             (@IsActive IS NULL OR IsActive = @IsActive)
             AND (@UserId == UserId);
-    ";
+        ";
 
-            return await QueryPagedAsync<Account>(sql, new
-            {
-                UserId = userId,
-                PageNumber = pageNumber,
-                PageSize = pageSize,
-                IsActive = isActive,
-            });
+            return await QueryPagedAsync<Account>(sql,
+                new
+                {
+                    UserId = userId,
+                    PageNumber = pageNumber,
+                    PageSize = pageSize,
+                    IsActive = isActive,
+                }
+            );
         }
 
         public async Task<Account> GetByAccountNumberAsync(string accountNumber)
@@ -54,7 +56,12 @@ namespace MyWallet.Infrastructure.Persistence.Repositories
 
             const string sql = "SELECT * FROM Accounts WHERE AccountNumber = @AccountNumber";
 
-            return await QuerySingleAsync<Account>(sql, new { AccountNumber = accountNumber });
+            return await QueryFirstOrDefaultAsync<Account>(sql,
+                new
+                {
+                    AccountNumber = accountNumber
+                }
+            );
         }
 
         public async Task<bool> AccountNumberExistsAsync(Guid userId, string accountNumber, Guid? excludeAccountId)
@@ -72,9 +79,13 @@ namespace MyWallet.Infrastructure.Persistence.Repositories
                   AND (@ExcludeId IS NULL OR Id <> @ExcludeId)
             ";
 
-            var count = await QuerySingleAsync<int>(
-                sql,
-                new { UserId = userId, AccountNumber = accountNumber, ExcludeId = excludeAccountId }
+            var count = await QueryFirstOrDefaultAsync<int>(sql,
+                new
+                {
+                    UserId = userId,
+                    AccountNumber = accountNumber,
+                    ExcludeId = excludeAccountId
+                }
             );
 
             return count > 0;

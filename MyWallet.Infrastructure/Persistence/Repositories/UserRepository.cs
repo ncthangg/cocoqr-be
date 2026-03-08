@@ -1,14 +1,15 @@
-﻿using MyWallet.Domain.Entities;
+﻿using Dapper;
+using MyWallet.Domain.Entities;
 using MyWallet.Domain.Interface.IRepositories;
+using MyWallet.Domain.Interface.IUnitOfWork;
 using MyWallet.Infrastructure.Persistence.Repositories.Base;
-using IDbConnectionFactory = MyWallet.Domain.Interface.IDbContext.IDbConnectionFactory;
 
 namespace MyWallet.Infrastructure.Persistence.Repositories
 {
     public class UserRepository : BaseRepository<User>, IUserRepository
     {
-        public UserRepository(IDbConnectionFactory connectionFactory)
-            : base(connectionFactory, "Users")
+        public UserRepository(IUnitOfWork _unitOfWork)
+            : base(_unitOfWork, "Users")
         {
         }
 
@@ -24,7 +25,12 @@ namespace MyWallet.Infrastructure.Persistence.Repositories
                 WHERE Email = @Email
             ";
 
-            return await QuerySingleAsync<User>(sql, new { Email = email });
+            return await QueryFirstOrDefaultAsync<User>(sql,
+                new
+                {
+                    Email = email
+                }
+            );
         }
 
         public async Task<bool> EmailExistsAsync(string email)
@@ -34,7 +40,12 @@ namespace MyWallet.Infrastructure.Persistence.Repositories
 
             const string sql = "SELECT COUNT(1) FROM Users WHERE Email = @Email";
 
-            var count = await QuerySingleAsync<int>(sql, new { Email = email });
+            var count = await QueryFirstOrDefaultAsync<int>(sql,
+                new
+                {
+                    Email = email
+                }
+            );
             return count > 0;
         }
 
@@ -45,13 +56,23 @@ namespace MyWallet.Infrastructure.Persistence.Repositories
 
             const string sql = "SELECT * FROM Users WHERE Id = @UserId";
 
-            return await QuerySingleAsync<User>(sql, new { UserId = id });
+            return await QueryFirstOrDefaultAsync<User>(sql,
+                new
+                {
+                    UserId = id
+                }
+            );
         }
         public async Task<List<User>> GetUsersByIdsAsync(IEnumerable<Guid> userIds)
         {
             const string sql = "SELECT Id, FullName FROM Users WHERE Id IN @Ids";
 
-            return await QuerySingleAsync<List<User>>(sql, new { Ids = userIds });
+            return await QueryFirstOrDefaultAsync<List<User>>(sql,
+                new
+                {
+                    Ids = userIds
+                }
+            );
         }
     }
 }

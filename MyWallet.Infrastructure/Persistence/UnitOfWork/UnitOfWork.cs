@@ -9,6 +9,7 @@ namespace MyWallet.Infrastructure.Persistence.UnitOfWork
     public class UnitOfWork(IDbConnectionFactory connectionFactory) : IUnitOfWork
     {
         private readonly IDbConnectionFactory _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
+
         private IDbConnection? _connection;
         private IDbTransaction? _transaction;
 
@@ -20,36 +21,46 @@ namespace MyWallet.Infrastructure.Persistence.UnitOfWork
         private IQRHistoryRepository? _qrHistoryRepository;
         private IBankInfoRepository? _bankInfoRepository;
 
+        public IDbConnection Connection
+        {
+            get
+            {
+                if (_connection == null)
+                    _connection = _connectionFactory.CreateConnection();
+
+                if (_connection.State == ConnectionState.Closed)
+                    _connection.Open();
+
+                return _connection;
+            }
+        }
+        public IDbTransaction? Transaction => _transaction;
+
         public IUserRepository Users
-            => _userRepository ??= new UserRepository(_connectionFactory);
-
+            => _userRepository ??= new UserRepository(this);
         public IAccountRepository Accounts
-            => _accountRepository ??= new AccountRepository(_connectionFactory);
+            => _accountRepository ??= new AccountRepository(this);
         public IRoleRepository Roles
-            => _roleRepository ??= new RoleRepository(_connectionFactory);
-
+            => _roleRepository ??= new RoleRepository(this);
         public IUserTokenRepository UserTokens
-            => _userTokenRepository ??= new UserTokenRepository(_connectionFactory);
+            => _userTokenRepository ??= new UserTokenRepository(this);
         public IUserRoleRepository UserRoles
-            => _userRoleRepository ??= new UserRoleRepository(_connectionFactory);
-
+            => _userRoleRepository ??= new UserRoleRepository(this);
         public IQRHistoryRepository QRHistories
-            => _qrHistoryRepository ??= new QRHistoryRepository(_connectionFactory);
-
+            => _qrHistoryRepository ??= new QRHistoryRepository(this);
         public IBankInfoRepository BankInfos
-            => _bankInfoRepository ??= new BankInfoRepository(_connectionFactory);
+            => _bankInfoRepository ??= new BankInfoRepository(this);
 
         public async Task BeginTransactionAsync()
         {
             if (_connection == null)
-            {
                 _connection = await _connectionFactory.CreateConnectionAsync();
-            }
+
+            if (_connection.State == ConnectionState.Closed)
+                _connection.Open();
 
             if (_transaction == null)
-            {
                 _transaction = _connection.BeginTransaction();
-            }
         }
 
         public Task CommitAsync()
