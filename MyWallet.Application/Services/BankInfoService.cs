@@ -30,10 +30,12 @@ namespace MyWallet.Application.Services
             _fileStorageService = fileStorageService;
         }
 
-        public async Task<PagingVM<GetBankInfoRes>> GetsAsync(int pageNumber, int pageSize, bool? isActive, string? searchValue)
+        public async Task<PagingVM<GetBankInfoRes>> GetsAsync(int pageNumber, int pageSize, string? sortField, string? sortDirection, bool? isActive, string? searchValue)
         {
             var (items, totalCount) = await _unitOfWork.BankInfos.GetBankInfosAsync(pageNumber,
                                                                       pageSize,
+                                                                      sortField,
+                                                                      sortDirection,
                                                                       isActive,
                                                                       searchValue);
 
