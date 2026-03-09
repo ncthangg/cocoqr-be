@@ -6,14 +6,9 @@ using System.Threading.Tasks;
 
 namespace MyWallet.Application.DTOs.Request
 {
-    public class AddUserRoleReq
+    public class PostPutUserRoleReq
     {
         public required Guid UserId { get; set; }
-        public required Guid RoleId { get; set; }
-    }
-    public class RemoveUserFromRole
-    {
-        public required Guid UserId { get; set; }
-        public required Guid RoleId { get; set; }
+        public IEnumerable<Guid> RoleIds { get; set; } = [];
     }
 }

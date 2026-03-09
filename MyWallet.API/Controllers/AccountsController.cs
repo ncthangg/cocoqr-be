@@ -5,6 +5,7 @@ using MyWallet.Application.DTOs.Request;
 using MyWallet.Application.DTOs.Response;
 using MyWallet.Application.DTOs.Response.Base;
 using MyWallet.Domain.Constants;
+using System.Buffers;
 
 namespace MyWallet.API.Controllers
 {
@@ -19,9 +20,9 @@ namespace MyWallet.API.Controllers
         }
         [HttpGet]
         [Authorize]
-        public async Task<IActionResult> Get(Guid userId, int pageNumber = 1, int pageSize = 10, bool? isActive = true)
+        public async Task<IActionResult> Get(Guid userId, int pageNumber = 1, int pageSize = 10, string? sortField = null, string? sortDirection = null, bool? isActive = null, string? searchValue = null)
         {
-            PagingVM<GetAccountRes> result = await _accountService.GetUserAccountsAsync(userId, pageNumber, pageSize, isActive);
+            PagingVM<GetAccountRes> result = await _accountService.GetUserAccountsAsync(userId, pageNumber, pageSize, sortField, sortDirection, isActive, searchValue);
             return Ok(new BaseResponseModel<PagingVM<GetAccountRes>>(
                 code: SuccessCode.Success,
                 data: result,

@@ -13,12 +13,28 @@ namespace MyWallet.Infrastructure.Persistence.Repositories
         {
         }
 
-        public async Task<(IEnumerable<Account>, int totalCount)> GetByUserIdAsync(Guid userId, int pageNumber, int pageSize, bool? isActive)
+        public async Task<(IEnumerable<Account>, int totalCount)> GetByUserIdAsync(Guid userId, int pageNumber, int pageSize, string? sortField, string? sortDirection, bool? isActive, string? searchValue)
         {
             if (userId == Guid.Empty)
                 throw new ArgumentException("Invalid user ID", nameof(userId));
 
-            const string sql = @"
+            var orderBy = "CreatedAt DESC";
+
+            if (!string.IsNullOrEmpty(sortField))
+            {
+                var dir = sortDirection?.ToUpper() == "DESC" ? "DESC" : "ASC";
+
+                orderBy = sortField switch
+                {
+                    "accountNumber" => $"AccountNumber {dir}",
+                    "accountHolder" => $"AccountHolder {dir}",
+                    "bankCode" => $"BankCode {dir}",
+                    "bankName" => $"BankName {dir}",
+                    _ => "CreatedAt DESC"
+                };
+            }
+
+            var sql = $@"
         SELECT 
             Id, UserId, AccountNumber, AccountHolder, 
             BankCode, BankName, AccountType, Balance, IsActive
@@ -27,7 +43,14 @@ namespace MyWallet.Infrastructure.Persistence.Repositories
         WHERE 
             (@IsActive IS NULL OR IsActive = @IsActive)
             AND (@UserId == UserId)
-        ORDER BY BankName ASC
+            AND (
+                @SearchValue IS NULL 
+                OR AccountNumber LIKE '%' + @SearchValue + '%'
+                OR AccountHolder LIKE '%' + @SearchValue + '%'
+                OR BankCode LIKE '%' + @SearchValue + '%'
+                OR BankName LIKE '%' + @SearchValue + '%'
+            )
+        ORDER BY {orderBy}
         OFFSET (@PageNumber - 1) * @PageSize ROWS
         FETCH NEXT @PageSize ROWS ONLY;
 
@@ -35,7 +58,14 @@ namespace MyWallet.Infrastructure.Persistence.Repositories
         FROM Accounts
         WHERE 
             (@IsActive IS NULL OR IsActive = @IsActive)
-            AND (@UserId == UserId);
+            AND (@UserId == UserId)
+            AND (
+                @SearchValue IS NULL 
+                OR AccountNumber LIKE '%' + @SearchValue + '%'
+                OR AccountHolder LIKE '%' + @SearchValue + '%'
+                OR BankCode LIKE '%' + @SearchValue + '%'
+                OR BankName LIKE '%' + @SearchValue + '%'
+            );
         ";
 
             return await QueryPagedAsync<Account>(sql,

@@ -18,19 +18,9 @@ namespace MyWallet.API.Controllers
         {
             _userRoleService = userRoleService;
         }
-        [HttpGet]
-        [Authorize]
-        public async Task<IActionResult> Get(int pageNumber = 1, int pageSize = 10, Guid? roleId = null)
-        {
-            PagingVM<GetUserRoleRes> result = await _userRoleService.GetAllUserRoles(pageNumber, pageSize, roleId);
-            return Ok(new BaseResponseModel<PagingVM<GetUserRoleRes>>(
-                code: SuccessCode.Success,
-                data: result,
-                message: null));
-        }
         [HttpGet("{userId}/roles")]
         [Authorize]
-        public async Task<IActionResult> GetRolesByUserId([FromQuery] Guid userId)
+        public async Task<IActionResult> GetRolesByUserId(Guid userId)
         {
             var result = await _userRoleService.GetRolesByUserIdAsync(userId);
 
@@ -41,20 +31,9 @@ namespace MyWallet.API.Controllers
         }
         [HttpPost]
         [Authorize]
-        public async Task<IActionResult> AddUserToRole([FromBody] AddUserRoleReq req)
+        public async Task<IActionResult> PostPutUserRoles([FromBody] PostPutUserRoleReq req)
         {
-            var result = await _userRoleService.AddUserToRoleAsync(req);
-
-            return Ok(new BaseResponseModel<bool>(
-                code: SuccessCode.Success,
-                data: result,
-                message: null));
-        }
-        [HttpDelete]
-        [Authorize]
-        public async Task<IActionResult> RemoveUserFromRole([FromBody] RemoveUserFromRole req)
-        {
-            var result = await _userRoleService.RemoveUserFromRoleAsync(req);
+            var result = await _userRoleService.PostPutUserRolesAsync(req);
 
             return Ok(new BaseResponseModel<bool>(
                 code: SuccessCode.Success,

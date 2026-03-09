@@ -10,15 +10,6 @@ namespace MyWallet.Application.Common.Mapper
 {
     public class UserRoleMapper
     {
-        public static GetUserRoleRes ToGetUserRoleRes(UserRole entity)
-        {
-            return new GetUserRoleRes
-            {
-                UserId = entity.UserId,
-                RoleId = entity.RoleId,
-                Name = entity.Role.Name,
-                NameUpperCase = entity.Role.NameUpperCase
-            };
-        }
+
     }
 }

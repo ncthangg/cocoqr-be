@@ -6,7 +6,7 @@ namespace MyWallet.Application.Contracts.IServices
 {
     public interface IAccountService
     {
-        Task<PagingVM<GetAccountRes>> GetUserAccountsAsync(Guid userId, int pageNumber = 1, int pageSize = 10, bool? isActive = true);
+        Task<PagingVM<GetAccountRes>> GetUserAccountsAsync(Guid userId, int pageNumber, int pageSize, string? sortField, string? sortDirection, bool? isActive, string? searchValue);
         Task<GetAccountRes> GetByIdAsync(Guid id);
         Task<Guid> PostAccountAsync(PostAccountReq request);
         Task PutAccountAsync(Guid id, PutAccountReq request);

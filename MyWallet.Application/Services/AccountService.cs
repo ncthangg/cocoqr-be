@@ -26,14 +26,12 @@ namespace MyWallet.Application.Services
             _idGenerator = idGenerator;
         }
 
-        public async Task<PagingVM<GetAccountRes>> GetUserAccountsAsync(Guid userId, int pageNumber = 1, int pageSize = 10, bool? isActive = true)
+        public async Task<PagingVM<GetAccountRes>> GetUserAccountsAsync(Guid userId, int pageNumber, int pageSize, string? sortField, string? sortDirection, bool? isActive, string? searchValue)
         {
             if (userId == Guid.Empty)
                 throw new ApplicationException(ErrorCode.ValidationError, "Invalid userId ID");
 
-            var accounts = await _unitOfWork.Accounts.GetByUserIdAsync(userId, pageNumber, pageSize, isActive);
-
-            var (items, totalCount) = await _unitOfWork.Accounts.GetByUserIdAsync(userId, pageNumber, pageSize, isActive);
+            var (items, totalCount) = await _unitOfWork.Accounts.GetByUserIdAsync(userId, pageNumber, pageSize, sortField, sortDirection, isActive, searchValue);
 
             var userDict = await UserHelper.GetUserNameDictAsync((List<BankInfo>)items, _unitOfWork.Users);
 

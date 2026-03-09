@@ -5,7 +5,7 @@ namespace MyWallet.Domain.Interface.IRepositories
 {
     public interface IAccountRepository : IRepository<Account>
     {
-        Task<(IEnumerable<Account>, int totalCount)> GetByUserIdAsync(Guid userId, int pageNumber, int pageSize, bool? isActive);
+        Task<(IEnumerable<Account>, int totalCount)> GetByUserIdAsync(Guid userId, int pageNumber, int pageSize, string? sortField, string? sortDirection, bool? isActive, string? searchValue);
         Task<Account> GetByAccountNumberAsync(string accountNumber);
         Task<bool> AccountNumberExistsAsync(Guid userId, string accountNumber, Guid? excludeAccountId = null);
     }

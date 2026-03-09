@@ -18,7 +18,6 @@ namespace MyWallet.API.Controllers
             _roleService = roleService;
         }
         [HttpGet]
-        [Authorize]
         public async Task<IActionResult> Get()
         {
             IEnumerable<GetRoleRes> result = await _roleService.GetAllAsync();
@@ -40,7 +39,7 @@ namespace MyWallet.API.Controllers
         }
         [HttpPost]
         [Authorize]
-        public async Task<IActionResult> Post([FromForm] PostRoleReq request)
+        public async Task<IActionResult> Post(PostRoleReq request)
         {
             await _roleService.PostAsync(request);
             return Ok(new BaseResponseModel<string>(
@@ -50,7 +49,7 @@ namespace MyWallet.API.Controllers
         }
         [HttpPut("{id}")]
         [Authorize]
-        public async Task<IActionResult> Put(Guid id, [FromForm] PutRoleReq request)
+        public async Task<IActionResult> Put(Guid id, PutRoleReq request)
         {
             await _roleService.PutAsync(id, request);
             return Ok(new BaseResponseModel<string>(
