@@ -41,6 +41,7 @@ namespace MyWallet.Domain.Entities
         {
             SetId(id);
             SetCreated(userId);
+            Status = true;
         }
     }
 }
