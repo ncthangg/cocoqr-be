@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MyWallet.Infrastructure.Persistence.MyDbContext;
 
@@ -11,9 +12,11 @@ using MyWallet.Infrastructure.Persistence.MyDbContext;
 namespace MyWallet.Infrastructure.Migrations
 {
     [DbContext(typeof(MyWalletDbContext))]
-    partial class MyWalletDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260310103606_UpdateQRHistory")]
+    partial class UpdateQRHistory
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -29,10 +32,16 @@ namespace MyWallet.Infrastructure.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("AccountHolder")
+                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
                     b.Property<string>("AccountNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("AccountType")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
@@ -44,10 +53,12 @@ namespace MyWallet.Infrastructure.Migrations
                         .HasDefaultValue(0m);
 
                     b.Property<string>("BankCode")
+                        .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
                     b.Property<string>("BankName")
+                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
@@ -70,22 +81,7 @@ namespace MyWallet.Infrastructure.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
 
-                    b.Property<bool>("IsDeleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
-                    b.Property<bool>("IsPinned")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
-                    b.Property<string>("Provider")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<bool>("Status")
+                    b.Property<bool?>("Status")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
@@ -108,20 +104,19 @@ namespace MyWallet.Infrastructure.Migrations
 
                     SqlServerIndexBuilderExtensions.IncludeProperties(b.HasIndex("BankCode"), new[] { "BankName" });
 
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("IX_Accounts_UserId");
+
+                    SqlServerIndexBuilderExtensions.IncludeProperties(b.HasIndex("UserId"), new[] { "AccountNumber", "AccountHolder", "BankCode", "BankName", "AccountType", "Balance", "IsActive" });
+
+                    b.HasIndex("UserId", "AccountNumber")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Accounts_UserId_AccountNumber");
+
                     b.HasIndex("UserId", "IsActive")
                         .HasDatabaseName("IX_Accounts_UserId_IsActive");
 
-                    SqlServerIndexBuilderExtensions.IncludeProperties(b.HasIndex("UserId", "IsActive"), new[] { "AccountNumber", "AccountHolder", "BankCode", "BankName", "Provider", "Balance", "IsPinned", "CreatedAt" });
-
-                    b.HasIndex("UserId", "IsPinned", "CreatedAt")
-                        .HasDatabaseName("IX_Accounts_UserId_IsPinned_CreatedAt");
-
-                    SqlServerIndexBuilderExtensions.IncludeProperties(b.HasIndex("UserId", "IsPinned", "CreatedAt"), new[] { "AccountNumber", "AccountHolder", "BankCode", "BankName", "Provider", "Balance", "IsActive" });
-
-                    b.HasIndex("UserId", "AccountNumber", "BankCode", "Provider")
-                        .IsUnique()
-                        .HasDatabaseName("IX_Accounts_UserId_AccountNumber_BankCode_Provider")
-                        .HasFilter("[BankCode] IS NOT NULL");
+                    SqlServerIndexBuilderExtensions.IncludeProperties(b.HasIndex("UserId", "IsActive"), new[] { "AccountNumber", "AccountHolder", "BankCode", "BankName", "AccountType", "Balance" });
 
                     b.ToTable("Accounts", (string)null);
                 });
@@ -174,7 +169,7 @@ namespace MyWallet.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<bool>("Status")
+                    b.Property<bool?>("Status")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
@@ -340,7 +335,7 @@ namespace MyWallet.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<bool>("Status")
+                    b.Property<bool?>("Status")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
@@ -400,16 +395,6 @@ namespace MyWallet.Infrastructure.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
-                    b.Property<bool>("IsActive")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
-
-                    b.Property<bool>("IsDeleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
                     b.Property<DateTime?>("LastLoginAt")
                         .HasColumnType("datetime2");
 
@@ -430,7 +415,7 @@ namespace MyWallet.Infrastructure.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
-                    b.Property<bool>("Status")
+                    b.Property<bool?>("Status")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
@@ -465,7 +450,7 @@ namespace MyWallet.Infrastructure.Migrations
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("RoleId")
+                    b.Property<Guid?>("RoleId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -485,7 +470,7 @@ namespace MyWallet.Infrastructure.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<bool>("Status")
+                    b.Property<bool?>("Status")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
@@ -537,7 +522,7 @@ namespace MyWallet.Infrastructure.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
-                    b.Property<bool>("Status")
+                    b.Property<bool?>("Status")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(true);

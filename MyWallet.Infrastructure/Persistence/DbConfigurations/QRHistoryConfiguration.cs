@@ -17,7 +17,6 @@ namespace MyWallet.Infrastructure.Persistence.DbConfigurations
             // Properties configuration
             builder.Property(qr => qr.Id)
                 .IsRequired()
-                .HasMaxLength(32)
                 .ValueGeneratedOnAdd();
 
             builder.Property(qr => qr.UserId)
@@ -25,6 +24,15 @@ namespace MyWallet.Infrastructure.Persistence.DbConfigurations
 
             builder.Property(qr => qr.AccountId)
                 .IsRequired(false);
+
+            builder.Property(qr => qr.AccountNumberSnapshot)
+                .HasMaxLength(50);
+            builder.Property(qr => qr.AccountHolderSnapshot)
+                .HasMaxLength(255);
+            builder.Property(qr => qr.BankCodeSnapshot)
+                .HasMaxLength(20);
+            builder.Property(qr => qr.BankNameSnapshot)
+                .HasMaxLength(255);
 
             builder.Property(qr => qr.Amount)
                 .IsRequired()
@@ -39,9 +47,35 @@ namespace MyWallet.Infrastructure.Persistence.DbConfigurations
             builder.Property(qr => qr.QRImageUrl)
                 .HasMaxLength(500);
 
+            builder.Property(qr => qr.Provider)
+                .IsRequired()
+                .HasConversion<string>()
+                .HasMaxLength(20);
+            builder.Property(qr => qr.ReceiverType)
+                .IsRequired()
+                .HasConversion<string>()
+                .HasMaxLength(20);
+
+            builder.Property(qr => qr.IsFixedAmount)
+                .IsRequired()
+                .HasDefaultValue(false);
+
+            builder.Property(qr => qr.IsPaid)
+                .IsRequired()
+                .HasDefaultValue(false);
+
             builder.Property(qr => qr.CreatedAt)
                 .IsRequired()
                 .HasDefaultValueSql("GETUTCDATE()");
+
+            builder.Property(qr => qr.ExpiredAt)
+                .IsRequired(false);
+
+            builder.Property(qr => qr.PaidAt)
+                .IsRequired(false);
+
+            builder.Property(qr => qr.DeletedAt)
+                .IsRequired(false);
 
             builder.Property(qr => qr.IsDeleted)
                 .IsRequired()

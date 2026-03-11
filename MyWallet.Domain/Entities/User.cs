@@ -2,6 +2,7 @@
 {
     public class User : BaseEntity
     {
+        public User() { }
         public required string FullName { get; set; }
         public required string Email { get; set; }
         public required string GoogleId { get; set; }
@@ -14,6 +15,9 @@
         public string? LastLoginDevice { get; set; }
 
         public string? SecurityStamp { get; set; }
+
+        public bool IsActive { get; set; }
+        public bool IsDeleted { get; set; }
 
         public virtual ICollection<UserToken>? UserTokens { get; set; }
         public virtual ICollection<UserRole>? UserRoles { get; set; }
@@ -32,6 +36,19 @@
             {
                 return false;
             }
+        }
+        public void Activate()
+        {
+            IsActive = true;
+        }
+        public void Deactivate()
+        {
+            IsActive = false;
+        }
+        public void Delete(Guid userId)
+        {
+            IsDeleted = true;
+            SetDeleted(userId);
         }
     }
 }

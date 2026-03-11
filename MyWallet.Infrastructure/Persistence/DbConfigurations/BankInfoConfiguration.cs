@@ -42,11 +42,12 @@ namespace MyWallet.Infrastructure.Persistence.DbConfigurations
                 .HasDefaultValue(true);
 
             // BaseEntity properties
-            builder.Property(b => b.CreatedAt)
+            builder.Property(a => a.CreatedAt)
                 .IsRequired()
                 .HasDefaultValueSql("GETUTCDATE()");
 
-            builder.Property(b => b.Status)
+            builder.Property(a => a.Status)
+                .IsRequired()
                 .HasDefaultValue(true);
 
             // Indexes

@@ -47,12 +47,21 @@ namespace MyWallet.Infrastructure.Persistence.DbConfigurations
             builder.Property(u => u.SecurityStamp)
                 .HasMaxLength(255);
 
+            builder.Property(a => a.IsActive)
+                .IsRequired()
+                .HasDefaultValue(true);
+
+            builder.Property(qr => qr.IsDeleted)
+                .IsRequired()
+                .HasDefaultValue(false);
+
             // BaseEntity properties
-            builder.Property(u => u.CreatedAt)
+            builder.Property(a => a.CreatedAt)
                 .IsRequired()
                 .HasDefaultValueSql("GETUTCDATE()");
 
-            builder.Property(u => u.Status)
+            builder.Property(a => a.Status)
+                .IsRequired()
                 .HasDefaultValue(true);
 
             builder.HasMany(u => u.UserTokens)

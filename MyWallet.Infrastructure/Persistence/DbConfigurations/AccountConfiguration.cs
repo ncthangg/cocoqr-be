@@ -24,25 +24,30 @@ namespace MyWallet.Infrastructure.Persistence.DbConfigurations
                 .HasMaxLength(50);
 
             builder.Property(a => a.AccountHolder)
-                .IsRequired()
+                .IsRequired(false)
                 .HasMaxLength(255);
 
             builder.Property(a => a.BankCode)
-                .IsRequired()
+                .IsRequired(false)
                 .HasMaxLength(20);
 
             builder.Property(a => a.BankName)
-                .IsRequired()
+                .IsRequired(false)
                 .HasMaxLength(255);
 
-            builder.Property(a => a.AccountType)
+            builder.Property(qr => qr.Provider)
                 .IsRequired()
-                .HasMaxLength(50);
+                .HasConversion<string>()
+                .HasMaxLength(20);
 
             builder.Property(a => a.Balance)
                 .IsRequired()
                 .HasColumnType("decimal(18,2)")
                 .HasDefaultValue(0m);
+
+            builder.Property(a => a.IsPinned)
+                .IsRequired()
+                .HasDefaultValue(false);
 
             builder.Property(a => a.IsActive)
                 .IsRequired()
@@ -54,24 +59,29 @@ namespace MyWallet.Infrastructure.Persistence.DbConfigurations
                 .HasDefaultValueSql("GETUTCDATE()");
 
             builder.Property(a => a.Status)
+                .IsRequired()
                 .HasDefaultValue(true);
+
+            builder.Property(qr => qr.IsDeleted)
+                .IsRequired()
+                .HasDefaultValue(false);
 
             // Indexes
             // Uniqueness: 1 user không được trùng AccountNumber
-            builder.HasIndex(a => new { a.UserId, a.AccountNumber })
+            builder.HasIndex(a => new { a.UserId, a.AccountNumber, a.BankCode, a.Provider })
                 .IsUnique()
-                .HasDatabaseName("IX_Accounts_UserId_AccountNumber");
+                .HasDatabaseName("IX_Accounts_UserId_AccountNumber_BankCode_Provider");
 
             // Truy vấn phổ biến: lấy danh sách account theo user (covering index)
-            builder.HasIndex(a => a.UserId)
-                .HasDatabaseName("IX_Accounts_UserId")
+            builder.HasIndex(a => new { a.UserId, a.IsPinned, a.CreatedAt })
+                .HasDatabaseName("IX_Accounts_UserId_IsPinned_CreatedAt")
                 .IncludeProperties(a => new
                 {
                     a.AccountNumber,
                     a.AccountHolder,
                     a.BankCode,
                     a.BankName,
-                    a.AccountType,
+                    a.Provider,
                     a.Balance,
                     a.IsActive
                 });
@@ -85,8 +95,10 @@ namespace MyWallet.Infrastructure.Persistence.DbConfigurations
                     a.AccountHolder,
                     a.BankCode,
                     a.BankName,
-                    a.AccountType,
-                    a.Balance
+                    a.Provider,
+                    a.Balance,
+                    a.IsPinned,
+                    a.CreatedAt
                 });
 
             builder.HasIndex(a => a.BankCode)

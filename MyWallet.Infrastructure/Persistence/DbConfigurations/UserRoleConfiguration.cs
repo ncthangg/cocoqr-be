@@ -25,12 +25,13 @@ namespace MyWallet.Infrastructure.Persistence.DbConfigurations
                 .HasForeignKey(ur => ur.RoleId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // BaseEntity
-            builder.Property(ur => ur.CreatedAt)
+            // BaseEntity properties
+            builder.Property(a => a.CreatedAt)
                 .IsRequired()
                 .HasDefaultValueSql("GETUTCDATE()");
 
-            builder.Property(ur => ur.Status)
+            builder.Property(a => a.Status)
+                .IsRequired()
                 .HasDefaultValue(true);
 
             // Index
