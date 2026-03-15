@@ -1,0 +1,10 @@
+﻿[
+  {
+    "Name": "admin",
+    "Status": true
+  },
+  {
+    "Name": "user",
+    "Status": true
+  }
+]

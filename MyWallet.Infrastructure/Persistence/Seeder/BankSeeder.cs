@@ -52,7 +52,7 @@ namespace MyWallet.Infrastructure.Persistence.Seeder
                     var bank = new BankInfo
                     {
                         BankCode = item.BankCode,
-                        NapasCode = item.NapasCode,
+                        NapasBin = item.NapasBin,
                         SwiftCode = item.SwiftCode,
                         BankName = item.BankName,
                         ShortName = item.ShortName,
@@ -67,7 +67,7 @@ namespace MyWallet.Infrastructure.Persistence.Seeder
                 else
                 {
                     // UPDATE
-                    existing.NapasCode = item.NapasCode;
+                    existing.NapasBin = item.NapasBin;
                     existing.SwiftCode = item.SwiftCode;
                     existing.BankName = item.BankName;
                     existing.ShortName = item.ShortName;

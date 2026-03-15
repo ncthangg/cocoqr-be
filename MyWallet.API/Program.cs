@@ -65,8 +65,11 @@ if (app.Environment.IsDevelopment())
 
 using (var scope = app.Services.CreateScope())
 {
-    var seeder = scope.ServiceProvider.GetRequiredService<BankSeeder>();
-    await seeder.SeedAsync();
+    var bankSeeder = scope.ServiceProvider.GetRequiredService<BankSeeder>();
+    await bankSeeder.SeedAsync();
+
+    var roleSeeder = scope.ServiceProvider.GetRequiredService<RoleSeeder>();
+    await roleSeeder.SeedAsync();
 }
 
 if (app.Environment.IsStaging())
