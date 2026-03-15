@@ -5,7 +5,7 @@ namespace MyWallet.Application.DTOs.Banks.Requests
     public class PostBankInfoReq
     {
         public string BankCode { get; set; } = string.Empty;
-        public string? NapasCode { get; set; }
+        public string? NapasBin { get; set; }
         public string? SwiftCode { get; set; }
         public string BankName { get; set; } = string.Empty;
         public string ShortName { get; set; } = string.Empty;
@@ -15,7 +15,7 @@ namespace MyWallet.Application.DTOs.Banks.Requests
     public class PutBankInfoReq
     {
         public string BankCode { get; set; } = string.Empty;
-        public string? NapasCode { get; set; }
+        public string? NapasBin { get; set; }
         public string? SwiftCode { get; set; }
         public string BankName { get; set; } = string.Empty;
         public string ShortName { get; set; } = string.Empty;
@@ -26,7 +26,7 @@ namespace MyWallet.Application.DTOs.Banks.Requests
     public class PostBankInfoJsonReq
     {
         public string BankCode { get; set; } = string.Empty;
-        public string? NapasCode { get; set; }
+        public string? NapasBin { get; set; }
         public string? SwiftCode { get; set; }
         public string BankName { get; set; } = string.Empty;
         public string ShortName { get; set; } = string.Empty;

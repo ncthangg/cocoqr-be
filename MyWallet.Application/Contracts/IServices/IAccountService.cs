@@ -10,7 +10,7 @@ namespace MyWallet.Application.Contracts.IServices
         Task<PagingVM<GetAccountRes>> GetAllAsync(int pageNumber, int pageSize,
                                                            string? sortField, string? sortDirection,
                                                            Guid? userId,
-                                                           AccountProvider? provider,
+                                                           Guid? providerId,
                                                            string? searchValue,
                                                            bool? isActive,
                                                            bool? isDeleted,

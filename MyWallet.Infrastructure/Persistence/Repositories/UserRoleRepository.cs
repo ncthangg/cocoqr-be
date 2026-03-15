@@ -61,20 +61,22 @@ namespace MyWallet.Infrastructure.Persistence.Repositories
         public async Task<bool> ExistsAsync(Guid userId, Guid roleId)
         {
             const string sql = @"
-            SELECT COUNT(1)
-            FROM UserRoles
-            WHERE UserId = @UserId AND RoleId = @RoleId
+            SELECT CASE
+            WHEN EXISTS (
+                SELECT 1
+                FROM UserRoles
+                WHERE UserId = @UserId AND RoleId = @RoleId
+            )
+            THEN 1 ELSE 0 END
             ";
 
-            var count = await QueryFirstOrDefaultAsync<int>(sql,
+            return await QuerySingleAsync<bool>(sql,
                 new
                 {
                     userId,
                     roleId
                 }
             );
-
-            return count > 0;
         }
     }
 }

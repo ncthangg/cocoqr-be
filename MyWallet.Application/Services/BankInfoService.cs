@@ -37,7 +37,8 @@ namespace MyWallet.Application.Services
                                                                       sortField,
                                                                       sortDirection,
                                                                       isActive,
-                                                                      searchValue);
+                                                                      searchValue,
+                                                                      _userContext.IsAdmin());
 
             var list = items.Select(p => BankInfoMapper.ToGetBankInfoRes(p)).ToList();
 
@@ -82,7 +83,7 @@ namespace MyWallet.Application.Services
             var bank = new BankInfo()
             {
                 BankCode = req.BankCode,
-                NapasCode = req.NapasCode,
+                NapasBin = req.NapasBin,
                 SwiftCode = req.SwiftCode,
                 BankName = req.BankName,
                 ShortName = req.ShortName,
@@ -129,7 +130,7 @@ namespace MyWallet.Application.Services
             }
 
             oldItem.BankCode = req.BankCode;
-            oldItem.NapasCode = req.NapasCode;
+            oldItem.NapasBin = req.NapasBin;
             oldItem.SwiftCode = req.SwiftCode;
             oldItem.BankName = req.BankName;
             oldItem.ShortName = req.ShortName;

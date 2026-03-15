@@ -15,25 +15,28 @@ namespace MyWallet.Application.Common.Mapper
                 AccountHolder = u.AccountHolder ?? "",
 
                 BankCode = u.BankCode ?? "",
-                NapasCode = u.NapasCode ??"",
                 BankName = u.BankName ?? "",
-                ShortName = u.ShortName ?? "",
-                LogoUrl = u.LogoUrl ?? "",
+                BankShortName = u.BankShortName ?? "",
+                BankLogoUrl = u.BankLogoUrl ?? "",
 
-                Provider = u.Provider,
+                BankIsActive = u.BankIsActive,
+                BankStatus = u.BankStatus,
+
+                ProviderId = u.ProviderId,
+                ProviderCode = u.ProviderCode,
+                ProviderName = u.ProviderName,
+                ProviderLogoUrl = u.ProviderLogoUrl,
+
+                ProviderIsActive = u.ProviderIsActive,
+                ProviderStatus = u.ProviderStatus,
+
                 Balance = u.Balance,
 
                 IsPinned = u.IsPinned,
                 IsActive = u.IsActive,
 
+                Status = u.Status,
                 CreatedAt = u.CreatedAt,
-                UpdatedAt = u.UpdatedAt,
-
-                CreatedBy = u.CreatedBy,
-                UpdatedBy = u.UpdatedBy,
-
-                CreatedByName = u.CreatedByName,
-                UpdatedByName = u.UpdatedByName,
             };
         }
         public static GetAccountRes ToGetAccountByAdminRes(AccountQueryDto u)
@@ -46,17 +49,24 @@ namespace MyWallet.Application.Common.Mapper
                 AccountHolder = u.AccountHolder ?? "",
 
                 BankCode = u.BankCode ?? "",
-                NapasCode = u.NapasCode ?? "",
                 BankName = u.BankName ?? "",
-                ShortName = u.ShortName ?? "",
-                LogoUrl = u.LogoUrl ?? "",
+                BankShortName = u.BankShortName ?? "",
+                BankLogoUrl = u.BankLogoUrl ?? "",
 
-                Provider = u.Provider,
-                Balance = u.Balance,
+                BankIsActive = u.BankIsActive,
+                BankStatus = u.BankStatus,
+
+                ProviderId = u.ProviderId,
+                ProviderCode = u.ProviderCode,
+                ProviderName = u.ProviderName,
+                ProviderLogoUrl = u.ProviderLogoUrl,
+
+                ProviderIsActive = u.ProviderIsActive,
+                ProviderStatus = u.ProviderStatus,
 
                 IsPinned = u.IsPinned,
                 IsActive = u.IsActive,
-
+                
                 Status = u.Status,
                 CreatedAt = u.CreatedAt,
                 UpdatedAt = u.UpdatedAt,

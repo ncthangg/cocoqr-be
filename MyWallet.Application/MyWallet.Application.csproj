@@ -24,6 +24,7 @@
     <Folder Include="DTOs\Auths\Queries\" />
     <Folder Include="DTOs\Auths\Requests\" />
     <Folder Include="DTOs\Banks\Queries\" />
+    <Folder Include="DTOs\QR\Queries\" />
     <Folder Include="DTOs\Roles\Queries\" />
     <Folder Include="DTOs\UserRoles\Queries\" />
     <Folder Include="DTOs\Users\Queries\" />

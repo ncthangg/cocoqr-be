@@ -27,16 +27,6 @@ namespace MyWallet.API.Controllers
                 data: result,
                 message: null));
         }
-        [HttpGet("{id}")]
-        [Authorize]
-        public async Task<IActionResult> GetById(Guid id)
-        {
-            GetRoleRes result = await _roleService.GetByIdAsync(id);
-            return Ok(new BaseResponseModel<GetRoleRes>(
-                code: SuccessCode.Success,
-                data: result,
-                message: null));
-        }
         [HttpPost]
         [Authorize]
         public async Task<IActionResult> Post(PostRoleReq request)

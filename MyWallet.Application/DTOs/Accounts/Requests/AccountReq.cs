@@ -5,14 +5,14 @@ namespace MyWallet.Application.DTOs.Accounts.Requests
 {
     public class GetAccountReq : BaseReq
     {
-        public AccountProvider? Provider { get; set; }
+        public Guid? ProviderId { get; set; }
         public string? SearchValue { get; set; }
         public bool? IsActive { get; set; }
     }
     public class GetAccountByAdminReq : BaseAdminReq
     {
         public Guid? UserId { get; set; }
-        public AccountProvider? Provider { get; set; }
+        public Guid? ProviderId { get; set; }
         public string? SearchValue { get; set; }
         public bool? IsActive { get; set; }
     }
@@ -22,7 +22,7 @@ namespace MyWallet.Application.DTOs.Accounts.Requests
         public string? AccountHolder { get; set; }
         public string? BankCode { get; set; }
         public string? BankName { get; set; }
-        public AccountProvider Provider { get; set; }
+        public Guid ProviderId { get; set; }
         public bool IsActive { get; set; }
     }
     public class PutAccountReq
@@ -31,7 +31,7 @@ namespace MyWallet.Application.DTOs.Accounts.Requests
         public string? AccountHolder { get; set; }
         public string? BankCode { get; set; } 
         public string? BankName { get; set; }
-        public AccountProvider Provider { get; set; }
+        public Guid ProviderId { get; set; }
         public bool IsPinned { get; set; }
         public bool IsActive { get; set; }
     }

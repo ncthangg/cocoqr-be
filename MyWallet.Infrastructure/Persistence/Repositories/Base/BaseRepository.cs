@@ -122,7 +122,16 @@ namespace MyWallet.Infrastructure.Persistence.Repositories.Base
 
             await _unitOfWork.Connection.ExecuteAsync(sql, new { Id = id }, _unitOfWork.Transaction);
         }
-
+        protected async Task<TResult> QuerySingleAsync<TResult>(
+            string sql,
+            object? parameters = null)
+        {
+            return await _unitOfWork.Connection.QuerySingleAsync<TResult>(
+                sql,
+                parameters,
+                _unitOfWork.Transaction
+            );
+        }
         protected async Task<TResult> QueryFirstOrDefaultAsync<TResult>(
             string sql,
             object? parameters = null)

@@ -21,7 +21,7 @@ namespace MyWallet.Infrastructure.Persistence.Repositories
         public async Task<(IEnumerable<AccountQueryDto>, int totalCount)> GetAllAsync(int pageNumber, int pageSize,
                                                                                    string? sortField, string? sortDirection,
                                                                                    Guid? userId,
-                                                                                   AccountProvider? provider,
+                                                                                   Guid? providerId,
                                                                                    string? searchValue,
                                                                                    bool? isActive,
                                                                                    bool? isDeleted,
@@ -48,26 +48,20 @@ namespace MyWallet.Infrastructure.Persistence.Repositories
             var sql = $@"
         SELECT
             a.Id, a.UserId, a.AccountNumber, a.AccountHolder,
-            a.BankCode, b.BankName AS BankName, b.LogoUrl,
-            a.Provider, a.Balance, a.IsPinned, a.IsActive,
-
-            a.Status,
-
-            a.CreatedBy,
-
-            u1.FullName AS CreatedByName,
+            a.BankCode, b.BankName AS BankName, b.LogoUrl AS BankLogoUrl,
+            a.ProviderId, p.Code AS ProviderCode, p.Name AS ProviderName, p.LogoUrl AS ProviderLogoUrl,
+            a.IsPinned, a.IsActive, a.Status,
 
             a.CreatedAt
         FROM Accounts a
             LEFT JOIN BankInfos b
                  ON a.BankCode = b.BankCode
+            LEFT JOIN Providers p
+                 ON a.ProviderId = p.Id
             LEFT JOIN Users u ON a.UserId = u.Id
-            LEFT JOIN Users u1 ON a.CreatedBy = u1.Id
-            LEFT JOIN Users u2 ON a.UpdatedBy = u2.Id
-            LEFT JOIN Users u3 ON a.DeletedBy = u3.Id        
         WHERE
             (@UserId IS NULL OR a.UserId = @UserId)
-            AND (@Provider IS NULL OR a.Provider = @Provider)
+            AND (@ProviderId IS NULL OR a.ProviderId = @ProviderId)
             AND (@IsActive IS NULL OR a.IsActive = @IsActive)
             AND (
                  @IsDeleted IS NULL
@@ -92,10 +86,12 @@ namespace MyWallet.Infrastructure.Persistence.Repositories
         FROM Accounts a
             LEFT JOIN BankInfos b
                  ON a.BankCode = b.BankCode
+            LEFT JOIN Providers p
+                 ON a.ProviderId = p.Id
             LEFT JOIN Users u ON a.UserId = u.Id
         WHERE
             (@UserId IS NULL OR a.UserId = @UserId)
-            AND (@Provider IS NULL OR a.Provider = @Provider)
+            AND (@ProviderId IS NULL OR a.ProviderId = @ProviderId)
             AND (@IsActive IS NULL OR a.IsActive = @IsActive)
             AND (
                  @IsDeleted IS NULL
@@ -119,7 +115,7 @@ namespace MyWallet.Infrastructure.Persistence.Repositories
                     PageNumber = pageNumber,
                     PageSize = pageSize,
                     UserId = userId,
-                    Provider = provider,
+                    ProviderId = providerId,
                     SearchValue = searchValue,
                     IsActive = isActive,
                     IsDeleted = isDeleted,
@@ -134,29 +130,10 @@ namespace MyWallet.Infrastructure.Persistence.Repositories
             if (isAdmin)
             {
                 sql = $@"SELECT
-                     a.Id, a.UserId, a.AccountNumber, a.AccountHolder,
-                     a.BankCode, b.BankName AS BankName, b.LogoUrl,
-                     a.Provider, a.Balance, a.IsPinned, a.IsActive,
-
-                     a.Status,
-
-                     a.CreatedBy,
-
-                     u1.FullName AS CreatedByName,
-
-                     a.CreatedAt,
-                     a.UpdatedAt
-                FROM Accounts
-                LEFT JOIN BankInfos b
-                    ON a.BankCode = b.BankCode
-                WHERE a.Id = @Id";
-            }
-            else
-            {
-                sql = $@"SELECT
-                     a.Id, a.UserId, a.AccountNumber, a.AccountHolder,
-                     a.BankCode, b.BankName AS BankName, b.LogoUrl,
-                     a.Provider, a.Balance, a.IsPinned, a.IsActive,
+            a.Id, a.UserId, a.AccountNumber, a.AccountHolder,
+            a.BankCode, b.BankName AS BankName, b.ShortName AS BankShortName, b.LogoUrl AS BankLogoUrl, b.IsActive AS BankIsActive, b.Status AS BankStatus,
+            a.ProviderId, p.Code AS ProviderCode, p.Name AS ProviderName, p.LogoUrl AS ProviderLogoUrl, p.IsActive AS ProviderIsActive, p.Status AS ProviderStatus, 
+            a.Balance, a.IsPinned, a.IsActive,
 
                      a.Status,
 
@@ -174,6 +151,36 @@ namespace MyWallet.Infrastructure.Persistence.Repositories
                 FROM Accounts a
                 LEFT JOIN BankInfos b
                     ON a.BankCode = b.BankCode
+                LEFT JOIN Providers p
+                     ON a.ProviderId = p.Id
+                WHERE a.Id = @Id";
+            }
+            else
+            {
+                sql = $@"SELECT
+                     a.Id, a.UserId, a.AccountNumber, a.AccountHolder,
+                     a.BankCode, b.BankName AS BankName, b.ShortName AS BankShortName, b.LogoUrl AS BankLogoUrl, b.IsActive AS BankIsActive, b.Status AS BankStatus,
+                     a.ProviderId, p.Code AS ProviderCode, p.Name AS ProviderName, p.LogoUrl AS ProviderLogoUrl, p.IsActive AS ProviderIsActive, p.Status AS ProviderStatus, 
+                     a.Balance, a.IsPinned, a.IsActive,
+
+                     a.Status,
+
+                     a.CreatedBy,
+                     a.UpdatedBy,
+                     a.DeletedBy,
+
+                     u1.FullName AS CreatedByName,
+                     u2.FullName AS UpdatedByName,
+                     u3.FullName AS DeletedByName,
+
+                     a.CreatedAt,
+                     a.UpdatedAt,
+                     a.DeletedAt
+                FROM Accounts a
+                LEFT JOIN BankInfos b
+                    ON a.BankCode = b.BankCode
+                LEFT JOIN Providers p
+                     ON a.ProviderId = p.Id
                 WHERE a.Id = @Id
                      AND a.UserId = @UserId
                      AND a.DeletedAt IS NULL
@@ -181,14 +188,14 @@ namespace MyWallet.Infrastructure.Persistence.Repositories
                 ";
             }
 
-            return await QueryFirstOrDefaultAsync<AccountQueryDto>(sql,
+            return await QuerySingleAsync<AccountQueryDto>(sql,
                 new
                 {
                     Id = id,
                     UserId = userId
                 });
         }
-        public async Task<bool> AccountNumberExistsAsync(Guid userId, string accountNumber, string? bankCode, AccountProvider provider, Guid? excludeAccountId)
+        public async Task<bool> AccountNumberExistsAsync(Guid userId, string accountNumber, Guid providerId, string? bankCode, Guid? excludeAccountId)
         {
             if (userId == Guid.Empty)
                 throw new ArgumentException("Invalid user ID", nameof(userId));
@@ -196,29 +203,31 @@ namespace MyWallet.Infrastructure.Persistence.Repositories
                 throw new ArgumentException("Account number cannot be empty", nameof(accountNumber));
 
             const string sql = @"
-                SELECT TOP 1 1
-                FROM Accounts
-                WHERE UserId = @UserId
-                     AND AccountNumber = @AccountNumber
-                     AND (@BankCode IS NULL OR BankCode = @BankCode)
-                     AND Provider = @Provider
-                     AND (@ExcludeId IS NULL OR Id <> @ExcludeId)
-                     AND DeletedAt IS NULL
-                     AND Status = 1
-                ";
+                SELECT CASE
+                WHEN EXISTS (
+                    SELECT 1
+                    FROM Accounts
+                    WHERE UserId = @UserId
+                        AND AccountNumber = @AccountNumber
+                        AND ProviderId = @ProviderId
+                        AND (@BankCode IS NULL OR BankCode = @BankCode)
+                        AND (@ExcludeId IS NULL OR Id <> @ExcludeId)
+                        AND DeletedAt IS NULL
+                        AND Status = 1
+                )
+                THEN 1 ELSE 0 END
+            ";
 
-            var count = await QueryFirstOrDefaultAsync<int>(sql,
+            return await QuerySingleAsync<bool>(sql,
                 new
                 {
                     UserId = userId,
                     AccountNumber = accountNumber,
+                    ProviderId = providerId,
                     BankCode = bankCode,
-                    Provider = provider,
                     ExcludeId = excludeAccountId
                 }
             );
-
-            return count > 0;
         }
     }
 }

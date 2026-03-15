@@ -1,37 +1,39 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MyWallet.Application.Contracts.IServices;
-using MyWallet.Application.DTOs.Banks.Requests;
-using MyWallet.Application.DTOs.Banks.Responses;
 using MyWallet.Application.DTOs.Base.BaseRes;
+using MyWallet.Application.DTOs.Providers.Requests;
+using MyWallet.Application.DTOs.Providers.Responses;
+using MyWallet.Application.DTOs.Roles.Requests;
+using MyWallet.Application.DTOs.Roles.Responses;
 using MyWallet.Domain.Constants;
 
 namespace MyWallet.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class BankInfosController : ControllerBase
+    public class ProvidersController : ControllerBase
     {
-        private readonly IBankInfoService _bankInfoService;
-        public BankInfosController(IBankInfoService bankInfoService)
+        private readonly IProviderService _providerService;
+        public ProvidersController(IProviderService providerService)
         {
-            _bankInfoService = bankInfoService;
+            _providerService = providerService;
         }
         [HttpGet]
-        public async Task<IActionResult> Get(int pageNumber = 1, int pageSize = 10, string? sortField = null, string? sortDirection = null, bool? isActive = null, string? searchValue = null)
+        public async Task<IActionResult> Get()
         {
-            PagingVM<GetBankInfoRes> result = await _bankInfoService.GetsAsync(pageNumber, pageSize, sortField, sortDirection, isActive, searchValue);
+            IEnumerable<GetProviderRes> result = await _providerService.GetAllAsync();
 
-            return Ok(new BaseResponseModel<PagingVM<GetBankInfoRes>>(
+            return Ok(new BaseResponseModel<IEnumerable<GetProviderRes>>(
                 code: SuccessCode.Success,
                 data: result,
                 message: null));
         }
         [HttpPost]
         [Authorize]
-        public async Task<IActionResult> Post([FromForm] PostBankInfoReq request)
+        public async Task<IActionResult> Post([FromForm] PostProviderReq request)
         {
-            await _bankInfoService.PostAsync(request);
+            await _providerService.PostAsync(request);
             return Ok(new BaseResponseModel<string>(
                 code: SuccessCode.Success,
                 data: null,
@@ -39,9 +41,9 @@ namespace MyWallet.API.Controllers
         }
         [HttpPut("{id}")]
         [Authorize]
-        public async Task<IActionResult> Put(Guid id, [FromForm] PutBankInfoReq request)
+        public async Task<IActionResult> Put(Guid id, [FromForm] PutProviderReq request)
         {
-            await _bankInfoService.PutAsync(id, request);
+            await _providerService.PutAsync(id, request);
             return Ok(new BaseResponseModel<string>(
                code: SuccessCode.Success,
                data: null,
@@ -51,7 +53,7 @@ namespace MyWallet.API.Controllers
         [Authorize]
         public async Task<IActionResult> Delete(Guid id)
         {
-            await _bankInfoService.DeleteAsync(id);
+            await _providerService.DeleteAsync(id);
             return Ok(new BaseResponseModel<string>(
               code: SuccessCode.Success,
               data: null,

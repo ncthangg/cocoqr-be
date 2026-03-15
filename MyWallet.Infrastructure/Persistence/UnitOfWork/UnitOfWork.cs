@@ -18,8 +18,9 @@ namespace MyWallet.Infrastructure.Persistence.UnitOfWork
         private IRoleRepository? _roleRepository;
         private IUserTokenRepository? _userTokenRepository;
         private IUserRoleRepository? _userRoleRepository;
-        private IQRHistoryRepository? _qrHistoryRepository;
+        private IQrRepository? _qrHistoryRepository;
         private IBankInfoRepository? _bankInfoRepository;
+        private IProviderRepository? _providerRepository;
 
         public IDbConnection Connection
         {
@@ -46,10 +47,12 @@ namespace MyWallet.Infrastructure.Persistence.UnitOfWork
             => _userTokenRepository ??= new UserTokenRepository(this);
         public IUserRoleRepository UserRoles
             => _userRoleRepository ??= new UserRoleRepository(this);
-        public IQRHistoryRepository QRHistories
-            => _qrHistoryRepository ??= new QRHistoryRepository(this);
+        public IQrRepository QRHistories
+            => _qrHistoryRepository ??= new QrRepository(this);
         public IBankInfoRepository BankInfos
             => _bankInfoRepository ??= new BankInfoRepository(this);
+        public IProviderRepository Providers
+            => _providerRepository ??= new ProviderRepository(this);
 
         public async Task BeginTransactionAsync()
         {

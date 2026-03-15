@@ -11,7 +11,7 @@ namespace MyWallet.Application.Common.Mapper
             {
                 Id = u.Id,
                 BankCode = u.BankCode,
-                NapasCode = u.NapasCode,
+                NapasCode = u.NapasBin,
                 SwiftCode = u.SwiftCode,
                 BankName = u.BankName,
 

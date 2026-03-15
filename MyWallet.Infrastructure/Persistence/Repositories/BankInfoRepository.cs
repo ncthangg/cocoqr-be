@@ -1,5 +1,7 @@
 ﻿using MyWallet.Application.Contracts.IRepositories;
 using MyWallet.Application.Contracts.IUnitOfWork;
+using MyWallet.Application.DTOs.Accounts.Queries;
+using MyWallet.Application.DTOs.Banks.Responses;
 using MyWallet.Domain.Entities;
 using MyWallet.Infrastructure.Persistence.Repositories.Base;
 namespace MyWallet.Infrastructure.Persistence.Repositories
@@ -10,7 +12,7 @@ namespace MyWallet.Infrastructure.Persistence.Repositories
             : base(_unitOfWork, "BankInfos")
         {
         }
-        public async Task<(IEnumerable<BankInfo>, int totalCount)> GetBankInfosAsync(int pageNumber, int pageSize, string? sortField, string? sortDirection, bool? isActive, string? searchValue)
+        public async Task<(IEnumerable<BankInfo>, int totalCount)> GetBankInfosAsync(int pageNumber, int pageSize, string? sortField, string? sortDirection, bool? isActive, string? searchValue, bool isAdmin)
         {
             var orderBy = "BankName ASC";
 
@@ -28,12 +30,17 @@ namespace MyWallet.Infrastructure.Persistence.Repositories
                 };
             }
 
-            var sql = $@"
+            string sql;
+            if (isAdmin)
+            {
+                sql = $@"
         SELECT 
-            Id, BankCode, NapasCode, SwiftCode, 
+            Id, BankCode, NapasBin, SwiftCode, 
             BankName, ShortName, LogoUrl, IsActive,
-            Status, CreatedAt, CreatedBy, UpdatedAt, UpdatedBy, DeletedAt, DeletedBy
-        FROM BankInfos
+            Status, 
+            CreatedAt, CreatedBy, 
+            UpdatedAt, UpdatedBy, 
+            DeletedAt, DeletedBy,
         WHERE 
             (@IsActive IS NULL OR IsActive = @IsActive)
             AND (
@@ -57,6 +64,40 @@ namespace MyWallet.Infrastructure.Persistence.Repositories
                 OR BankCode LIKE '%' + @SearchValue + '%'
             );
         ";
+            }
+            else
+            {
+                sql = $@"
+        SELECT 
+            Id, BankCode, BankName, ShortName, LogoUrl, IsActive
+        FROM BankInfos
+        WHERE 
+            DeletedAt IS NULL
+            AND Status = 1
+            AND (
+                @SearchValue IS NULL 
+                OR BankName LIKE '%' + @SearchValue + '%'
+                OR ShortName LIKE '%' + @SearchValue + '%'
+                OR BankCode LIKE '%' + @SearchValue + '%'
+            )
+        ORDER BY {orderBy}
+        OFFSET (@PageNumber - 1) * @PageSize ROWS
+        FETCH NEXT @PageSize ROWS ONLY;
+
+        SELECT COUNT(1)
+        FROM BankInfos
+        WHERE 
+            DeletedAt IS NULL
+            AND Status = 1
+            AND (
+                @SearchValue IS NULL 
+                OR BankName LIKE '%' + @SearchValue + '%'
+                OR ShortName LIKE '%' + @SearchValue + '%'
+                OR BankCode LIKE '%' + @SearchValue + '%'
+            );
+        ";
+            }
+
 
             return await QueryPagedAsync<BankInfo>(sql, new
             {
@@ -64,6 +105,24 @@ namespace MyWallet.Infrastructure.Persistence.Repositories
                 PageSize = pageSize,
                 IsActive = isActive,
                 SearchValue = searchValue
+            });
+        }
+
+        public async Task<BankInfo> GetByBankCodeAsync(string bankCode)
+        {
+            var sql = $@"SELECT
+                     Id, BankCode, NapasBin, SwiftCode, BankName, ShortName, LogoUrl, IsActive
+
+                FROM BankInfos 
+                WHERE BankCode = @BankCode
+                     AND DeletedAt IS NULL
+                     AND Status = 1
+                ";
+
+            return await QueryFirstOrDefaultAsync<BankInfo>(sql,
+            new
+            {
+                BankCode = bankCode,
             });
         }
     }

@@ -13,13 +13,16 @@ namespace MyWallet.Application.DependencyInjection
         private static void AddService(this IServiceCollection services)
         {
             services.AddScoped<IAuthService, AuthService>();
+
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IRoleService, RoleService>();
-            services.AddScoped<IUserRoleService, UserRoleService>();
-
             services.AddScoped<IAccountService, AccountService>();
-            services.AddScoped<IQRHistoryService, QRHistoryService>();
+
+            services.AddScoped<IQrService, QrService>();
             services.AddScoped<IBankInfoService, BankInfoService>();
+            services.AddScoped<IProviderService, ProviderService>();
+
+            services.AddScoped<IUserRoleService, UserRoleService>();
         }
     }
 }

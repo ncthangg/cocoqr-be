@@ -177,40 +177,19 @@ namespace MyWallet.Infrastructure.Persistence.Repositories
             if (string.IsNullOrWhiteSpace(email))
                 throw new ArgumentException("Email cannot be empty", nameof(email));
 
-            const string sql = "SELECT COUNT(1) FROM Users WHERE Email = @Email";
+            const string sql = @"SELECT CASE
+                WHEN EXISTS (
+                     SELECT 1
+                     FROM Users 
+                     WHERE Email = @Email
+                )
+                THEN 1 ELSE 0 END
+            ";
 
-            var count = await QueryFirstOrDefaultAsync<int>(sql,
+            return await QuerySingleAsync<bool>(sql,
                 new
                 {
                     Email = email
-                }
-            );
-            return count > 0;
-        }
-
-        public async Task<User> GetWithAccountsAsync(Guid id)
-        {
-            if (id == Guid.Empty)
-                throw new ArgumentException("Invalid user ID", nameof(id));
-
-            const string sql = "SELECT * FROM Users WHERE Id = @UserId";
-
-            return await QueryFirstOrDefaultAsync<User>(sql,
-                new
-                {
-                    UserId = id
-                }
-            );
-        }
-
-        public async Task<List<User>> GetUsersByIdsAsync(IEnumerable<Guid> userIds)
-        {
-            const string sql = "SELECT Id, FullName FROM Users WHERE Id IN @Ids";
-
-            return await QueryFirstOrDefaultAsync<List<User>>(sql,
-                new
-                {
-                    Ids = userIds
                 }
             );
         }

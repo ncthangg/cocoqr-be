@@ -10,7 +10,7 @@ using MyWallet.Application.DTOs.Auths.Responses;
 using MyWallet.Application.DTOs.Users.Responses;
 using MyWallet.Domain.Constants;
 using MyWallet.Domain.Constants.Enum;
-using MyWallet.Domain.Entities; 
+using MyWallet.Domain.Entities;
 using System.Security.Claims;
 using ApplicationException = MyWallet.Application.Exceptions.ApplicationException;
 
@@ -46,7 +46,7 @@ namespace MyWallet.Application.Services
             var userId = _userContext.UserId
                 ?? throw new ApplicationException(ErrorCode.Unauthorized, ErrorMessages.UserIDNotFoundInTheContext);
 
-            User? user = await _unitOfWork.Users.GetWithAccountsAsync(userId)
+            User? user = await _unitOfWork.Users.GetByIdAsync(userId)
                       ?? throw new ApplicationException(ErrorCode.Unauthorized, "Tên người dùng này chưa có tài khoản! Vui lòng đăng ký!");
 
             return new GetUserRes
@@ -56,7 +56,7 @@ namespace MyWallet.Application.Services
                 FullName = user.FullName,
                 GoogleId = user.GoogleId,
                 PictureUrl = user.PictureUrl,
-                SecurityStamp = user.SecurityStamp ?? ""                                                    
+                SecurityStamp = user.SecurityStamp ?? ""
             };
         }
         public async Task<SignInGoogleRes> SignInGoogle(HttpContext context)
@@ -75,7 +75,7 @@ namespace MyWallet.Application.Services
 
             if (string.IsNullOrWhiteSpace(email))
                 throw new ApplicationException(ErrorCode.BadRequest, "Không tìm thấy email Google!");
-             
+
             User? user = await _unitOfWork.Users.GetByEmailAsync(email);
 
             if (user == null)
@@ -97,7 +97,7 @@ namespace MyWallet.Application.Services
                     user.Initialize(userId, userId);
                     await _unitOfWork.Users.AddAsync(user);
 
-                    var rolesExisted = await _unitOfWork.Roles.GetByNameAsync(RoleCategory.User.ToString())
+                    var rolesExisted = await _unitOfWork.Roles.GetByNameAsync(RoleCategory.USER.ToString())
                         ?? throw new ApplicationException(ErrorCode.NotFound, "Default role not found");
                     await _unitOfWork.UserRoles.AddUserToRoleAsync(_idGenerator.NewId(), user.Id, rolesExisted.Id);
 
@@ -110,8 +110,10 @@ namespace MyWallet.Application.Services
                 }
             }
 
-            var roles = await _unitOfWork.UserRoles.GetRolesByUserIdAsync(user.Id)
-                ?? throw new ApplicationException(ErrorCode.NotFound, "Role of user not found");
+            var roles = await _unitOfWork.UserRoles.GetRolesByUserIdAsync(user.Id);
+
+            if (!roles.Any())
+                throw new ApplicationException(ErrorCode.BadRequest, "Đăng nhập thất bại, Role of user not found");
 
             // 4. Generate JWT for this user
             TokenRes jwt = await _tokenService.GenerateTokens(user.Id, roles, null);

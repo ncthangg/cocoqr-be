@@ -30,7 +30,7 @@ namespace MyWallet.Application.Services
         public async Task<PagingVM<GetAccountRes>> GetAllAsync(int pageNumber, int pageSize,
                                                                string? sortField, string? sortDirection,
                                                                Guid? userId,
-                                                               AccountProvider? provider,
+                                                               Guid? providerId,
                                                                string? searchValue,
                                                                bool? isActive,
                                                                bool? isDeleted,
@@ -53,13 +53,13 @@ namespace MyWallet.Application.Services
             }
 
             var (items, totalCount) = await _unitOfWork.Accounts.GetAllAsync(pageNumber, pageSize,
-                                                                                  sortField, sortDirection,
-                                                                                  userId,
-                                                                                  provider,
-                                                                                  searchValue,
-                                                                                  isActive,
-                                                                                  isDeleted,
-                                                                                  status);
+                                                                             sortField, sortDirection,
+                                                                             userId,
+                                                                             providerId,
+                                                                             searchValue,
+                                                                             isActive,
+                                                                             isDeleted,
+                                                                             status);
             IEnumerable<GetAccountRes> list = [];
 
             if (_userContext.IsAdmin())
@@ -119,8 +119,8 @@ namespace MyWallet.Application.Services
             bool exists = await _unitOfWork.Accounts.AccountNumberExistsAsync(
                 userId,
                 request.AccountNumber,
-                request.BankCode,
-                request.Provider
+                request.ProviderId,
+                request.BankCode
             );
             if (exists)
                 throw new ApplicationException(ErrorCode.DuplicateEntry, "Account number already exists");
@@ -132,7 +132,7 @@ namespace MyWallet.Application.Services
                 AccountHolder = request.AccountHolder?.Trim(),
                 BankCode = request.BankCode?.Trim(),
                 Balance = 0,
-                Provider = request.Provider,
+                ProviderId = request.ProviderId,
                 IsActive = request.IsActive,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
@@ -164,8 +164,8 @@ namespace MyWallet.Application.Services
             bool exists = await _unitOfWork.Accounts.AccountNumberExistsAsync(
                 userId,
                 request.AccountNumber,
+                request.ProviderId,
                 request.BankCode,
-                request.Provider,
                 id
             );
             if (exists)
@@ -174,7 +174,7 @@ namespace MyWallet.Application.Services
             account.AccountNumber = request.AccountNumber.Trim();
             account.AccountHolder = request.AccountHolder?.Trim();
             account.BankCode = request.BankCode?.Trim();
-            account.Provider = request.Provider;
+            account.ProviderId = request.ProviderId;
             account.IsPinned = request.IsPinned;
             account.IsActive = request.IsActive;
             account.SetUpdated(userId);
