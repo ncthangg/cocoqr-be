@@ -5,24 +5,25 @@
 namespace MyWallet.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class UpdateUser : Migration
+    public partial class UpdateProvider1 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.RenameColumn(
-                name: "AvatarUrl",
-                table: "Users",
-                newName: "PictureUrl");
+            migrationBuilder.AddColumn<string>(
+                name: "LogoUrl",
+                table: "Providers",
+                type: "nvarchar(500)",
+                maxLength: 500,
+                nullable: true);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.RenameColumn(
-                name: "PictureUrl",
-                table: "Users",
-                newName: "AvatarUrl");
+            migrationBuilder.DropColumn(
+                name: "LogoUrl",
+                table: "Providers");
         }
     }
 }

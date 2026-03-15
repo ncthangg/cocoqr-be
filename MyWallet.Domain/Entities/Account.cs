@@ -9,7 +9,7 @@ namespace MyWallet.Domain.Entities
         public string AccountNumber { get; set; } = string.Empty;
         public string? AccountHolder { get; set; }
         public string? BankCode { get; set; }
-        public AccountProvider Provider { get; set; }
+        public Guid ProviderId { get; set; }
         public decimal? Balance { get; set; }
         public bool IsPinned { get; set; }
 
@@ -19,8 +19,7 @@ namespace MyWallet.Domain.Entities
 
         public bool IsValidAccount()
         {
-            return !string.IsNullOrWhiteSpace(AccountNumber)
-                && Enum.IsDefined(typeof(AccountProvider), Provider);
+            return !string.IsNullOrWhiteSpace(AccountNumber);
         }
         public void Activate()
         {

@@ -36,7 +36,7 @@ namespace MyWallet.Infrastructure.Persistence.DbConfigurations
                 .HasMaxLength(255);
 
             builder.Property(qr => qr.Amount)
-                .IsRequired()
+                .IsRequired(false)
                 .HasColumnType("decimal(18,2)");
 
             builder.Property(qr => qr.Currency)
@@ -52,16 +52,15 @@ namespace MyWallet.Infrastructure.Persistence.DbConfigurations
                 .HasMaxLength(2000);
 
             builder.Property(qr => qr.QRImageUrl)
-                .HasMaxLength(500);
+                .HasColumnType("nvarchar(MAX)");
 
             builder.Property(qr => qr.TransactionRef)
                 .IsRequired()
                 .HasMaxLength(50);
 
-            builder.Property(qr => qr.Provider)
-                .IsRequired()
-                .HasConversion<string>()
-                .HasMaxLength(20);
+            builder.Property(qr => qr.ProviderId)
+                .IsRequired();
+
             builder.Property(qr => qr.ReceiverType)
                 .IsRequired()
                 .HasConversion<string>()

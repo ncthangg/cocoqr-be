@@ -15,14 +15,14 @@ namespace MyWallet.Domain.Entities
         public string? BankCodeSnapshot { get; set; }
         public string? BankNameSnapshot { get; set; }
         // QR info
-        public decimal Amount { get; set; }
+        public decimal? Amount { get; set; }
         public Currency Currency { get; set; } = Currency.VND;
         public string? Description { get; set; }
         public string? QRData { get; set; }
         public string? QRImageUrl { get; set; }
-        public string? TransactionRef { get; set; }
+        public string TransactionRef { get; set; } = null!;
 
-        public AccountProvider Provider { get; set; }
+        public Guid ProviderId { get; set; }
         public QRReceiverType ReceiverType { get; set; }
 
         public bool IsFixedAmount { get; set; }

@@ -31,10 +31,8 @@ namespace MyWallet.Infrastructure.Persistence.DbConfigurations
                 .IsRequired(false)
                 .HasMaxLength(20);
 
-            builder.Property(qr => qr.Provider)
-                .IsRequired()
-                .HasConversion<string>()
-                .HasMaxLength(20);
+            builder.Property(qr => qr.ProviderId)
+                .IsRequired();
 
             builder.Property(a => a.Balance)
                 .IsRequired()
@@ -60,7 +58,7 @@ namespace MyWallet.Infrastructure.Persistence.DbConfigurations
 
             // Indexes
             // Uniqueness: 1 user không được trùng AccountNumber
-            builder.HasIndex(a => new { a.UserId, a.AccountNumber, a.BankCode, a.Provider })
+            builder.HasIndex(a => new { a.UserId, a.AccountNumber, a.BankCode, a.ProviderId })
                 .IsUnique()
                 .HasDatabaseName("IX_Accounts_UserId_AccountNumber_BankCode_Provider_Unique");
 
@@ -72,7 +70,6 @@ namespace MyWallet.Infrastructure.Persistence.DbConfigurations
                     a.AccountNumber,
                     a.AccountHolder,
                     a.BankCode,
-                    a.Provider,
                     a.Balance,
                     a.IsActive
                 });
@@ -85,7 +82,6 @@ namespace MyWallet.Infrastructure.Persistence.DbConfigurations
                     a.AccountNumber,
                     a.AccountHolder,
                     a.BankCode,
-                    a.Provider,
                     a.Balance,
                     a.IsActive
                 });

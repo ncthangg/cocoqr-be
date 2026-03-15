@@ -71,10 +71,8 @@ namespace MyWallet.Infrastructure.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
-                    b.Property<string>("Provider")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                    b.Property<Guid>("ProviderId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<bool>("Status")
                         .ValueGeneratedOnAdd()
@@ -100,9 +98,9 @@ namespace MyWallet.Infrastructure.Migrations
                     b.HasIndex("Status", "DeletedAt", "CreatedAt")
                         .HasDatabaseName("IX_Accounts_Status_DeletedAt_CreatedAt");
 
-                    SqlServerIndexBuilderExtensions.IncludeProperties(b.HasIndex("Status", "DeletedAt", "CreatedAt"), new[] { "AccountNumber", "AccountHolder", "BankCode", "Provider", "Balance", "IsActive" });
+                    SqlServerIndexBuilderExtensions.IncludeProperties(b.HasIndex("Status", "DeletedAt", "CreatedAt"), new[] { "AccountNumber", "AccountHolder", "BankCode", "Balance", "IsActive" });
 
-                    b.HasIndex("UserId", "AccountNumber", "BankCode", "Provider")
+                    b.HasIndex("UserId", "AccountNumber", "BankCode", "ProviderId")
                         .IsUnique()
                         .HasDatabaseName("IX_Accounts_UserId_AccountNumber_BankCode_Provider_Unique")
                         .HasFilter("[BankCode] IS NOT NULL");
@@ -110,7 +108,7 @@ namespace MyWallet.Infrastructure.Migrations
                     b.HasIndex("UserId", "Status", "DeletedAt", "IsPinned", "CreatedAt")
                         .HasDatabaseName("IX_Accounts_UserId_Filter_Sort");
 
-                    SqlServerIndexBuilderExtensions.IncludeProperties(b.HasIndex("UserId", "Status", "DeletedAt", "IsPinned", "CreatedAt"), new[] { "AccountNumber", "AccountHolder", "BankCode", "Provider", "Balance", "IsActive" });
+                    SqlServerIndexBuilderExtensions.IncludeProperties(b.HasIndex("UserId", "Status", "DeletedAt", "IsPinned", "CreatedAt"), new[] { "AccountNumber", "AccountHolder", "BankCode", "Balance", "IsActive" });
 
                     b.ToTable("Accounts", (string)null);
                 });
@@ -154,7 +152,7 @@ namespace MyWallet.Infrastructure.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<string>("NapasCode")
+                    b.Property<string>("NapasBin")
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
@@ -191,8 +189,10 @@ namespace MyWallet.Infrastructure.Migrations
 
                     SqlServerIndexBuilderExtensions.IncludeProperties(b.HasIndex("IsActive"), new[] { "BankCode", "ShortName", "BankName", "LogoUrl" });
 
-                    b.HasIndex("NapasCode")
-                        .HasDatabaseName("IX_BankInfos_NapasCode");
+                    b.HasIndex("NapasBin")
+                        .IsUnique()
+                        .HasDatabaseName("IX_BankInfos_NapasBin")
+                        .HasFilter("[NapasBin] IS NOT NULL");
 
                     b.HasIndex("IsActive", "BankName")
                         .HasDatabaseName("IX_BankInfos_IsActive_BankName");
@@ -200,6 +200,65 @@ namespace MyWallet.Infrastructure.Migrations
                     SqlServerIndexBuilderExtensions.IncludeProperties(b.HasIndex("IsActive", "BankName"), new[] { "BankCode", "ShortName", "LogoUrl" });
 
                     b.ToTable("BankInfos", (string)null);
+                });
+
+            modelBuilder.Entity("MyWallet.Domain.Entities.Provider", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("LogoUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("Status")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Providers_Code");
+
+                    b.ToTable("Providers", (string)null);
                 });
 
             modelBuilder.Entity("MyWallet.Domain.Entities.QRHistory", b =>
@@ -221,7 +280,7 @@ namespace MyWallet.Infrastructure.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<decimal>("Amount")
+                    b.Property<decimal?>("Amount")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("BankCodeSnapshot")
@@ -262,18 +321,15 @@ namespace MyWallet.Infrastructure.Migrations
                     b.Property<DateTime?>("PaidAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Provider")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                    b.Property<Guid>("ProviderId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("QRData")
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
 
                     b.Property<string>("QRImageUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                        .HasColumnType("nvarchar(MAX)");
 
                     b.Property<string>("ReceiverType")
                         .IsRequired()

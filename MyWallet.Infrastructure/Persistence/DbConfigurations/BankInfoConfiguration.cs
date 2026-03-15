@@ -20,7 +20,7 @@ namespace MyWallet.Infrastructure.Persistence.DbConfigurations
                 .IsRequired()
                 .HasMaxLength(20);
 
-            builder.Property(b => b.NapasCode)
+            builder.Property(b => b.NapasBin)
                 .HasMaxLength(20);
 
             builder.Property(b => b.SwiftCode)
@@ -55,8 +55,9 @@ namespace MyWallet.Infrastructure.Persistence.DbConfigurations
                 .IsUnique()
                 .HasDatabaseName("IX_BankInfos_BankCode");
 
-            builder.HasIndex(b => b.NapasCode)
-                .HasDatabaseName("IX_BankInfos_NapasCode");
+            builder.HasIndex(b => b.NapasBin)
+                .IsUnique()
+                .HasDatabaseName("IX_BankInfos_NapasBin");
 
             // Truy vấn phổ biến: load danh sách ngân hàng active (covering index)
             builder.HasIndex(b => b.IsActive)

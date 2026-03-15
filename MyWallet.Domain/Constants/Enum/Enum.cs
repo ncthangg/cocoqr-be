@@ -2,8 +2,8 @@
 {
     public enum RoleCategory
     {
-        Admin,
-        User
+        ADMIN,
+        USER
     }
     public enum QRStatus
     {
@@ -12,7 +12,7 @@
         EXPIRED,
         CANCELLED
     }
-    public enum AccountProvider
+    public enum ProviderCode
     {
         BANK,
         MOMO,
