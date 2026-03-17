@@ -37,7 +37,7 @@ namespace MyWallet.Domain.Entities
         {
             Status = !Status;
         }
-        
+
         public void Initialize(Guid id, Guid userId)
         {
             SetId(id);

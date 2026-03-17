@@ -1,6 +1,4 @@
-﻿using MyWallet.Domain.Constants.Enum;
-
-namespace MyWallet.Domain.Entities
+﻿namespace MyWallet.Domain.Entities
 {
     public class Account : BaseEntity
     {

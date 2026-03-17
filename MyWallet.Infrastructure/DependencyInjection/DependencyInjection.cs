@@ -5,7 +5,6 @@ using Microsoft.Extensions.Options;
 using MyWallet.Application.Common.Context;
 using MyWallet.Application.Contracts.IConfigs;
 using MyWallet.Application.Contracts.IContext;
-using MyWallet.Application.Contracts.IQr;
 using MyWallet.Application.Contracts.IRepositories;
 using MyWallet.Application.Contracts.ISubServices;
 using MyWallet.Application.Contracts.IUnitOfWork;
@@ -14,8 +13,6 @@ using MyWallet.Infrastructure.Persistence.MyDbContext;
 using MyWallet.Infrastructure.Persistence.Repositories;
 using MyWallet.Infrastructure.Persistence.Seeder;
 using MyWallet.Infrastructure.Persistence.UnitOfWork;
-using MyWallet.Infrastructure.QR;
-using MyWallet.Infrastructure.QR.NewFolder;
 using MyWallet.Infrastructure.Security;
 using MyWallet.Infrastructure.SubService;
 using StackExchange.Redis;
@@ -77,14 +74,6 @@ namespace MyWallet.Infrastructure.DependencyInjection
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IFileStorageService, LocalFileStorageService>();
             services.AddScoped<IIdGenerator, SqlServerIdGenerator>();
-
-            services.AddScoped<ICocoQrGenerator, CocoQrGenerator>();
-            services.AddScoped<IQrImageService, QrImageService>();
-
-            services.AddScoped<IQrMerchantBuilder, MerchantBuilder>();
-            services.AddScoped<IQrMerchantBuilder, MomoMerchantBuilder>();
-            services.AddScoped<IQrMerchantBuilder, ZaloPayMerchantBuilder>();
-            services.AddScoped<IQrMerchantBuilder, VnPayMerchantBuilder>();
         }
         private static void AddSeeder(this IServiceCollection services)
         {

@@ -30,10 +30,13 @@ namespace MyWallet.Infrastructure.Persistence.DbConfigurations
                 .HasMaxLength(50);
             builder.Property(qr => qr.AccountHolderSnapshot)
                 .HasMaxLength(255);
+
             builder.Property(qr => qr.BankCodeSnapshot)
                 .HasMaxLength(20);
             builder.Property(qr => qr.BankNameSnapshot)
                 .HasMaxLength(255);
+            builder.Property(qr => qr.NapasBinSnapshot)
+                .HasMaxLength(20);
 
             builder.Property(qr => qr.Amount)
                 .IsRequired(false)
@@ -70,6 +73,10 @@ namespace MyWallet.Infrastructure.Persistence.DbConfigurations
                 .IsRequired()
                 .HasDefaultValue(false);
 
+            builder.Property(x => x.QrMode)
+                .HasConversion<string>()
+                .HasMaxLength(20);
+
             builder.Property(qr => qr.Status)
                 .IsRequired()
                 .HasConversion<string>()
@@ -98,7 +105,7 @@ namespace MyWallet.Infrastructure.Persistence.DbConfigurations
 
             builder.HasIndex(qr => qr.TransactionRef)
                 .IsUnique()
-                .HasDatabaseName("IX_QRHistory_TransactionRef"); 
+                .HasDatabaseName("IX_QRHistory_TransactionRef");
 
             // Relationships
             builder.HasOne(qr => qr.User)
