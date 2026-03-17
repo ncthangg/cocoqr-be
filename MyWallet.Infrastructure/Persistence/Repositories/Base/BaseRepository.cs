@@ -73,7 +73,14 @@ namespace MyWallet.Infrastructure.Persistence.Repositories.Base
             var parameters = new DynamicParameters();
             foreach (var prop in properties)
             {
-                parameters.Add($"@{prop.Name}", prop.GetValue(entity));
+                var value = prop.GetValue(entity);
+
+                if (value != null && value.GetType().IsEnum)
+                {
+                    value = value.ToString();
+                }
+
+                parameters.Add($"@{prop.Name}", value);
             }
 
             await _unitOfWork.Connection.ExecuteAsync(sql, parameters, _unitOfWork.Transaction);
@@ -104,7 +111,14 @@ namespace MyWallet.Infrastructure.Persistence.Repositories.Base
 
             foreach (var prop in properties)
             {
-                parameters.Add($"@{prop.Name}", prop.GetValue(entity));
+                var value = prop.GetValue(entity);
+
+                if (value != null && value.GetType().IsEnum)
+                {
+                    value = value.ToString();
+                }
+
+                parameters.Add($"@{prop.Name}", value);
             }
 
             await _unitOfWork.Connection.ExecuteAsync(sql, parameters, _unitOfWork.Transaction);

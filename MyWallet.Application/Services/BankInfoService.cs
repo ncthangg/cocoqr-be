@@ -1,5 +1,4 @@
-﻿using Microsoft.IdentityModel.Tokens;
-using MyWallet.Application.Common.Mapper;
+﻿using MyWallet.Application.Common.Mapper;
 using MyWallet.Application.Contracts.IContext;
 using MyWallet.Application.Contracts.IServices;
 using MyWallet.Application.Contracts.ISubServices;
@@ -9,8 +8,6 @@ using MyWallet.Application.DTOs.Banks.Responses;
 using MyWallet.Application.DTOs.Base.BaseRes;
 using MyWallet.Domain.Constants;
 using MyWallet.Domain.Entities;
-using MyWallet.Domain.Helper;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 using ApplicationException = MyWallet.Application.Exceptions.ApplicationException;
 
 namespace MyWallet.Application.Services

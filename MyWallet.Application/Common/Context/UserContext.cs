@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using MyWallet.Application.Contracts.IContext;
 using MyWallet.Domain.Constants.Enum;
-using MyWallet.Domain.Entities;
 using MyWallet.Domain.Helper;
 using System.Security.Claims;
 

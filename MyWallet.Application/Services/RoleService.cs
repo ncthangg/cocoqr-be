@@ -53,7 +53,8 @@ namespace MyWallet.Application.Services
             Guid userId = _userContext.UserId
                 ?? throw new ApplicationException(ErrorCode.Unauthorized, "User ID not found in context!");
 
-            var role = new Role() { 
+            var role = new Role()
+            {
                 Name = req.Name.Trim().ToLower(),
                 NameUpperCase = req.Name.Trim().ToUpper()
             };

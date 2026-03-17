@@ -1,5 +1,4 @@
 ﻿using MyWallet.Application.DTOs.Base.BaseReq;
-using MyWallet.Domain.Constants.Enum;
 
 namespace MyWallet.Application.DTOs.Accounts.Requests
 {
@@ -29,7 +28,7 @@ namespace MyWallet.Application.DTOs.Accounts.Requests
     {
         public string AccountNumber { get; set; } = string.Empty;
         public string? AccountHolder { get; set; }
-        public string? BankCode { get; set; } 
+        public string? BankCode { get; set; }
         public string? BankName { get; set; }
         public Guid ProviderId { get; set; }
         public bool IsPinned { get; set; }

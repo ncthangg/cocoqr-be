@@ -6,5 +6,6 @@ namespace MyWallet.Application.Contracts.IServices
     public interface IQrService
     {
         Task<GetQrRes> CreateAsync(PostQrReq request);
+        Task<GetQrRes> RegenerateImageAsync(Guid qrHistoryId);
     }
 }

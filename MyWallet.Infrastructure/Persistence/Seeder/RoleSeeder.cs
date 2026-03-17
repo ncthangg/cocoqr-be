@@ -1,18 +1,12 @@
 ﻿using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using MyWallet.Application.Contracts.ISubServices;
-using MyWallet.Application.DTOs.Banks.Requests;
 using MyWallet.Application.DTOs.Roles.Requests;
 using MyWallet.Domain.Constants;
 using MyWallet.Domain.Entities;
 using MyWallet.Domain.Exceptions;
 using MyWallet.Infrastructure.Persistence.MyDbContext;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace MyWallet.Infrastructure.Persistence.Seeder
 {
@@ -71,7 +65,7 @@ namespace MyWallet.Infrastructure.Persistence.Seeder
                     existing.NameUpperCase = item.Name.ToUpper();
                     existing.Status = item.Status;
                 }
-            } 
+            }
 
             // DELETE nếu JSON không còn
             var jsonCodes = roles.Select(x => x.Name.ToLower()).ToHashSet();

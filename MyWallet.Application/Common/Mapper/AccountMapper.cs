@@ -12,25 +12,25 @@ namespace MyWallet.Application.Common.Mapper
                 Id = u.Id,
                 UserId = u.UserId,
                 AccountNumber = u.AccountNumber,
-                AccountHolder = u.AccountHolder ?? "",
+                AccountHolder = u.AccountHolder ?? null,
 
-                BankCode = u.BankCode ?? "",
-                BankName = u.BankName ?? "",
-                BankShortName = u.BankShortName ?? "",
-                BankLogoUrl = u.BankLogoUrl ?? "",
+                BankCode = u.BankCode ?? null,
+                BankName = u.BankName ?? null,
+                BankShortName = u.BankShortName ?? null,
+                BankLogoUrl = u.BankLogoUrl ?? null,
 
-                BankIsActive = u.BankIsActive,
-                BankStatus = u.BankStatus,
+                BankIsActive = u.BankIsActive ?? null,
+                BankStatus = u.BankStatus ?? null,
 
                 ProviderId = u.ProviderId,
                 ProviderCode = u.ProviderCode,
-                ProviderName = u.ProviderName,
-                ProviderLogoUrl = u.ProviderLogoUrl,
+                ProviderName = u.ProviderName ?? null,
+                ProviderLogoUrl = u.ProviderLogoUrl ?? null,
 
                 ProviderIsActive = u.ProviderIsActive,
                 ProviderStatus = u.ProviderStatus,
 
-                Balance = u.Balance,
+                Balance = u.Balance ?? null,
 
                 IsPinned = u.IsPinned,
                 IsActive = u.IsActive,
@@ -46,27 +46,27 @@ namespace MyWallet.Application.Common.Mapper
                 Id = u.Id,
                 UserId = u.UserId,
                 AccountNumber = u.AccountNumber,
-                AccountHolder = u.AccountHolder ?? "",
+                AccountHolder = u.AccountHolder ?? null,
 
-                BankCode = u.BankCode ?? "",
-                BankName = u.BankName ?? "",
-                BankShortName = u.BankShortName ?? "",
-                BankLogoUrl = u.BankLogoUrl ?? "",
+                BankCode = u.BankCode ?? null,
+                BankName = u.BankName ?? null,
+                BankShortName = u.BankShortName ?? null,
+                BankLogoUrl = u.BankLogoUrl ?? null,
 
-                BankIsActive = u.BankIsActive,
-                BankStatus = u.BankStatus,
+                BankIsActive = u.BankIsActive ?? null,
+                BankStatus = u.BankStatus ?? null,
 
                 ProviderId = u.ProviderId,
                 ProviderCode = u.ProviderCode,
-                ProviderName = u.ProviderName,
-                ProviderLogoUrl = u.ProviderLogoUrl,
+                ProviderName = u.ProviderName ?? null,
+                ProviderLogoUrl = u.ProviderLogoUrl ?? null,
 
                 ProviderIsActive = u.ProviderIsActive,
                 ProviderStatus = u.ProviderStatus,
 
                 IsPinned = u.IsPinned,
                 IsActive = u.IsActive,
-                
+
                 Status = u.Status,
                 CreatedAt = u.CreatedAt,
                 UpdatedAt = u.UpdatedAt,

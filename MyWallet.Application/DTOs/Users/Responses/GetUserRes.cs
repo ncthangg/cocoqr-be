@@ -1,6 +1,5 @@
 ﻿using MyWallet.Application.DTOs.Base.BaseRes;
 using MyWallet.Application.DTOs.Roles.Responses;
-using MyWallet.Domain.Entities;
 
 namespace MyWallet.Application.DTOs.Users.Responses
 {

@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using MyWallet.Application.Contracts.ISubServices;
 using MyWallet.Application.DTOs.Banks.Requests;
 using MyWallet.Domain.Constants;
@@ -87,6 +86,9 @@ namespace MyWallet.Infrastructure.Persistence.Seeder
             }
 
             _context.BankInfos.RemoveRange(toDelete);
+
+            // Ensure EF Core detects the changes made while AutoDetectChangesEnabled was false
+            _context.ChangeTracker.DetectChanges();
 
             await _context.SaveChangesAsync();
 

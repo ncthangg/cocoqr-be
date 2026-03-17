@@ -13,8 +13,8 @@ namespace MyWallet.Application.Common.Mapper
                 BankCode = u.BankCode,
                 NapasCode = u.NapasBin,
                 SwiftCode = u.SwiftCode,
-                BankName = u.BankName,
 
+                BankName = u.BankName,
                 ShortName = u.ShortName,
                 LogoUrl = u.LogoUrl,
                 IsActive = u.IsActive,

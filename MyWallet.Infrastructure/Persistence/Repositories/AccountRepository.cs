@@ -1,13 +1,8 @@
-﻿using Dapper;
-using Microsoft.Identity.Client;
-using MyWallet.Application.Contracts.IRepositories;
+﻿using MyWallet.Application.Contracts.IRepositories;
 using MyWallet.Application.Contracts.IUnitOfWork;
 using MyWallet.Application.DTOs.Accounts.Queries;
-using MyWallet.Application.DTOs.Accounts.Responses;
-using MyWallet.Domain.Constants.Enum;
 using MyWallet.Domain.Entities;
 using MyWallet.Infrastructure.Persistence.Repositories.Base;
-using System.Runtime.CompilerServices;
 
 namespace MyWallet.Infrastructure.Persistence.Repositories
 {

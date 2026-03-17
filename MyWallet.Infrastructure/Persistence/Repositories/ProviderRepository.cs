@@ -1,14 +1,8 @@
 ﻿using MyWallet.Application.Contracts.IRepositories;
 using MyWallet.Application.Contracts.IUnitOfWork;
-using MyWallet.Application.DTOs.Accounts.Queries;
 using MyWallet.Application.DTOs.Providers.NewFolder;
 using MyWallet.Domain.Entities;
 using MyWallet.Infrastructure.Persistence.Repositories.Base;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MyWallet.Infrastructure.Persistence.Repositories
 {

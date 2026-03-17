@@ -4,8 +4,6 @@ using MyWallet.Application.Contracts.IServices;
 using MyWallet.Application.DTOs.Base.BaseRes;
 using MyWallet.Application.DTOs.Providers.Requests;
 using MyWallet.Application.DTOs.Providers.Responses;
-using MyWallet.Application.DTOs.Roles.Requests;
-using MyWallet.Application.DTOs.Roles.Responses;
 using MyWallet.Domain.Constants;
 
 namespace MyWallet.API.Controllers

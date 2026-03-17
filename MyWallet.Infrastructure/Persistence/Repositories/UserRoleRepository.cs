@@ -1,5 +1,4 @@
-﻿using Dapper;
-using MyWallet.Application.Contracts.IRepositories;
+﻿using MyWallet.Application.Contracts.IRepositories;
 using MyWallet.Application.Contracts.IUnitOfWork;
 using MyWallet.Domain.Entities;
 using MyWallet.Infrastructure.Persistence.Repositories.Base;

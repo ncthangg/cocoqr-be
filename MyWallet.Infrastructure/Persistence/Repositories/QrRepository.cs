@@ -1,5 +1,4 @@
-﻿using Dapper;
-using MyWallet.Application.Contracts.IRepositories;
+﻿using MyWallet.Application.Contracts.IRepositories;
 using MyWallet.Application.Contracts.IUnitOfWork;
 using MyWallet.Domain.Constants.Enum;
 using MyWallet.Domain.Entities;
@@ -7,9 +6,9 @@ using MyWallet.Infrastructure.Persistence.Repositories.Base;
 
 namespace MyWallet.Infrastructure.Persistence.Repositories
 {
-    public class QRHistoryRepository : BaseRepository<QRHistory>, IQRHistoryRepository
+    public class QrRepository : BaseRepository<QRHistory>, IQrRepository
     {
-        public QRHistoryRepository(IUnitOfWork _unitOfWork)
+        public QrRepository(IUnitOfWork _unitOfWork)
             : base(_unitOfWork, "QRHistories")
         {
         }
@@ -17,7 +16,7 @@ namespace MyWallet.Infrastructure.Persistence.Repositories
         public async Task<IEnumerable<QRHistory>> GetByAccountIdAsync(Guid accountId,
             int pageNumber, int pageSize,
             string? sortField, string? sortDirection,
-            AccountProvider? provider,
+            Guid? providerId,
             QRReceiverType? receiverType,
             bool? isFixedAmount, bool? isPaid,
             string? searchValue)
@@ -46,13 +45,13 @@ namespace MyWallet.Infrastructure.Persistence.Repositories
                 SELECT
                     Id, UserId, AccountId,
                     AccountNumberSnapshot, AccountHolderSnapshot, BankCodeSnapshot, BankNameSnapshot
-                    Amount, Description, Provider, ReceiverType,
+                    Amount, Description, ProviderCode, ReceiverType,
                     IsFixedAmount, IsPaid,
                     CreatedAt, ExpiredAt, PaidAt, DeletedAt
                 FROM QRHistories
                 WHERE
                     (AccountId = @AccountId)
-                    AND (@Provider IS NULL OR Provider = @Provider)
+                    AND (@ProviderCode IS NULL OR ProviderCode = @ProviderCode)
                     AND (@ReceiverType IS NULL OR ReceiverType = @ReceiverType)
                     AND (@IsFixedAmount IS NULL OR IsFixedAmount = @IsFixedAmount)
                     AND (@IsPaid IS NULL OR IsPaid = @IsPaid)
@@ -72,7 +71,7 @@ namespace MyWallet.Infrastructure.Persistence.Repositories
                 FROM QRHistories
                 WHERE
                     (AccountId = @AccountId)
-                    AND (@Provider IS NULL OR Provider = @Provider)
+                    AND (@ProviderCode IS NULL OR ProviderCode = @ProviderCode)
                     AND (@ReceiverType IS NULL OR ReceiverType = @ReceiverType)
                     AND (@IsFixedAmount IS NULL OR IsFixedAmount = @IsFixedAmount)
                     AND (@IsPaid IS NULL OR IsPaid = @IsPaid)
@@ -90,7 +89,7 @@ namespace MyWallet.Infrastructure.Persistence.Repositories
                 new
                 {
                     AccountId = accountId,
-                    Provider = provider?.ToString(),
+                    Provider = providerId,
                     ReceiverType = receiverType?.ToString(),
                     IsFixedAmount = isFixedAmount,
                     IsPaid = isPaid,
@@ -116,7 +115,7 @@ namespace MyWallet.Infrastructure.Persistence.Repositories
                 SELECT 
                     Id, UserId, AccountId,
                     AccountNumberSnapshot, AccountHolderSnapshot, BankCodeSnapshot, BankNameSnapshot
-                    Amount, Description, QRData, QRImageUrl, Provider, ReceiverType,
+                    Amount, Description, QRData, QRImageUrl, ProviderCode, ReceiverType,
                     IsFixedAmount, IsPaid,
                     CreatedAt, ExpiredAt, PaidAt, DeletedAt
                 FROM QRHistories
@@ -143,7 +142,7 @@ namespace MyWallet.Infrastructure.Persistence.Repositories
 
         public async Task<decimal> GetTotalQRAmountAsync(Guid accountId,
                                                          bool? isPaid,
-                                                         AccountProvider? provider,
+                                                         Guid? providerId,
                                                          QRReceiverType? receiverType)
         {
             if (accountId == Guid.Empty)
@@ -155,7 +154,7 @@ namespace MyWallet.Infrastructure.Persistence.Repositories
                 WHERE 
                      AccountId = @AccountId
                      AND (@IsPaid IS NULL OR IsPaid = @IsPaid)
-                     AND (@Provider IS NULL OR Provider = @Provider)
+                     AND (@ProviderId IS NULL OR ProviderId = @ProviderId)
                      AND (@ReceiverType IS NULL OR ReceiverType = @ReceiverType)
             ";
 
@@ -164,10 +163,65 @@ namespace MyWallet.Infrastructure.Persistence.Repositories
                 {
                     AccountId = accountId,
                     IsPaid = isPaid,
-                    Provider = provider,
+                    ProviderId = providerId,
                     ReceiverType = receiverType
                 }
             );
+        }
+
+        public async Task<long> Post(QRHistory req)
+        {
+            const string sql = @"
+                INSERT INTO QRHistories
+                (
+                    UserId, AccountId,
+                    AccountNumberSnapshot, AccountHolderSnapshot,
+                    BankCodeSnapshot, BankNameSnapshot, NapasBinSnapshot,
+                    Amount, Currency, Description,
+                    QRData, QRImageUrl, TransactionRef,
+                    ProviderId, ReceiverType, IsFixedAmount, QrMode,
+                    CreatedAt
+                )
+                VALUES
+                (
+                    @UserId, @AccountId,
+                    @AccountNumberSnapshot, @AccountHolderSnapshot,
+                    @BankCodeSnapshot, @BankNameSnapshot, @NapasBinSnapshot,
+                    @Amount, @Currency, @Description,
+                    @QRData, @QRImageUrl, @TransactionRef,
+                    @ProviderId, @ReceiverType, @IsFixedAmount, @QrMode,
+                    @CreatedAt
+                );
+                
+                SELECT CAST(SCOPE_IDENTITY() as BIGINT);
+            ";
+
+            return await QuerySingleAsync<long>(sql, new
+            {
+                req.UserId,
+                req.AccountId,
+
+                req.AccountNumberSnapshot,
+                req.AccountHolderSnapshot,
+                req.BankCodeSnapshot,
+                req.BankNameSnapshot,
+                req.NapasBinSnapshot,
+
+                req.Amount,
+                Currency = req.Currency.ToString(),
+                req.Description,
+
+                req.QRData,
+                req.QRImageUrl,
+                req.TransactionRef,
+
+                req.ProviderId,
+                ReceiverType = req.ReceiverType.ToString(),
+                req.IsFixedAmount,
+                QrMode = req.QrMode.ToString(),
+
+                req.CreatedAt
+            });
         }
     }
 }

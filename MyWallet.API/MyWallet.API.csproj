@@ -19,6 +19,7 @@
   <ItemGroup>
     <ProjectReference Include="..\MyWallet.Application\MyWallet.Application.csproj" />
     <ProjectReference Include="..\MyWallet.Infrastructure\MyWallet.Infrastructure.csproj" />
+    <ProjectReference Include="..\MyWallet.QR_Generator\MyWallet.QR_Generator.csproj" />
   </ItemGroup>
 
   <ItemGroup>

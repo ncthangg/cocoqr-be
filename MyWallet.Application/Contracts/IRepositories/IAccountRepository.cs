@@ -1,7 +1,5 @@
 ﻿using MyWallet.Application.Contracts.IRepositories.Base;
 using MyWallet.Application.DTOs.Accounts.Queries;
-using MyWallet.Application.DTOs.Accounts.Responses;
-using MyWallet.Domain.Constants.Enum;
 using MyWallet.Domain.Entities;
 
 namespace MyWallet.Application.Contracts.IRepositories

@@ -6,8 +6,6 @@ using MyWallet.Application.Contracts.IUnitOfWork;
 using MyWallet.Application.DTOs.Roles.Responses;
 using MyWallet.Application.DTOs.UserRoles.Requests;
 using MyWallet.Domain.Constants;
-using MyWallet.Domain.Entities;
-using MyWallet.Domain.Helper;
 using ApplicationException = MyWallet.Application.Exceptions.ApplicationException;
 
 namespace MyWallet.Application.Services

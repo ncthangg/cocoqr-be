@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace MyWallet.Application.DTOs.Roles.Requests
+﻿namespace MyWallet.Application.DTOs.Roles.Requests
 {
     public class PostRoleReq
     {
@@ -17,6 +11,6 @@ namespace MyWallet.Application.DTOs.Roles.Requests
     public class PostRoleJsonReq
     {
         public string Name { get; set; } = string.Empty;
-        public bool Status { get; set; } 
+        public bool Status { get; set; }
     }
 }

@@ -2,7 +2,7 @@
 using MyWallet.Domain.Constants.Enum;
 
 namespace MyWallet.Application.DTOs.Providers.Responses
-{ 
+{
     public class GetProviderRes : BaseGetVM
     {
         public required ProviderCode Code { get; set; }

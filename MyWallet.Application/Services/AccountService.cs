@@ -7,9 +7,7 @@ using MyWallet.Application.DTOs.Accounts.Requests;
 using MyWallet.Application.DTOs.Accounts.Responses;
 using MyWallet.Application.DTOs.Base.BaseRes;
 using MyWallet.Domain.Constants;
-using MyWallet.Domain.Constants.Enum;
 using MyWallet.Domain.Entities;
-using System.Collections.Generic;
 using ApplicationException = MyWallet.Application.Exceptions.ApplicationException;
 
 namespace MyWallet.Application.Services

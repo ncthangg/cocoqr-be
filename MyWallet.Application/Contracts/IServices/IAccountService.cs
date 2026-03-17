@@ -1,7 +1,6 @@
 ﻿using MyWallet.Application.DTOs.Accounts.Requests;
 using MyWallet.Application.DTOs.Accounts.Responses;
 using MyWallet.Application.DTOs.Base.BaseRes;
-using MyWallet.Domain.Constants.Enum;
 
 namespace MyWallet.Application.Contracts.IServices
 {

@@ -14,8 +14,8 @@ namespace MyWallet.Application.DTOs.Accounts.Queries
         public string? BankName { get; set; }
         public string? BankShortName { get; set; }
         public string? BankLogoUrl { get; set; }
-        public bool BankIsActive { get; set; }
-        public bool BankStatus { get; set; }
+        public bool? BankIsActive { get; set; }
+        public bool? BankStatus { get; set; }
 
         public Guid ProviderId { get; set; }
         public ProviderCode ProviderCode { get; set; }

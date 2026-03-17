@@ -1,7 +1,5 @@
 ﻿using MyWallet.Application.Contracts.IRepositories;
 using MyWallet.Application.Contracts.IUnitOfWork;
-using MyWallet.Application.DTOs.Accounts.Queries;
-using MyWallet.Application.DTOs.Banks.Responses;
 using MyWallet.Domain.Entities;
 using MyWallet.Infrastructure.Persistence.Repositories.Base;
 namespace MyWallet.Infrastructure.Persistence.Repositories
@@ -69,7 +67,7 @@ namespace MyWallet.Infrastructure.Persistence.Repositories
             {
                 sql = $@"
         SELECT 
-            Id, BankCode, BankName, ShortName, LogoUrl, IsActive
+            Id, BankCode, NapasBin, SwiftCode, BankName, ShortName, LogoUrl, IsActive
         FROM BankInfos
         WHERE 
             DeletedAt IS NULL
