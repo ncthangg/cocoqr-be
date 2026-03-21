@@ -11,6 +11,7 @@ namespace MyWallet.Application.DTOs.Accounts.Queries
         public string? AccountHolder { get; set; }
 
         public string? BankCode { get; set; }
+        public string? NapasBin { get; set; }
         public string? BankName { get; set; }
         public string? BankShortName { get; set; }
         public string? BankLogoUrl { get; set; }

@@ -1,22 +1,35 @@
 ﻿using MyWallet.Application.DTOs.Base.BaseRes;
-using MyWallet.Application.DTOs.Roles.Responses;
 
 namespace MyWallet.Application.DTOs.Users.Responses
 {
     public class GetUserRes
     {
-        public required Guid UserId { get; set; }
-        public required string GoogleId { get; set; }
         public required string Email { get; set; }
         public required string FullName { get; set; }
-        public string PictureUrl { get; set; } = string.Empty;
-        public string SecurityStamp { get; set; } = string.Empty;
+        public string? PictureUrl { get; set; }
     }
-    public class GetUserBaseRes : BaseGetVM
+    public class GetUserBaseRes : BaseGetVM<Guid>
+    {
+        public required string Email { get; set; }
+        public required string FullName { get; set; }
+        public string? PictureUrl { get; set; }
+        public IEnumerable<UserRoleRaw> Roles { get; set; } = [];
+    }
+    public class GetUserBySystemRes
     {
         public required Guid UserId { get; set; }
         public required string Email { get; set; }
         public required string FullName { get; set; }
-        public IEnumerable<GetRoleRes> GetRolesRes { get; set; } = [];
+        public string? SecurityStamp { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
+        public bool? Status { get; set; }
+    }
+    public class UserRoleRaw
+    {
+        public Guid UserId { get; set; }
+        public Guid RoleId { get; set; }
+        public required string Name { get; set; }
+        public required string NameUpperCase { get; set; }
     }
 }

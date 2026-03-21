@@ -1,8 +1,8 @@
 ﻿namespace MyWallet.Application.DTOs.Base.BaseRes
 {
-    public class BaseGetVM
+    public class BaseGetVM<TId>
     {
-        public Guid Id { get; set; }
+        public required TId Id { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public DateTime? DeletedAt { get; set; }
@@ -14,7 +14,7 @@
         public string? DeletedByName { get; set; }
         public bool? Status { get; set; }
     }
-    public class PagingVM<T> where T : BaseGetVM
+    public class PagingVM<T>
     {
         public IEnumerable<T>? List { get; set; }
         public int PageSize { get; set; }

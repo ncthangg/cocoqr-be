@@ -1,10 +1,10 @@
-﻿using MyWallet.Application.DTOs.Base.BaseRes;
-using MyWallet.Domain.Constants.Enum;
+﻿using MyWallet.Domain.Constants.Enum;
 
-namespace MyWallet.Application.DTOs.QR.Responses
+namespace MyWallet.Application.DTOs.QR.Queries
 {
-    public class GetQrRes : BaseGetVM<long>
+    public class QrHistoryQueryDto
     {
+        public long Id { get; set; }
         public Guid? UserId { get; set; }
         public string? Email { get; set; }
         public Guid? AccountId { get; set; }
@@ -13,8 +13,8 @@ namespace MyWallet.Application.DTOs.QR.Responses
         public string? AccountHolderSnapshot { get; set; }
 
         public string? BankCodeSnapshot { get; set; }
-        public string? BankNameSnapshot { get; set; }
         public string? NapasBinSnapshot { get; set; }
+        public string? BankNameSnapshot { get; set; }
 
         public string? BankShortName { get; set; }
         public string? BankLogoUrl { get; set; }
@@ -38,7 +38,7 @@ namespace MyWallet.Application.DTOs.QR.Responses
         public QrMode? QrMode { get; set; }
         public QRStatus? QrStatus { get; set; }
 
-        public new DateTime? CreatedAt { get; set; }
+        public DateTime? CreatedAt { get; set; }
         public DateTime? ExpiredAt { get; set; }
         public DateTime? PaidAt { get; set; }
         public DateTime? DeletedAt { get; set; }
