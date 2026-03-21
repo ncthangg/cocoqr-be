@@ -11,7 +11,7 @@ namespace MyWallet.Infrastructure.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.RenameColumn(
-                name: "NapasCode",
+                name: "NapasBin",
                 table: "BankInfos",
                 newName: "NapasBin");
 
@@ -32,7 +32,7 @@ namespace MyWallet.Infrastructure.Migrations
             migrationBuilder.RenameColumn(
                 name: "NapasBin",
                 table: "BankInfos",
-                newName: "NapasCode");
+                newName: "NapasBin");
         }
     }
 }

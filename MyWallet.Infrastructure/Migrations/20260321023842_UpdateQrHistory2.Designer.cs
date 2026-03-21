@@ -12,8 +12,8 @@ using MyWallet.Infrastructure.Persistence.MyDbContext;
 namespace MyWallet.Infrastructure.Migrations
 {
     [DbContext(typeof(MyWalletDbContext))]
-    [Migration("20260315054729_Init")]
-    partial class Init
+    [Migration("20260321023842_UpdateQrHistory2")]
+    partial class UpdateQrHistory2
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -193,7 +193,9 @@ namespace MyWallet.Infrastructure.Migrations
                     SqlServerIndexBuilderExtensions.IncludeProperties(b.HasIndex("IsActive"), new[] { "BankCode", "ShortName", "BankName", "LogoUrl" });
 
                     b.HasIndex("NapasBin")
-                        .HasDatabaseName("IX_BankInfos_NapasCode");
+                        .IsUnique()
+                        .HasDatabaseName("IX_BankInfos_NapasBin")
+                        .HasFilter("[NapasBin] IS NOT NULL");
 
                     b.HasIndex("IsActive", "BankName")
                         .HasDatabaseName("IX_BankInfos_IsActive_BankName");
@@ -232,6 +234,10 @@ namespace MyWallet.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
+
+                    b.Property<string>("LogoUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -288,6 +294,10 @@ namespace MyWallet.Infrastructure.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
+                    b.Property<string>("BankShortNameSnapshot")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
@@ -315,6 +325,10 @@ namespace MyWallet.Infrastructure.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
+                    b.Property<string>("NapasBinSnapshot")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
                     b.Property<DateTime?>("PaidAt")
                         .HasColumnType("datetime2");
 
@@ -327,6 +341,11 @@ namespace MyWallet.Infrastructure.Migrations
 
                     b.Property<string>("QrImageUrl")
                         .HasColumnType("nvarchar(MAX)");
+
+                    b.Property<string>("QrMode")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<string>("ReceiverType")
                         .IsRequired()

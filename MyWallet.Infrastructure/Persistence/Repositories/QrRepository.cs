@@ -1,5 +1,6 @@
 ﻿using MyWallet.Application.Contracts.IRepositories;
 using MyWallet.Application.Contracts.IUnitOfWork;
+using MyWallet.Application.DTOs.QR.Queries;
 using MyWallet.Domain.Constants.Enum;
 using MyWallet.Domain.Entities;
 using MyWallet.Infrastructure.Persistence.Repositories.Base;
@@ -12,7 +13,159 @@ namespace MyWallet.Infrastructure.Persistence.Repositories
             : base(_unitOfWork, "QRHistories")
         {
         }
+        public async Task<(IEnumerable<QrHistoryQueryDto>, int totalCount)> GetAllAsync(int pageNumber, int pageSize,
+                                                                           string? sortField, string? sortDirection,
+                                                                           Guid? userId,
+                                                                           Guid? providerId,
+                                                                           string? searchValue,
+                                                                           bool? isDeleted,
+                                                                           bool? status)
+        {
+            var orderBy = "CreatedAt DESC";
 
+            if (!string.IsNullOrEmpty(sortField))
+            {
+                var dir = sortDirection?.ToUpper() == "DESC" ? "DESC" : "ASC";
+
+                orderBy = sortField switch
+                {
+                    "accountHolderSnapshot" => $"AccountHolderSnapshot {dir}",
+                    "createdAt" => $"CreatedAt {dir}",
+                    _ => "CreatedAt DESC"
+                };
+            }
+
+            var sql = $@"
+        SELECT
+            q.Id, q.UserId, u.Email, q.AccountId,
+            q.AccountNumberSnapshot, q.AccountHolderSnapshot,
+            q.BankCodeSnapshot, q.NapasBinSnapshot, b.BankName AS BankNameSnapshot, b.ShortName AS BankShortName, b.LogoUrl AS BankLogoUrl,
+            q.ProviderId, p.Code AS ProviderCode, p.Name AS ProviderName, p.LogoUrl AS ProviderLogoUrl,
+            q.ReceiverType, q.QrMode, q.Status AS QrStatus,
+
+            q.CreatedAt
+        FROM QRHistories q
+            LEFT JOIN BankInfos b
+                 ON q.BankCodeSnapshot = b.BankCode
+            LEFT JOIN Providers p
+                 ON q.ProviderId = p.Id
+            LEFT JOIN Users u ON q.UserId = u.Id
+        WHERE
+            (@UserId IS NULL OR q.UserId = @UserId)
+            AND (
+                 @IsDeleted IS NULL
+                 OR (@IsDeleted = 1 AND q.DeletedAt IS NOT NULL)
+                 OR (@IsDeleted = 0 AND q.DeletedAt IS NULL)
+            )
+            AND (@ProviderId IS NULL OR q.ProviderId = @ProviderId)
+            AND (
+                @SearchValue IS NULL
+                OR q.AccountNumberSnapshot LIKE '%' + @SearchValue + '%'
+                OR ISNULL(q.AccountHolderSnapshot,'') LIKE '%' + @SearchValue + '%'
+                OR ISNULL(q.BankCodeSnapshot,'')  LIKE '%' + @SearchValue + '%'
+                OR ISNULL(q.NapasBinSnapshot,'')  LIKE '%' + @SearchValue + '%'
+                OR u.Email LIKE @SearchValue + '%'
+            )
+        ORDER BY 
+            {orderBy}
+        OFFSET (@PageNumber - 1) * @PageSize ROWS
+        FETCH NEXT @PageSize ROWS ONLY;
+
+        SELECT COUNT(1)
+        FROM QRHistories q
+            LEFT JOIN BankInfos b
+                 ON q.BankCodeSnapshot = b.BankCode
+            LEFT JOIN Providers p
+                 ON q.ProviderId = p.Id
+            LEFT JOIN Users u ON q.UserId = u.Id
+        WHERE
+            (@UserId IS NULL OR q.UserId = @UserId)
+            AND (@ProviderId IS NULL OR q.ProviderId = @ProviderId)
+            AND (
+                 @IsDeleted IS NULL
+                 OR (@IsDeleted = 1 AND q.DeletedAt IS NOT NULL)
+                 OR (@IsDeleted = 0 AND q.DeletedAt IS NULL)
+            )
+            AND (
+                @SearchValue IS NULL
+                OR q.AccountNumberSnapshot LIKE '%' + @SearchValue + '%'
+                OR ISNULL(q.AccountHolderSnapshot,'') LIKE '%' + @SearchValue + '%'
+                OR ISNULL(q.BankCodeSnapshot,'')  LIKE '%' + @SearchValue + '%'
+                OR ISNULL(q.NapasBinSnapshot,'')  LIKE '%' + @SearchValue + '%'
+                OR u.Email LIKE @SearchValue + '%'
+            );
+        ";
+
+            return await QueryPagedAsync<QrHistoryQueryDto>(sql,
+                new
+                {
+                    PageNumber = pageNumber,
+                    PageSize = pageSize,
+                    UserId = userId,
+                    ProviderId = providerId,
+                    SearchValue = searchValue,
+                    IsDeleted = isDeleted,
+                    Status = status,
+                    //FromDtate = "",
+                    //ToDate = ""
+                }
+            );
+        }
+        public async Task<QrHistoryQueryDto?> GetByIdAsync(long id, Guid? userId, bool isAdmin)
+        {
+            string sql;
+
+            if (isAdmin)
+            {
+                sql = $@"SELECT
+                q.Id, q.UserId, u.Email, q.AccountId,
+                q.AccountNumberSnapshot, q.AccountHolderSnapshot,
+                q.BankCodeSnapshot, q.NapasBinSnapshot, b.BankName AS BankNameSnapshot, b.ShortName AS BankShortName, b.LogoUrl AS BankLogoUrl,
+                q.Amount, q.Currency, q.Description,
+                q.QrData, q.QrImageUrl, q.TransactionRef,
+                q.ProviderId, p.Code AS ProviderCode, p.Name AS ProviderName, p.LogoUrl AS ProviderLogoUrl,
+                q.ReceiverType, q.IsFixedAmount, q.QrMode, q.Status AS QrStatus,
+
+                q.CreatedAt, q.ExpiredAt, q.PaidAt, q.DeletedAt
+                FROM QRHistories q
+                LEFT JOIN BankInfos b
+                    ON q.BankCodeSnapshot = b.BankCode
+                LEFT JOIN Providers p
+                     ON q.ProviderId = p.Id
+                LEFT JOIN Users u
+                     ON q.UserId = u.Id
+                WHERE q.Id = @Id";
+            }
+            else
+            {
+                sql = $@"SELECT
+                q.Id, q.UserId, q.AccountId,
+                q.AccountNumberSnapshot, q.AccountHolderSnapshot,
+                q.BankCodeSnapshot, q.NapasBinSnapshot, b.BankName AS BankNameSnapshot, b.ShortName AS BankShortName, b.LogoUrl AS BankLogoUrl,
+                q.Amount, q.Currency, q.Description,
+                q.QrData, q.QrImageUrl, q.TransactionRef,
+                q.ProviderId, p.Code AS ProviderCode, p.Name AS ProviderName, p.LogoUrl AS ProviderLogoUrl,
+                q.ReceiverType, q.IsFixedAmount, q.QrMode, q.Status AS QrStatus,
+
+                q.CreatedAt, q.ExpiredAt, q.PaidAt
+                FROM QRHistories q
+                    LEFT JOIN BankInfos b
+                         ON q.BankCodeSnapshot = b.BankCode
+                    LEFT JOIN Providers p
+                         ON q.ProviderId = p.Id
+                WHERE q.Id = @Id
+                     AND q.UserId = @UserId
+                     AND q.DeletedAt IS NULL
+                ";
+            }
+
+            return await QuerySingleAsync<QrHistoryQueryDto>(sql,
+                new
+                {
+                    Id = id,
+                    UserId = userId
+                });
+        }
         public async Task<IEnumerable<QRHistory>> GetByAccountIdAsync(Guid accountId,
             int pageNumber, int pageSize,
             string? sortField, string? sortDirection,
@@ -115,7 +268,7 @@ namespace MyWallet.Infrastructure.Persistence.Repositories
                 SELECT 
                     Id, UserId, AccountId,
                     AccountNumberSnapshot, AccountHolderSnapshot, BankCodeSnapshot, BankNameSnapshot
-                    Amount, Description, QRData, QRImageUrl, ProviderCode, ReceiverType,
+                    Amount, Description, QrData, QrImageUrl, ProviderCode, ReceiverType,
                     IsFixedAmount, IsPaid,
                     CreatedAt, ExpiredAt, PaidAt, DeletedAt
                 FROM QRHistories
@@ -176,9 +329,9 @@ namespace MyWallet.Infrastructure.Persistence.Repositories
                 (
                     UserId, AccountId,
                     AccountNumberSnapshot, AccountHolderSnapshot,
-                    BankCodeSnapshot, BankNameSnapshot, NapasBinSnapshot,
+                    BankCodeSnapshot, BankNameSnapshot, BankShortNameSnapshot, NapasBinSnapshot,
                     Amount, Currency, Description,
-                    QRData, QRImageUrl, TransactionRef,
+                    QrData, QrImageUrl, TransactionRef,
                     ProviderId, ReceiverType, IsFixedAmount, QrMode,
                     CreatedAt
                 )
@@ -186,9 +339,9 @@ namespace MyWallet.Infrastructure.Persistence.Repositories
                 (
                     @UserId, @AccountId,
                     @AccountNumberSnapshot, @AccountHolderSnapshot,
-                    @BankCodeSnapshot, @BankNameSnapshot, @NapasBinSnapshot,
+                    @BankCodeSnapshot, @BankNameSnapshot, @BankShortNameSnapshot, @NapasBinSnapshot,
                     @Amount, @Currency, @Description,
-                    @QRData, @QRImageUrl, @TransactionRef,
+                    @QrData, @QrImageUrl, @TransactionRef,
                     @ProviderId, @ReceiverType, @IsFixedAmount, @QrMode,
                     @CreatedAt
                 );
@@ -205,14 +358,15 @@ namespace MyWallet.Infrastructure.Persistence.Repositories
                 req.AccountHolderSnapshot,
                 req.BankCodeSnapshot,
                 req.BankNameSnapshot,
+                req.BankShortNameSnapshot,
                 req.NapasBinSnapshot,
 
                 req.Amount,
                 Currency = req.Currency.ToString(),
                 req.Description,
 
-                req.QRData,
-                req.QRImageUrl,
+                req.QrData,
+                req.QrImageUrl,
                 req.TransactionRef,
 
                 req.ProviderId,

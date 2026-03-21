@@ -14,13 +14,13 @@ namespace MyWallet.Infrastructure.Persistence.Repositories
         }
 
         public async Task<(IEnumerable<AccountQueryDto>, int totalCount)> GetAllAsync(int pageNumber, int pageSize,
-                                                                                   string? sortField, string? sortDirection,
-                                                                                   Guid? userId,
-                                                                                   Guid? providerId,
-                                                                                   string? searchValue,
-                                                                                   bool? isActive,
-                                                                                   bool? isDeleted,
-                                                                                   bool? status)
+                                                                                      string? sortField, string? sortDirection,
+                                                                                      Guid? userId,
+                                                                                      Guid? providerId,
+                                                                                      string? searchValue,
+                                                                                      bool? isActive,
+                                                                                      bool? isDeleted,
+                                                                                      bool? status)
         {
             var orderBy = "CreatedAt DESC";
 
@@ -43,8 +43,8 @@ namespace MyWallet.Infrastructure.Persistence.Repositories
             var sql = $@"
         SELECT
             a.Id, a.UserId, a.AccountNumber, a.AccountHolder,
-            a.BankCode, b.BankName AS BankName, b.LogoUrl AS BankLogoUrl,
-            a.ProviderId, p.Code AS ProviderCode, p.Name AS ProviderName, p.LogoUrl AS ProviderLogoUrl,
+            a.BankCode, b.NapasBin as NapasBin, b.BankName AS BankName, b.ShortName AS BankShortName, b.LogoUrl AS BankLogoUrl, b.IsActive AS BankIsActive,
+            a.ProviderId, p.Code AS ProviderCode, p.Name AS ProviderName, p.LogoUrl AS ProviderLogoUrl, p.IsActive AS ProviderIsActive,
             a.IsPinned, a.IsActive, a.Status,
 
             a.CreatedAt
@@ -70,6 +70,7 @@ namespace MyWallet.Infrastructure.Persistence.Repositories
                 OR ISNULL(a.AccountHolder,'') LIKE '%' + @SearchValue + '%'
                 OR ISNULL(a.BankCode,'') LIKE '%' + @SearchValue + '%'
                 OR ISNULL(b.BankName,'') LIKE '%' + @SearchValue + '%'
+                OR ISNULL(b.ShortName,'') LIKE '%' + @SearchValue + '%'
                 OR u.Email = @SearchValue
             )
         ORDER BY 
@@ -100,6 +101,7 @@ namespace MyWallet.Infrastructure.Persistence.Repositories
                 OR ISNULL(a.AccountHolder,'') LIKE '%' + @SearchValue + '%'
                 OR ISNULL(a.BankCode,'') LIKE '%' + @SearchValue + '%'
                 OR ISNULL(b.BankName,'') LIKE '%' + @SearchValue + '%'
+                OR ISNULL(b.ShortName,'') LIKE '%' + @SearchValue + '%'
                 OR u.Email = @SearchValue
             );
         ";
@@ -126,7 +128,7 @@ namespace MyWallet.Infrastructure.Persistence.Repositories
             {
                 sql = $@"SELECT
             a.Id, a.UserId, a.AccountNumber, a.AccountHolder,
-            a.BankCode, b.BankName AS BankName, b.ShortName AS BankShortName, b.LogoUrl AS BankLogoUrl, b.IsActive AS BankIsActive, b.Status AS BankStatus,
+            a.BankCode, b.NapasBin, b.BankName AS BankName, b.ShortName AS BankShortName, b.LogoUrl AS BankLogoUrl, b.IsActive AS BankIsActive, b.Status AS BankStatus,
             a.ProviderId, p.Code AS ProviderCode, p.Name AS ProviderName, p.LogoUrl AS ProviderLogoUrl, p.IsActive AS ProviderIsActive, p.Status AS ProviderStatus, 
             a.Balance, a.IsPinned, a.IsActive,
 
@@ -148,34 +150,36 @@ namespace MyWallet.Infrastructure.Persistence.Repositories
                     ON a.BankCode = b.BankCode
                 LEFT JOIN Providers p
                      ON a.ProviderId = p.Id
+                LEFT JOIN Users u1 
+                     ON a.CreatedBy = u1.Id
+                LEFT JOIN Users u2 
+                     ON a.UpdatedBy = u2.Id
+                LEFT JOIN Users u3
+                     ON a.DeletedBy = u3.Id
                 WHERE a.Id = @Id";
             }
             else
             {
                 sql = $@"SELECT
                      a.Id, a.UserId, a.AccountNumber, a.AccountHolder,
-                     a.BankCode, b.BankName AS BankName, b.ShortName AS BankShortName, b.LogoUrl AS BankLogoUrl, b.IsActive AS BankIsActive, b.Status AS BankStatus,
-                     a.ProviderId, p.Code AS ProviderCode, p.Name AS ProviderName, p.LogoUrl AS ProviderLogoUrl, p.IsActive AS ProviderIsActive, p.Status AS ProviderStatus, 
+                     a.BankCode, b.NapasBin, b.BankName AS BankName, b.ShortName AS BankShortName, b.LogoUrl AS BankLogoUrl, b.IsActive AS BankIsActive,
+                     a.ProviderId, p.Code AS ProviderCode, p.Name AS ProviderName, p.LogoUrl AS ProviderLogoUrl, p.IsActive AS ProviderIsActive,
                      a.Balance, a.IsPinned, a.IsActive,
 
                      a.Status,
 
                      a.CreatedBy,
-                     a.UpdatedBy,
-                     a.DeletedBy,
 
                      u1.FullName AS CreatedByName,
-                     u2.FullName AS UpdatedByName,
-                     u3.FullName AS DeletedByName,
 
-                     a.CreatedAt,
-                     a.UpdatedAt,
-                     a.DeletedAt
+                     a.CreatedAt
                 FROM Accounts a
                 LEFT JOIN BankInfos b
                     ON a.BankCode = b.BankCode
                 LEFT JOIN Providers p
                      ON a.ProviderId = p.Id
+                LEFT JOIN Users u1 
+                     ON a.CreatedBy = u1.Id
                 WHERE a.Id = @Id
                      AND a.UserId = @UserId
                      AND a.DeletedAt IS NULL

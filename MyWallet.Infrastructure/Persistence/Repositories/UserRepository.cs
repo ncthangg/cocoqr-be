@@ -1,6 +1,7 @@
 ﻿using Dapper;
 using MyWallet.Application.Contracts.IRepositories;
 using MyWallet.Application.Contracts.IUnitOfWork;
+using MyWallet.Application.DTOs.Users.Responses;
 using MyWallet.Domain.Entities;
 using MyWallet.Infrastructure.Persistence.Repositories.Base;
 
@@ -12,7 +13,7 @@ namespace MyWallet.Infrastructure.Persistence.Repositories
             : base(_unitOfWork, "Users")
         {
         }
-        public async Task<(IEnumerable<User>, int totalCount)> GetUsersAsync(int pageNumber,
+        public async Task<(IEnumerable<GetUserBaseRes>, int totalCount)> GetUsersAsync(int pageNumber,
             int pageSize,
             string? sortField,
             string? sortDirection,
@@ -42,6 +43,9 @@ namespace MyWallet.Infrastructure.Persistence.Repositories
             u.Id,
             u.FullName,
             u.Email,
+            u.PictureUrl,
+            u.CreatedAt,
+            u.UpdatedAt,
             u.Status
         FROM Users u
         WHERE
@@ -103,7 +107,7 @@ namespace MyWallet.Infrastructure.Persistence.Repositories
             #endregion
 
             if (!users.Any())
-                return (users, totalCount);
+                return ([], totalCount);
 
             #region Query roles
 
@@ -112,7 +116,7 @@ namespace MyWallet.Infrastructure.Persistence.Repositories
             var sqlRoles = @"
         SELECT 
             ur.UserId,
-            r.Id,
+            ur.RoleId,
             r.Name,
             r.NameUpperCase
         FROM UserRoles ur
@@ -120,36 +124,45 @@ namespace MyWallet.Infrastructure.Persistence.Repositories
         WHERE ur.UserId IN @UserIds
         ";
 
-            var roles = await _unitOfWork.Connection.QueryAsync<UserRole, Role, UserRole>(
-                sqlRoles,
-                (ur, role) =>
-                {
-                    ur.Role = role;
-                    return ur;
-                },
-                new { UserIds = userIds },
-                splitOn: "Id",
-                transaction: _unitOfWork.Transaction
-            );
+            var roles = await _unitOfWork.Connection.QueryAsync<UserRoleRaw>(
+                           sqlRoles,
+                           new { UserIds = userIds },
+                           transaction: _unitOfWork.Transaction
+                       );
 
             #endregion
 
             #region Map roles to users
 
-            var roleLookup = roles.GroupBy(x => x.UserId)
-                                  .ToDictionary(g => g.Key, g => g.ToList());
+            var roleLookup = roles
+                            .GroupBy(x => x.UserId)
+                            .ToDictionary(
+                                g => g.Key,
+                                g => g.Select(r => new UserRoleRaw
+                                {
+                                    RoleId = r.RoleId,
+                                    Name = r.Name,
+                                    NameUpperCase = r.NameUpperCase
+                                }).ToList()
+                            );
 
-            foreach (var user in users)
+            var result = users.Select(u => new GetUserBaseRes
             {
-                if (roleLookup.TryGetValue(user.Id, out var userRoles))
-                    user.UserRoles = userRoles;
-                else
-                    user.UserRoles = new List<UserRole>();
-            }
+                Id = u.Id,
+                Email = u.Email,
+                FullName = u.FullName,
+                PictureUrl = u.PictureUrl,
+                CreatedAt = u.CreatedAt,
+                UpdatedAt = u.UpdatedAt,
+                Status = u.Status,
+                Roles = roleLookup.TryGetValue(u.Id, out var roles)
+        ? roles
+        : []
+            }).ToList();
 
             #endregion
 
-            return (users, totalCount);
+            return (result, totalCount);
         }
 
         public async Task<User> GetByEmailAsync(string email)
@@ -159,7 +172,7 @@ namespace MyWallet.Infrastructure.Persistence.Repositories
 
             const string sql = @"
                 SELECT 
-                    Id, Email, FullName, GoogleId, SecurityStamp, PictureUrl, CreatedAt, UpdatedAt
+                    Id, Email, FullName, GoogleId, SecurityStamp, PictureUrl, CreatedAt, UpdatedAt, Status
                 FROM Users
                 WHERE Email = @Email
             ";

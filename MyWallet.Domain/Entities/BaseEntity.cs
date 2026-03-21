@@ -33,7 +33,7 @@ namespace MyWallet.Domain.Entities
             DeletedAt = DateTime.UtcNow;
             DeletedBy = userId;
         }
-        public virtual void ChangeStatus(Guid userId)
+        public virtual void ChangeStatus()
         {
             Status = !Status;
         }

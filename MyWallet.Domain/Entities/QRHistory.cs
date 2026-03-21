@@ -13,14 +13,15 @@ namespace MyWallet.Domain.Entities
         public string? AccountHolderSnapshot { get; set; }
         public string? BankCodeSnapshot { get; set; }
         public string? BankNameSnapshot { get; set; }
+        public string? BankShortNameSnapshot { get; set; }
         public string? NapasBinSnapshot { get; set; }
         // QR info
         public decimal? Amount { get; set; }
         public Currency Currency { get; set; } = Currency.VND;
         public string? Description { get; set; }
 
-        public string? QRData { get; set; }
-        public string? QRImageUrl { get; set; }
+        public string? QrData { get; set; }
+        public string? QrImageUrl { get; set; }
         public string TransactionRef { get; set; } = null!;
 
         public Guid ProviderId { get; set; }

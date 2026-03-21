@@ -331,11 +331,11 @@ namespace MyWallet.Infrastructure.Migrations
                     b.Property<Guid>("ProviderId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("QRData")
+                    b.Property<string>("QrData")
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
 
-                    b.Property<string>("QRImageUrl")
+                    b.Property<string>("QrImageUrl")
                         .HasColumnType("nvarchar(MAX)");
 
                     b.Property<string>("QrMode")

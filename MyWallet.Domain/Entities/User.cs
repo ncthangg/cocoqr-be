@@ -34,5 +34,9 @@
                 return false;
             }
         }
+        public void UpdateSecurityStamp()
+        {
+            SecurityStamp = Guid.NewGuid().ToString("N");
+        }
     }
 }

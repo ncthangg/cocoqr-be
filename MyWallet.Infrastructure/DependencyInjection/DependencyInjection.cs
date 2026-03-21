@@ -79,6 +79,7 @@ namespace MyWallet.Infrastructure.DependencyInjection
         {
             services.AddScoped<RoleSeeder>();
             services.AddScoped<BankSeeder>();
+            services.AddScoped<ProviderSeeder>();
         }
         private static void AddConfig(this IServiceCollection services, IConfiguration configuration)
         {

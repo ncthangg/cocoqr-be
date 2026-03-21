@@ -291,6 +291,10 @@ namespace MyWallet.Infrastructure.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
+                    b.Property<string>("BankShortNameSnapshot")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
@@ -328,11 +332,11 @@ namespace MyWallet.Infrastructure.Migrations
                     b.Property<Guid>("ProviderId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("QRData")
+                    b.Property<string>("QrData")
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
 
-                    b.Property<string>("QRImageUrl")
+                    b.Property<string>("QrImageUrl")
                         .HasColumnType("nvarchar(MAX)");
 
                     b.Property<string>("QrMode")

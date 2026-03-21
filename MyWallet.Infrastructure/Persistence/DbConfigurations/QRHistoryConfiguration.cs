@@ -35,6 +35,8 @@ namespace MyWallet.Infrastructure.Persistence.DbConfigurations
                 .HasMaxLength(20);
             builder.Property(qr => qr.BankNameSnapshot)
                 .HasMaxLength(255);
+            builder.Property(qr => qr.BankShortNameSnapshot)
+                .HasMaxLength(50);
             builder.Property(qr => qr.NapasBinSnapshot)
                 .HasMaxLength(20);
 
@@ -51,10 +53,10 @@ namespace MyWallet.Infrastructure.Persistence.DbConfigurations
             builder.Property(qr => qr.Description)
                 .HasMaxLength(500);
 
-            builder.Property(qr => qr.QRData)
+            builder.Property(qr => qr.QrData)
                 .HasMaxLength(2000);
 
-            builder.Property(qr => qr.QRImageUrl)
+            builder.Property(qr => qr.QrImageUrl)
                 .HasColumnType("nvarchar(MAX)");
 
             builder.Property(qr => qr.TransactionRef)
