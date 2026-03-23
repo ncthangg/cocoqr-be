@@ -10,7 +10,7 @@ namespace MyWallet.QR_Generator.Models
     {
         public required ProviderCode ProviderCode { get; init; }
         /// <summary>BankCode tra trong BankBins (VCB, TCB, MOMO,...)</summary>
-        public required string BankCode { get; init; }
+        public string? BankCode { get; init; }
 
         /// <summary>Số tài khoản (VietQR) hoặc SĐT (MoMo native)</summary>
         public required string AccountNumber { get; init; }

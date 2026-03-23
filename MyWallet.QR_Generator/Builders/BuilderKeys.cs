@@ -10,9 +10,10 @@ namespace MyWallet.QR_Generator.Builders
     {
         public const string Bank = "BANK_VietQR";
         public const string MomoVietQr = "MOMO_VietQR";
-        public const string MomoNative = "MOMO_MomoNative";
         public const string VnPay = "VNPAY_VietQR";
         public const string ZaloPay = "ZALOPAY_VietQR";
+
+        public const string MomoNative = "MOMO_MomoNative";
 
         /// <summary>
         /// Tạo key từ bankCode và mode.
