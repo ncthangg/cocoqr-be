@@ -138,7 +138,7 @@ namespace MyWallet.Infrastructure.Persistence.Seeder
                                 SwiftCode = item.SwiftCode,
                                 BankName = item.BankName,
                                 ShortName = item.ShortName,
-                                IsActive = item.IsActive
+                                IsActive = false
                             };
 
                             bank.Initialize(_idGenerator.NewId(), Guid.Empty);
@@ -150,8 +150,7 @@ namespace MyWallet.Infrastructure.Persistence.Seeder
                                 existing.NapasBin != item.NapasBin ||
                                 existing.SwiftCode != item.SwiftCode ||
                                 existing.BankName != item.BankName ||
-                                existing.ShortName != item.ShortName ||
-                                existing.IsActive != item.IsActive;
+                                existing.ShortName != item.ShortName;
 
                             if (isDirty)
                             {
@@ -159,7 +158,6 @@ namespace MyWallet.Infrastructure.Persistence.Seeder
                                 existing.SwiftCode = item.SwiftCode;
                                 existing.BankName = item.BankName;
                                 existing.ShortName = item.ShortName;
-                                existing.IsActive = item.IsActive;
 
                                 _context.Entry(existing).State = EntityState.Modified;
                             }
@@ -222,7 +220,6 @@ namespace MyWallet.Infrastructure.Persistence.Seeder
             Check(nameof(existing.SwiftCode), existing.SwiftCode, incoming.SwiftCode);
             Check(nameof(existing.BankName), existing.BankName, incoming.BankName);
             Check(nameof(existing.ShortName), existing.ShortName, incoming.ShortName);
-            Check(nameof(existing.IsActive), existing.IsActive.ToString(), incoming.IsActive.ToString());
 
             return diffs;
 

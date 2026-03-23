@@ -138,7 +138,7 @@ namespace MyWallet.Infrastructure.Persistence.Seeder
                             {
                                 Code = item.Code,
                                 Name = item.Name,
-                                IsActive = item.IsActive,
+                                IsActive = false,
                             };
 
                             provider.Initialize(_idGenerator.NewId(), Guid.Empty);
@@ -146,14 +146,11 @@ namespace MyWallet.Infrastructure.Persistence.Seeder
                         }
                         else
                         {
-                            var isDirty =
-                                existing.Name != item.Name ||
-                                existing.IsActive != item.IsActive;
+                            var isDirty = existing.Name != item.Name;
 
                             if (isDirty)
                             {
                                 existing.Name = item.Name;
-                                existing.IsActive = item.IsActive;
 
                                 _context.Entry(existing).State = EntityState.Modified;
                             }
@@ -209,7 +206,6 @@ namespace MyWallet.Infrastructure.Persistence.Seeder
             var diffs = new List<ProviderFieldDiff>();
 
             Check(nameof(existing.Name), existing.Name, incoming.Name);
-            Check(nameof(existing.IsActive), existing.IsActive.ToString(), incoming.IsActive.ToString());
 
             return diffs;
 

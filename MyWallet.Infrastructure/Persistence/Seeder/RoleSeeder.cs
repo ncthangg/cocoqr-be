@@ -131,7 +131,7 @@ namespace MyWallet.Infrastructure.Persistence.Seeder
                             {
                                 Name = key,
                                 NameUpperCase = item.Name.ToUpper(),
-                                Status = item.Status
+                                Status = true
                             };
 
                             role.Initialize(_idGenerator.NewId(), Guid.Empty);
@@ -139,15 +139,12 @@ namespace MyWallet.Infrastructure.Persistence.Seeder
                         }
                         else
                         {
-                            var isDirty =
-                                existing.Name != item.Name ||
-                                existing.Status != item.Status;
+                            var isDirty = existing.Name != item.Name;
 
                             if (isDirty)
                             {
                                 existing.Name = key;
                                 existing.NameUpperCase = item.Name.ToUpper();
-                                existing.Status = item.Status;
 
                                 _context.Entry(existing).State = EntityState.Modified;
                             }
@@ -197,7 +194,6 @@ namespace MyWallet.Infrastructure.Persistence.Seeder
             var diffs = new List<RoleFieldDiff>();
 
             Check(nameof(existing.Name), existing.Name, incoming.Name);
-            Check(nameof(existing.Status), existing.Status.ToString(), incoming.Status.ToString());
 
             return diffs;
 
