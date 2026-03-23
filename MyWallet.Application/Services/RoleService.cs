@@ -2,12 +2,11 @@
 using MyWallet.Application.Contracts.IContext;
 using MyWallet.Application.Contracts.IServices;
 using MyWallet.Application.Contracts.ISubServices;
-using MyWallet.Application.DTOs.Request;
-using MyWallet.Application.DTOs.Response;
+using MyWallet.Application.Contracts.IUnitOfWork;
+using MyWallet.Application.DTOs.Roles.Requests;
+using MyWallet.Application.DTOs.Roles.Responses;
 using MyWallet.Domain.Constants;
 using MyWallet.Domain.Entities;
-using MyWallet.Domain.Helper;
-using MyWallet.Domain.Interface.IUnitOfWork;
 using ApplicationException = MyWallet.Application.Exceptions.ApplicationException;
 
 namespace MyWallet.Application.Services
@@ -29,9 +28,8 @@ namespace MyWallet.Application.Services
             var roles = await _unitOfWork.Roles.GetAllAsync()
                 ?? throw new ApplicationException(ErrorCode.NotFound, $"Roles not found");
 
-            var userDict = await UserHelper.GetUserNameDictAsync<Role>(roles.ToList(), _unitOfWork.Users);
 
-            return roles.Select(p => RoleMapper.ToGetRoleRes(p, userDict)).ToList();
+            return roles.Select(p => RoleMapper.ToGetRoleRes(p)).ToList();
         }
         public async Task<GetRoleRes> GetByIdAsync(Guid id)
         {
@@ -41,34 +39,7 @@ namespace MyWallet.Application.Services
             var role = await _unitOfWork.Roles.GetByIdAsync(id)
                 ?? throw new ApplicationException(ErrorCode.NotFound, $"Role {id} not found");
 
-            var userDict = await UserHelper.GetUserNameDictAsync(role, _unitOfWork.Users);
-
-            return RoleMapper.ToGetRoleRes(role, userDict);
-        }
-        public async Task<Guid> PostAsync(PostRoleReq req)
-        {
-            var isAdmin = _userContext.IsAdmin();
-
-            if (!isAdmin)
-            {
-                throw new ApplicationException(ErrorCode.Unauthorized, ErrorMessages.Unauthorized);
-            }
-
-            Guid userId = _userContext.UserId
-                ?? throw new ApplicationException(ErrorCode.Unauthorized, "User ID not found in context!");
-
-            var role = new Role() { 
-                Name = req.Name.Trim().ToLower(),
-                NameUpperCase = req.Name.Trim().ToUpper()
-            };
-            role.Initialize(_idGenerator.NewId(), userId);
-
-            if (!role.IsValidRole())
-                throw new ApplicationException(ErrorCode.ValidationError, "Invalid role");
-
-            await _unitOfWork.Roles.AddAsync(role);
-
-            return role.Id;
+            return RoleMapper.ToGetRoleRes(role);
         }
         public async Task PutAsync(Guid id, PutRoleReq req)
         {
@@ -96,23 +67,6 @@ namespace MyWallet.Application.Services
                 throw new ApplicationException(ErrorCode.ValidationError, "Invalid role");
 
             await _unitOfWork.Roles.UpdateAsync(role);
-        }
-        public async Task DeleteAsync(Guid id)
-        {
-            var isAdmin = _userContext.IsAdmin();
-
-            if (!isAdmin)
-            {
-                throw new ApplicationException(ErrorCode.Unauthorized, ErrorMessages.Unauthorized);
-            }
-
-            if (id == Guid.Empty)
-                throw new ApplicationException(ErrorCode.ValidationError, "Invalid role ID");
-
-            _ = await _unitOfWork.Roles.GetByIdAsync(id)
-                ?? throw new ApplicationException(ErrorCode.NotFound, $"Role {id} not found");
-
-            await _unitOfWork.Roles.DeleteAsync(id);
         }
     }
 }

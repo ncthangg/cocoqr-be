@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using MyWallet.Application.Contracts.ISubServices;
-using MyWallet.Application.DTOs.Response;
-using MyWallet.Application.DTOs.Response.Base;
+using MyWallet.Application.DTOs.Auths.Responses;
+using MyWallet.Application.DTOs.Base.BaseRes;
 using MyWallet.Domain.Constants;
 using System.Text.Json;
 

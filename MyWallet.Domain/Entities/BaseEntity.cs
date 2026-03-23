@@ -9,8 +9,15 @@ namespace MyWallet.Domain.Entities
         public Guid? CreatedBy { get; set; }
         public Guid? UpdatedBy { get; set; }
         public Guid? DeletedBy { get; set; }
-        public bool? Status { get; set; }
+        public bool Status { get; set; } = true;
 
+        public void SetId(Guid id)
+        {
+            if (Id != Guid.Empty)
+                throw new InvalidOperationException("Id already set");
+
+            Id = id;
+        }
         public void SetCreated(Guid userId)
         {
             CreatedAt = DateTime.UtcNow;
@@ -26,17 +33,11 @@ namespace MyWallet.Domain.Entities
             DeletedAt = DateTime.UtcNow;
             DeletedBy = userId;
         }
-        public virtual void ChangeStatus(Guid userId)
+        public virtual void ChangeStatus()
         {
             Status = !Status;
         }
-        public void SetId(Guid id)
-        {
-            if (Id != Guid.Empty)
-                throw new InvalidOperationException("Id already set");
 
-            Id = id;
-        }
         public void Initialize(Guid id, Guid userId)
         {
             SetId(id);

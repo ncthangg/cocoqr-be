@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
+using MyWallet.Application.Contracts.IDbContext;
 using MyWallet.Domain.Constants;
-using MyWallet.Domain.Interface.IDbContext;
 using System.Data;
 using System.Data.SqlClient;
 

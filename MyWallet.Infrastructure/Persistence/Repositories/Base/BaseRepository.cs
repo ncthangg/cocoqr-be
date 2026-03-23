@@ -1,18 +1,18 @@
 ﻿using Dapper;
-using MyWallet.Domain.Interface.IDbContext;
-using MyWallet.Domain.Interface.IRepositories.Base;
+using MyWallet.Application.Contracts.IRepositories.Base;
+using MyWallet.Application.Contracts.IUnitOfWork;
 using System.Data;
 
 namespace MyWallet.Infrastructure.Persistence.Repositories.Base
 {
     public abstract class BaseRepository<TEntity> : IRepository<TEntity> where TEntity : class
     {
-        protected readonly IDbConnectionFactory _connectionFactory;
+        protected readonly IUnitOfWork _unitOfWork;
         protected readonly string _tableName;
 
-        protected BaseRepository(IDbConnectionFactory connectionFactory, string tableName)
+        protected BaseRepository(IUnitOfWork unitOfWork, string tableName)
         {
-            _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(_connectionFactory));
+            _unitOfWork = unitOfWork;
             _tableName = tableName ?? throw new ArgumentNullException(nameof(tableName));
         }
 
@@ -26,16 +26,11 @@ namespace MyWallet.Infrastructure.Persistence.Repositories.Base
 
             string sql = $"SELECT * FROM {_tableName} WHERE Id = @Id";
 
-            // ✅ Use factory to create connection
-            using (var connection = _connectionFactory.CreateConnection())
-            {
-                if (connection.State == ConnectionState.Closed)
-                {
-                    connection.Open();
-                }
-
-                return await connection.QueryFirstOrDefaultAsync<TEntity>(sql,new { Id = id });
-            }
+            return await _unitOfWork.Connection.QueryFirstOrDefaultAsync<TEntity>(
+                sql,
+                new { Id = id },
+                _unitOfWork.Transaction
+            );
         }
 
         /// <summary>
@@ -45,15 +40,11 @@ namespace MyWallet.Infrastructure.Persistence.Repositories.Base
         {
             string sql = $"SELECT * FROM {_tableName}";
 
-            using (var connection = _connectionFactory.CreateConnection())
-            {
-                if (connection.State == ConnectionState.Closed)
-                {
-                    connection.Open();
-                }
+            return await _unitOfWork.Connection.QueryAsync<TEntity>(
+                sql,
+                _unitOfWork.Transaction
+            );
 
-                return await connection.QueryAsync<TEntity>(sql);
-            }
         }
 
         /// <summary>
@@ -82,18 +73,17 @@ namespace MyWallet.Infrastructure.Persistence.Repositories.Base
             var parameters = new DynamicParameters();
             foreach (var prop in properties)
             {
-                parameters.Add($"@{prop.Name}", prop.GetValue(entity));
-            }
+                var value = prop.GetValue(entity);
 
-            using (var connection = _connectionFactory.CreateConnection())
-            {
-                if (connection.State == ConnectionState.Closed)
+                if (value != null && value.GetType().IsEnum)
                 {
-                    connection.Open();
+                    value = value.ToString();
                 }
 
-                await connection.ExecuteAsync(sql, parameters);
+                parameters.Add($"@{prop.Name}", value);
             }
+
+            await _unitOfWork.Connection.ExecuteAsync(sql, parameters, _unitOfWork.Transaction);
         }
 
         /// <summary>
@@ -121,18 +111,17 @@ namespace MyWallet.Infrastructure.Persistence.Repositories.Base
 
             foreach (var prop in properties)
             {
-                parameters.Add($"@{prop.Name}", prop.GetValue(entity));
-            }
+                var value = prop.GetValue(entity);
 
-            using (var connection = _connectionFactory.CreateConnection())
-            {
-                if (connection.State == ConnectionState.Closed)
+                if (value != null && value.GetType().IsEnum)
                 {
-                    connection.Open();
+                    value = value.ToString();
                 }
 
-                await connection.ExecuteAsync(sql, parameters);
+                parameters.Add($"@{prop.Name}", value);
             }
+
+            await _unitOfWork.Connection.ExecuteAsync(sql, parameters, _unitOfWork.Transaction);
         }
 
         /// <summary>
@@ -145,89 +134,63 @@ namespace MyWallet.Infrastructure.Persistence.Repositories.Base
 
             string sql = $"DELETE FROM {_tableName} WHERE Id = @Id";
 
-            using (var connection = _connectionFactory.CreateConnection())
-            {
-                if (connection.State == ConnectionState.Closed)
-                {
-                    connection.Open();
-                }
-
-                await connection.ExecuteAsync(sql, new { Id = id });
-            }
+            await _unitOfWork.Connection.ExecuteAsync(sql, new { Id = id }, _unitOfWork.Transaction);
         }
-        /// <summary>
-        /// Execute custom query with parameters
-        /// ⚡ SAFE - Parametrized automatically
-        /// </summary>
         protected async Task<TResult> QuerySingleAsync<TResult>(
             string sql,
             object? parameters = null)
         {
-            using (var connection = _connectionFactory.CreateConnection())
-            {
-                if (connection.State == ConnectionState.Closed)
-                {
-                    connection.Open();
-                }
-
-                return await connection.QueryFirstOrDefaultAsync<TResult>(sql, parameters);
-            }
+            return await _unitOfWork.Connection.QuerySingleAsync<TResult>(
+                sql,
+                parameters,
+                _unitOfWork.Transaction
+            );
+        }
+        protected async Task<TResult> QueryFirstOrDefaultAsync<TResult>(
+            string sql,
+            object? parameters = null)
+        {
+            return await _unitOfWork.Connection.QueryFirstOrDefaultAsync<TResult>(
+                sql,
+                parameters,
+                _unitOfWork.Transaction
+            );
         }
 
-        /// <summary>
-        /// Execute custom query with multiple results
-        /// ⚡ SAFE - Parametrized automatically
-        /// </summary>
         protected async Task<IEnumerable<TResult>> QueryAsync<TResult>(
             string sql,
             object? parameters = null)
         {
-            using (var connection = _connectionFactory.CreateConnection())
-            {
-                if (connection.State == ConnectionState.Closed)
-                {
-                    connection.Open();
-                }
-
-                return await connection.QueryAsync<TResult>(sql, parameters);
-            }
+            return await _unitOfWork.Connection.QueryAsync<TResult>(
+                sql,
+                parameters,
+                _unitOfWork.Transaction
+            );
         }
 
         protected async Task<(IEnumerable<T>, int)> QueryPagedAsync<T>(
             string sql,
             object? parameters = null)
         {
-            using (var connection = _connectionFactory.CreateConnection())
-            {
-                if (connection.State == ConnectionState.Closed)
-                {
-                    connection.Open();
-                }
+            using var multi = await _unitOfWork.Connection.QueryMultipleAsync(
+                sql,
+                parameters,
+                _unitOfWork.Transaction
+            );
 
-                using var multi = await connection.QueryMultipleAsync(sql, parameters);
+            var items = await multi.ReadAsync<T>();
+            var total = await multi.ReadSingleAsync<int>();
 
-                var items = await multi.ReadAsync<T>();
-                var total = await multi.ReadSingleAsync<int>();
-
-                return (items, total);
-            }
+            return (items, total);
         }
 
-        /// <summary>
-        /// Execute command (INSERT, UPDATE, DELETE)
-        /// ⚡ SAFE - Parametrized automatically
-        /// </summary>
         protected async Task<int> ExecuteAsync(string sql, object? parameters = null)
         {
-            using (var connection = _connectionFactory.CreateConnection())
-            {
-                if (connection.State == ConnectionState.Closed)
-                {
-                    connection.Open();
-                }
-
-                return await connection.ExecuteAsync(sql, parameters);
-            }
+            return await _unitOfWork.Connection.ExecuteAsync(
+                sql,
+                parameters,
+                _unitOfWork.Transaction
+            );
         }
     }
 }

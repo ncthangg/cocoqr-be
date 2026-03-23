@@ -17,10 +17,20 @@
 
   <ItemGroup>
     <ProjectReference Include="..\MyWallet.Domain\MyWallet.Domain.csproj" />
+    <ProjectReference Include="..\MyWallet.QR_Generator\MyWallet.QR_Generator.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Common\Validators\" />
+    <Folder Include="DTOs\Auths\Queries\" />
+    <Folder Include="DTOs\Auths\Requests\" />
+    <Folder Include="DTOs\Banks\Queries\" />
+    <Folder Include="DTOs\QRStyleLibrary\Queries\" />
+    <Folder Include="DTOs\Roles\Queries\" />
+    <Folder Include="DTOs\UserRoles\Queries\" />
+    <Folder Include="DTOs\UserRoles\Responses\" />
+    <Folder Include="DTOs\Users\Queries\" />
+    <Folder Include="DTOs\Users\Requests\" />
   </ItemGroup>
 
 </Project>

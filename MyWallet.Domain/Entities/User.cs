@@ -2,6 +2,7 @@
 {
     public class User : BaseEntity
     {
+        public User() { }
         public required string FullName { get; set; }
         public required string Email { get; set; }
         public required string GoogleId { get; set; }
@@ -32,6 +33,10 @@
             {
                 return false;
             }
+        }
+        public void UpdateSecurityStamp()
+        {
+            SecurityStamp = Guid.NewGuid().ToString("N");
         }
     }
 }

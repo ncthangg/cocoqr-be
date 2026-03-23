@@ -2,10 +2,10 @@
 using MyWallet.Application.Contracts.IConfigs;
 using MyWallet.Application.Contracts.IContext;
 using MyWallet.Application.Contracts.ISubServices;
-using MyWallet.Application.DTOs.Response;
+using MyWallet.Application.Contracts.IUnitOfWork;
+using MyWallet.Application.DTOs.Auths.Responses;
 using MyWallet.Domain.Constants;
 using MyWallet.Domain.Entities;
-using MyWallet.Domain.Interface.IUnitOfWork;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;

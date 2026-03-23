@@ -19,6 +19,23 @@
   <ItemGroup>
     <ProjectReference Include="..\MyWallet.Application\MyWallet.Application.csproj" />
     <ProjectReference Include="..\MyWallet.Infrastructure\MyWallet.Infrastructure.csproj" />
+    <ProjectReference Include="..\MyWallet.QR_Generator\MyWallet.QR_Generator.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Seed\Data\banks_v1.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="wwwroot\assets\" />
+    <Folder Include="wwwroot\assets\banks\" />
+    <Folder Include="wwwroot\qrs\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
   </ItemGroup>
 
   <ItemGroup>

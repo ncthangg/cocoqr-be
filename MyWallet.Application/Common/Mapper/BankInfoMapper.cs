@@ -1,20 +1,20 @@
-﻿using MyWallet.Application.DTOs.Response;
+﻿using MyWallet.Application.DTOs.Banks.Responses;
 using MyWallet.Domain.Entities;
 
 namespace MyWallet.Application.Common.Mapper
 {
     public class BankInfoMapper
     {
-        public static GetBankInfoRes ToGetBankInfoRes(BankInfo u, Dictionary<Guid, string>? userDict)
+        public static GetBankInfoRes ToGetBankInfoRes(BankInfo u)
         {
             return new GetBankInfoRes
             {
                 Id = u.Id,
                 BankCode = u.BankCode,
-                NapasCode = u.NapasCode,
+                NapasBin = u.NapasBin,
                 SwiftCode = u.SwiftCode,
-                BankName = u.BankName,
 
+                BankName = u.BankName,
                 ShortName = u.ShortName,
                 LogoUrl = u.LogoUrl,
                 IsActive = u.IsActive,
@@ -23,10 +23,6 @@ namespace MyWallet.Application.Common.Mapper
                 CreatedAt = u.CreatedAt,
                 UpdatedAt = u.UpdatedAt,
                 DeletedAt = u.DeletedAt,
-
-                CreatedByName = BaseMapper.GetUserName(u.CreatedBy, userDict),
-                UpdatedByName = BaseMapper.GetUserName(u.UpdatedBy, userDict),
-                DeletedByName = BaseMapper.GetUserName(u.DeletedBy, userDict),
             };
         }
     }

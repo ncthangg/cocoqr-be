@@ -1,0 +1,26 @@
+﻿[
+  {
+    "Code": "BANK",
+    "Name": "Ngân hàng",
+    "LogoUrl": null,
+    "IsActive": true
+  },
+  {
+    "Code": "VNPAY",
+    "Name": "Ví điện tử VNPay",
+    "LogoUrl": null,
+    "IsActive": true
+  },
+  {
+    "Code": "ZALOPAY",
+    "Name": "Ví điện tử ZALOPAY",
+    "LogoUrl": null,
+    "IsActive": true
+  },
+  {
+    "Code": "MOMO",
+    "Name": "Ví điện tử MOMO",
+    "LogoUrl": null,
+    "IsActive": true
+  }
+]

@@ -265,6 +265,7 @@ namespace MyWallet.API.DependencyInjection
             services.AddControllers().AddJsonOptions(options =>
             {
                 options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+                options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
             });
         }
         //private static void BackgroundServices(this IServiceCollection services)

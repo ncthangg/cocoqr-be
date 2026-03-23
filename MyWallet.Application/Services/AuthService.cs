@@ -5,12 +5,12 @@ using MyWallet.Application.Contracts.IConfigs;
 using MyWallet.Application.Contracts.IContext;
 using MyWallet.Application.Contracts.IServices;
 using MyWallet.Application.Contracts.ISubServices;
-using MyWallet.Application.DTOs.Response;
+using MyWallet.Application.Contracts.IUnitOfWork;
+using MyWallet.Application.DTOs.Auths.Responses;
+using MyWallet.Application.DTOs.Users.Responses;
 using MyWallet.Domain.Constants;
 using MyWallet.Domain.Constants.Enum;
 using MyWallet.Domain.Entities;
-using MyWallet.Domain.Interface.IRepositories;
-using MyWallet.Domain.Interface.IUnitOfWork;
 using System.Security.Claims;
 using ApplicationException = MyWallet.Application.Exceptions.ApplicationException;
 
@@ -25,15 +25,13 @@ namespace MyWallet.Application.Services
         //private readonly IRedisService _redisService;
 
         private readonly ITokenService _tokenService;
-        private readonly IUserRepository _userRepository;
 
         public AuthService(IUnitOfWork unitOfWork,
             ITokenConfiguration tokenConfiguration,
             IUserContext userContext,
             IIdGenerator idGenerator,
             //IRedisService redisService,
-            ITokenService tokenService,
-            IUserRepository userRepository)
+            ITokenService tokenService)
         {
             _unitOfWork = unitOfWork;
             _tokenConfiguration = tokenConfiguration;
@@ -42,24 +40,20 @@ namespace MyWallet.Application.Services
             //_redisService = redisService;
 
             _tokenService = tokenService;
-            _userRepository = userRepository;
         }
         public async Task<GetUserRes> Me()
         {
             var userId = _userContext.UserId
                 ?? throw new ApplicationException(ErrorCode.Unauthorized, ErrorMessages.UserIDNotFoundInTheContext);
 
-            User? user = await _userRepository.GetWithAccountsAsync(userId)
+            User? user = await _unitOfWork.Users.GetByIdAsync(userId)
                       ?? throw new ApplicationException(ErrorCode.Unauthorized, "Tên người dùng này chưa có tài khoản! Vui lòng đăng ký!");
 
             return new GetUserRes
             {
-                UserId = user.Id,
                 Email = user.Email,
                 FullName = user.FullName,
-                GoogleId = user.GoogleId,
                 PictureUrl = user.PictureUrl,
-                SecurityStamp = user.SecurityStamp ?? ""                                                    
             };
         }
         public async Task<SignInGoogleRes> SignInGoogle(HttpContext context)
@@ -78,33 +72,50 @@ namespace MyWallet.Application.Services
 
             if (string.IsNullOrWhiteSpace(email))
                 throw new ApplicationException(ErrorCode.BadRequest, "Không tìm thấy email Google!");
-             
-            User? user = await _userRepository.GetByEmailAsync(email);
+
+            User? user = await _unitOfWork.Users.GetByEmailAsync(email);
 
             if (user == null)
             {
-                user = new User
+                try
                 {
-                    Email = email,
-                    FullName = name,
-                    GoogleId = googleId,
-                    PictureUrl = picture,
-                    SecurityStamp = Guid.NewGuid().ToString("N"),
-                    CreatedAt = DateTime.UtcNow
-                };
-                var userId = _idGenerator.NewId();
-                user.Initialize(userId, userId);
-                await _unitOfWork.Users.AddAsync(user);
+                    await _unitOfWork.BeginTransactionAsync();
 
-                var rolesExisted = await _unitOfWork.Roles.GetByNameAsync(RoleCategory.User.ToString())
-                    ?? throw new ApplicationException(ErrorCode.NotFound, "Default role not found");
-                await _unitOfWork.UserRoles.AddUserToRoleAsync(_idGenerator.NewId(), user.Id, rolesExisted.Id);
+                    user = new User
+                    {
+                        Email = email,
+                        FullName = name,
+                        GoogleId = googleId,
+                        PictureUrl = picture,
+                        SecurityStamp = Guid.NewGuid().ToString("N"),
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    var userId = _idGenerator.NewId();
+                    user.Initialize(userId, userId);
+                    await _unitOfWork.Users.AddAsync(user);
 
-                await _unitOfWork.CommitAsync();
+                    var rolesExisted = await _unitOfWork.Roles.GetByNameAsync(RoleCategory.USER.ToString())
+                        ?? throw new ApplicationException(ErrorCode.NotFound, "Default role not found");
+                    await _unitOfWork.UserRoles.AddUserToRoleAsync(_idGenerator.NewId(), user.Id, rolesExisted.Id);
+
+                    await _unitOfWork.CommitAsync();
+                }
+                catch
+                {
+                    await _unitOfWork.RollbackAsync();
+                    throw;
+                }
+            }
+            else
+            {
+                if (user.Status == false)
+                    throw new ApplicationException(ErrorCode.Unauthorized, "Tài khoản đang bị tạm khóa. Vui lòng liên hệ Admin để biết thêm chi tiết.");
             }
 
-            var roles = await _unitOfWork.UserRoles.GetRolesByUserIdAsync(user.Id)
-                ?? throw new ApplicationException(ErrorCode.NotFound, "Role of user not found");
+            var roles = await _unitOfWork.UserRoles.GetRolesByUserIdAsync(user.Id);
+
+            if (!roles.Any())
+                throw new ApplicationException(ErrorCode.BadRequest, "Đăng nhập thất bại, Role of user not found");
 
             // 4. Generate JWT for this user
             TokenRes jwt = await _tokenService.GenerateTokens(user.Id, roles, null);
@@ -113,11 +124,8 @@ namespace MyWallet.Application.Services
             {
                 UserRes = new()
                 {
-                    UserId = user.Id,
                     Email = user.Email,
                     FullName = user.FullName,
-                    GoogleId = user.GoogleId,
-                    SecurityStamp = user.SecurityStamp ?? "",
                     PictureUrl = user.PictureUrl,
                 },
                 TokenRes = jwt,

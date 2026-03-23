@@ -49,5 +49,6 @@
 
         bool IsAuthenticated();
         bool IsAdmin();
+        bool IsUser();
     }
 }

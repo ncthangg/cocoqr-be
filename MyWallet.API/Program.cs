@@ -6,6 +6,7 @@ using MyWallet.Application.DependencyInjection;
 using MyWallet.Infrastructure.DependencyInjection;
 using MyWallet.Infrastructure.Persistence.MyDbContext;
 using MyWallet.Infrastructure.Persistence.Seeder;
+using MyWallet.QR_Generator.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,6 +14,7 @@ builder.AddCustomLogging();
 builder.Services.AddForwardedHeadersConfig();
 
 // Add services to the container.
+builder.Services.AddQrGenerator();
 builder.Services.AddPresentation(builder.Configuration);
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
@@ -29,6 +31,12 @@ if (args.Contains("--migrate"))
     var db = scope.ServiceProvider.GetRequiredService<MyWalletDbContext>();
     await db.Database.MigrateAsync();
     return;
+}
+
+using (var scope = app.Services.CreateScope())
+{
+    var roleSeeder = scope.ServiceProvider.GetRequiredService<RoleSeeder>();
+    await roleSeeder.SeedAsync();
 }
 
 if (app.Environment.IsDevelopment())

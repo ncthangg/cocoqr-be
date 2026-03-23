@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MyWallet.Application.Contracts.IServices;
-using MyWallet.Application.DTOs.Request;
-using MyWallet.Application.DTOs.Response;
-using MyWallet.Application.DTOs.Response.Base;
+using MyWallet.Application.DTOs.Banks.Requests;
+using MyWallet.Application.DTOs.Banks.Responses;
+using MyWallet.Application.DTOs.Base.BaseRes;
 using MyWallet.Domain.Constants;
 
 namespace MyWallet.API.Controllers
@@ -18,35 +18,14 @@ namespace MyWallet.API.Controllers
             _bankInfoService = bankInfoService;
         }
         [HttpGet]
-        [Authorize]
-        public async Task<IActionResult> Get(int pageNumber = 1, int pageSize = 10, bool? isActive = true, string? searchValue = null)
+        public async Task<IActionResult> Get(int pageNumber = 1, int pageSize = 10, string? sortField = null, string? sortDirection = null, bool? isActive = null, string? searchValue = null)
         {
-            PagingVM<GetBankInfoRes> result = await _bankInfoService.GetsAsync(pageNumber, pageSize, isActive, searchValue);
+            PagingVM<GetBankInfoRes> result = await _bankInfoService.GetsAsync(pageNumber, pageSize, sortField, sortDirection, isActive, searchValue);
 
             return Ok(new BaseResponseModel<PagingVM<GetBankInfoRes>>(
                 code: SuccessCode.Success,
                 data: result,
                 message: null));
-        }
-        [HttpGet("{id}")]
-        [Authorize]
-        public async Task<IActionResult> GetById(Guid id)
-        {
-            GetBankInfoRes result = await _bankInfoService.GetByIdAsync(id);
-            return Ok(new BaseResponseModel<GetBankInfoRes>(
-                code: SuccessCode.Success,
-                data: result,
-                message: null));
-        }
-        [HttpPost]
-        [Authorize]
-        public async Task<IActionResult> Post([FromForm] PostBankInfoReq request)
-        {
-            await _bankInfoService.PostAsync(request);
-            return Ok(new BaseResponseModel<string>(
-                code: SuccessCode.Success,
-                data: null,
-                message: SuccessMessages.CreateSuccess));
         }
         [HttpPut("{id}")]
         [Authorize]
@@ -58,15 +37,6 @@ namespace MyWallet.API.Controllers
                data: null,
                message: SuccessMessages.UpdateSuccess));
         }
-        [HttpDelete("{id}")]
-        [Authorize]
-        public async Task<IActionResult> Delete(Guid id)
-        {
-            await _bankInfoService.DeleteAsync(id);
-            return Ok(new BaseResponseModel<string>(
-              code: SuccessCode.Success,
-              data: null,
-              message: SuccessMessages.DeleteForeverSuccess));
-        }
+
     }
 }

@@ -11,6 +11,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyWallet.Domain", "MyWallet
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyWallet.Infrastructure", "MyWallet.Infrastructure\MyWallet.Infrastructure.csproj", "{0026ABBB-0CB7-C5EB-702B-887B4E7BA312}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyWallet.QR_Generator", "MyWallet.QR_Generator\MyWallet.QR_Generator.csproj", "{773158FF-F883-4A24-B36A-354C5A98C711}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyWallet.QR_Decoder", "MyWallet.QR_Decoder\MyWallet.QR_Decoder.csproj", "{4931ABF1-0487-4205-84CD-C1F21A7D348A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +37,14 @@ Global
 		{0026ABBB-0CB7-C5EB-702B-887B4E7BA312}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0026ABBB-0CB7-C5EB-702B-887B4E7BA312}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0026ABBB-0CB7-C5EB-702B-887B4E7BA312}.Release|Any CPU.Build.0 = Release|Any CPU
+		{773158FF-F883-4A24-B36A-354C5A98C711}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{773158FF-F883-4A24-B36A-354C5A98C711}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{773158FF-F883-4A24-B36A-354C5A98C711}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{773158FF-F883-4A24-B36A-354C5A98C711}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4931ABF1-0487-4205-84CD-C1F21A7D348A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4931ABF1-0487-4205-84CD-C1F21A7D348A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4931ABF1-0487-4205-84CD-C1F21A7D348A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4931ABF1-0487-4205-84CD-C1F21A7D348A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

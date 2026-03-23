@@ -24,25 +24,24 @@ namespace MyWallet.Infrastructure.Persistence.DbConfigurations
                 .HasMaxLength(50);
 
             builder.Property(a => a.AccountHolder)
-                .IsRequired()
+                .IsRequired(false)
                 .HasMaxLength(255);
 
             builder.Property(a => a.BankCode)
-                .IsRequired()
+                .IsRequired(false)
                 .HasMaxLength(20);
 
-            builder.Property(a => a.BankName)
-                .IsRequired()
-                .HasMaxLength(255);
-
-            builder.Property(a => a.AccountType)
-                .IsRequired()
-                .HasMaxLength(50);
+            builder.Property(qr => qr.ProviderId)
+                .IsRequired();
 
             builder.Property(a => a.Balance)
                 .IsRequired()
                 .HasColumnType("decimal(18,2)")
                 .HasDefaultValue(0m);
+
+            builder.Property(a => a.IsPinned)
+                .IsRequired()
+                .HasDefaultValue(false);
 
             builder.Property(a => a.IsActive)
                 .IsRequired()
@@ -54,44 +53,41 @@ namespace MyWallet.Infrastructure.Persistence.DbConfigurations
                 .HasDefaultValueSql("GETUTCDATE()");
 
             builder.Property(a => a.Status)
+                .IsRequired()
                 .HasDefaultValue(true);
 
             // Indexes
             // Uniqueness: 1 user không được trùng AccountNumber
-            builder.HasIndex(a => new { a.UserId, a.AccountNumber })
+            builder.HasIndex(a => new { a.UserId, a.AccountNumber, a.BankCode, a.ProviderId })
                 .IsUnique()
-                .HasDatabaseName("IX_Accounts_UserId_AccountNumber");
+                .HasDatabaseName("IX_Accounts_UserId_AccountNumber_BankCode_Provider_Unique");
 
-            // Truy vấn phổ biến: lấy danh sách account theo user (covering index)
-            builder.HasIndex(a => a.UserId)
-                .HasDatabaseName("IX_Accounts_UserId")
+            // Truy vấn phổ biến: lấy danh sách account theo user + filter
+            builder.HasIndex(a => new { a.UserId, a.Status, a.DeletedAt, a.IsPinned, a.CreatedAt })
+                .HasDatabaseName("IX_Accounts_UserId_Filter_Sort")
                 .IncludeProperties(a => new
                 {
                     a.AccountNumber,
                     a.AccountHolder,
                     a.BankCode,
-                    a.BankName,
-                    a.AccountType,
                     a.Balance,
                     a.IsActive
                 });
 
-            // Truy vấn lọc account đang active theo user
-            builder.HasIndex(a => new { a.UserId, a.IsActive })
-                .HasDatabaseName("IX_Accounts_UserId_IsActive")
+            // Truy vấn phổ biến: admin lấy danh sách account
+            builder.HasIndex(a => new { a.Status, a.DeletedAt, a.CreatedAt })
+                .HasDatabaseName("IX_Accounts_Status_DeletedAt_CreatedAt")
                 .IncludeProperties(a => new
                 {
                     a.AccountNumber,
                     a.AccountHolder,
                     a.BankCode,
-                    a.BankName,
-                    a.AccountType,
-                    a.Balance
+                    a.Balance,
+                    a.IsActive
                 });
 
             builder.HasIndex(a => a.BankCode)
-                .HasDatabaseName("IX_Accounts_BankCode")
-                .IncludeProperties(a => new { a.BankName });
+                .HasDatabaseName("IX_Accounts_BankCode");
 
             // Relationships
             builder.HasOne(a => a.User)

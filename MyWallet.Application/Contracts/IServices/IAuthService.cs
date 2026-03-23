@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
-using MyWallet.Application.DTOs.Response;
+using MyWallet.Application.DTOs.Auths.Responses;
+using MyWallet.Application.DTOs.Users.Responses;
 
 namespace MyWallet.Application.Contracts.IServices
 {

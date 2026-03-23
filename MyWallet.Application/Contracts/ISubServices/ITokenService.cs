@@ -1,4 +1,4 @@
-﻿using MyWallet.Application.DTOs.Response;
+﻿using MyWallet.Application.DTOs.Auths.Responses;
 using MyWallet.Domain.Entities;
 using System.Security.Claims;
 

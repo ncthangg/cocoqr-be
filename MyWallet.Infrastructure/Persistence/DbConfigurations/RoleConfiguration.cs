@@ -23,12 +23,13 @@ namespace MyWallet.Infrastructure.Persistence.DbConfigurations
                 .IsRequired()
                 .HasMaxLength(100);
 
-            // BaseEntity
-            builder.Property(r => r.CreatedAt)
+            // BaseEntity properties
+            builder.Property(a => a.CreatedAt)
                 .IsRequired()
                 .HasDefaultValueSql("GETUTCDATE()");
 
-            builder.Property(r => r.Status)
+            builder.Property(a => a.Status)
+                .IsRequired()
                 .HasDefaultValue(true);
 
             builder.HasMany(r => r.UserRoles)

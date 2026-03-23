@@ -2,13 +2,12 @@
 using MyWallet.Application.Contracts.IContext;
 using MyWallet.Application.Contracts.IServices;
 using MyWallet.Application.Contracts.ISubServices;
-using MyWallet.Application.DTOs.Request;
-using MyWallet.Application.DTOs.Response;
-using MyWallet.Application.DTOs.Response.Base;
+using MyWallet.Application.Contracts.IUnitOfWork;
+using MyWallet.Application.DTOs.Accounts.Requests;
+using MyWallet.Application.DTOs.Accounts.Responses;
+using MyWallet.Application.DTOs.Base.BaseRes;
 using MyWallet.Domain.Constants;
 using MyWallet.Domain.Entities;
-using MyWallet.Domain.Helper;
-using MyWallet.Domain.Interface.IUnitOfWork;
 using ApplicationException = MyWallet.Application.Exceptions.ApplicationException;
 
 namespace MyWallet.Application.Services
@@ -26,18 +25,50 @@ namespace MyWallet.Application.Services
             _idGenerator = idGenerator;
         }
 
-        public async Task<PagingVM<GetAccountRes>> GetUserAccountsAsync(Guid userId, int pageNumber = 1, int pageSize = 10, bool? isActive = true)
+        public async Task<PagingVM<GetAccountRes>> GetAllAsync(int pageNumber, int pageSize,
+                                                               string? sortField, string? sortDirection,
+                                                               Guid? userId,
+                                                               Guid? providerId,
+                                                               string? searchValue,
+                                                               bool? isActive,
+                                                               bool? isDeleted,
+                                                               bool? status)
         {
-            if (userId == Guid.Empty)
-                throw new ApplicationException(ErrorCode.ValidationError, "Invalid userId ID");
+            if (!_userContext.IsAdmin() && !_userContext.IsUser())
+            {
+                throw new ApplicationException(ErrorCode.Unauthorized, ErrorMessages.Unauthorized);
+            }
+            else if (_userContext.IsUser())
+            {
+                userId = _userContext.UserId;
+            }
+            else
+            {
 
-            var accounts = await _unitOfWork.Accounts.GetByUserIdAsync(userId, pageNumber, pageSize, isActive);
+            }
 
-            var (items, totalCount) = await _unitOfWork.Accounts.GetByUserIdAsync(userId, pageNumber, pageSize, isActive);
+            var (items, totalCount) = await _unitOfWork.Accounts.GetAllAsync(pageNumber, pageSize,
+                                                                             sortField, sortDirection,
+                                                                             userId,
+                                                                             providerId,
+                                                                             searchValue,
+                                                                             isActive,
+                                                                             isDeleted,
+                                                                             status);
+            IEnumerable<GetAccountRes> list = [];
 
-            var userDict = await UserHelper.GetUserNameDictAsync((List<BankInfo>)items, _unitOfWork.Users);
-
-            var list = items.Select(p => AccountMapper.ToGetAccountRes(p, userDict)).ToList();
+            if (_userContext.IsAdmin())
+            {
+                list = items.Select(p => AccountMapper.ToGetAccountByAdminRes(p)).ToList();
+            }
+            else if (_userContext.IsUser())
+            {
+                list = items.Select(p => AccountMapper.ToGetAccountRes(p)).ToList();
+            }
+            else
+            {
+                throw new ApplicationException(ErrorCode.Unauthorized, ErrorMessages.Unauthorized);
+            }
 
             return new PagingVM<GetAccountRes>
             {
@@ -54,12 +85,22 @@ namespace MyWallet.Application.Services
             if (id == Guid.Empty)
                 throw new ApplicationException(ErrorCode.ValidationError, "Invalid userId ID");
 
-            var account = await _unitOfWork.Accounts.GetByIdAsync(id)
+            var account = await _unitOfWork.Accounts.GetByIdAsync(id, _userContext.UserId, _userContext.IsAdmin())
                 ?? throw new ApplicationException(ErrorCode.NotFound, $"Account {id} not found");
 
-            var userDict = await UserHelper.GetUserNameDictAsync(account, _unitOfWork.Users);
 
-            return AccountMapper.ToGetAccountRes(account, userDict);
+            if (_userContext.IsAdmin())
+            {
+                return AccountMapper.ToGetAccountByAdminRes(account);
+            }
+            else if (_userContext.IsUser())
+            {
+                return AccountMapper.ToGetAccountRes(account);
+            }
+            else
+            {
+                throw new ApplicationException(ErrorCode.Unauthorized, ErrorMessages.Unauthorized);
+            }
         }
 
         public async Task<Guid> PostAccountAsync(PostAccountReq request)
@@ -72,20 +113,36 @@ namespace MyWallet.Application.Services
 
             bool exists = await _unitOfWork.Accounts.AccountNumberExistsAsync(
                 userId,
-                request.AccountNumber
+                request.AccountNumber,
+                request.ProviderId,
+                request.BankCode
             );
             if (exists)
                 throw new ApplicationException(ErrorCode.DuplicateEntry, "Account number already exists");
+
+            var provider = await _unitOfWork.Providers.GetByIdAsync(request.ProviderId)
+                ?? throw new ApplicationException(ErrorCode.NotFound, "Provider not found");
+
+            BankInfo? bank = null;
+
+            if (provider.Code == Domain.Constants.Enum.ProviderCode.BANK)
+            {
+                if (string.IsNullOrWhiteSpace(request.BankCode))
+                    throw new ApplicationException(ErrorCode.ValidationError, "BankCode is required");
+
+                bank = await _unitOfWork.BankInfos.GetByBankCodeAsync(request.BankCode.Trim())
+                    ?? throw new ApplicationException(ErrorCode.NotFound, "Bank not found");
+            }
 
             var account = new Account
             {
                 UserId = userId,
                 AccountNumber = request.AccountNumber.Trim(),
-                AccountHolder = request.AccountHolder.Trim(),
-                BankCode = request.BankCode.Trim(),
-                BankName = request.BankName.Trim(),
-                AccountType = request.AccountType ?? null,
-                IsActive = true,
+                AccountHolder = request.AccountHolder?.Trim(),
+                BankCode = bank?.BankCode,
+                Balance = 0,
+                ProviderId = request.ProviderId,
+                IsActive = request.IsActive,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -116,16 +173,19 @@ namespace MyWallet.Application.Services
             bool exists = await _unitOfWork.Accounts.AccountNumberExistsAsync(
                 userId,
                 request.AccountNumber,
+                request.ProviderId,
+                request.BankCode,
                 id
             );
             if (exists)
                 throw new ApplicationException(ErrorCode.DuplicateEntry, "Account number already exists");
 
             account.AccountNumber = request.AccountNumber.Trim();
-            account.AccountHolder = request.AccountHolder.Trim();
-            account.BankCode = request.BankCode.Trim();
-            account.BankName = request.BankName.Trim();
-            account.AccountType = request.AccountType ?? account.AccountType;
+            account.AccountHolder = request.AccountHolder?.Trim();
+            account.BankCode = request.BankCode?.Trim();
+            account.ProviderId = request.ProviderId;
+            account.IsPinned = request.IsPinned;
+            account.IsActive = request.IsActive;
             account.SetUpdated(userId);
 
             if (!account.IsValidAccount())
@@ -134,6 +194,24 @@ namespace MyWallet.Application.Services
             await _unitOfWork.Accounts.UpdateAsync(account);
         }
 
+        public async Task PutStatusAsync(Guid id)
+        {
+            if (_userContext.IsAdmin())
+            {
+                if (id == Guid.Empty)
+                    throw new ApplicationException(ErrorCode.ValidationError, "Invalid account ID");
+
+                var account = await _unitOfWork.Accounts.GetByIdAsync(id)
+                    ?? throw new ApplicationException(ErrorCode.NotFound, $"Account {id} not found");
+
+                account.ChangeStatus();
+                await _unitOfWork.Accounts.UpdateAsync(account);
+            }
+            else
+            {
+                throw new ApplicationException(ErrorCode.Unauthorized, ErrorMessages.Unauthorized);
+            }
+        }
         public async Task DeleteAccountAsync(Guid id)
         {
             if (id == Guid.Empty)

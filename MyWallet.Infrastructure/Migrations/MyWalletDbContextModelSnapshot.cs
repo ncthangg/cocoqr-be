@@ -29,16 +29,10 @@ namespace MyWallet.Infrastructure.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("AccountHolder")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
                     b.Property<string>("AccountNumber")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("AccountType")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
@@ -50,14 +44,8 @@ namespace MyWallet.Infrastructure.Migrations
                         .HasDefaultValue(0m);
 
                     b.Property<string>("BankCode")
-                        .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
-
-                    b.Property<string>("BankName")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
@@ -78,7 +66,15 @@ namespace MyWallet.Infrastructure.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
 
-                    b.Property<bool?>("Status")
+                    b.Property<bool>("IsPinned")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<Guid>("ProviderId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("Status")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
@@ -99,21 +95,20 @@ namespace MyWallet.Infrastructure.Migrations
                     b.HasIndex("BankCode")
                         .HasDatabaseName("IX_Accounts_BankCode");
 
-                    SqlServerIndexBuilderExtensions.IncludeProperties(b.HasIndex("BankCode"), new[] { "BankName" });
+                    b.HasIndex("Status", "DeletedAt", "CreatedAt")
+                        .HasDatabaseName("IX_Accounts_Status_DeletedAt_CreatedAt");
 
-                    b.HasIndex("UserId")
-                        .HasDatabaseName("IX_Accounts_UserId");
+                    SqlServerIndexBuilderExtensions.IncludeProperties(b.HasIndex("Status", "DeletedAt", "CreatedAt"), new[] { "AccountNumber", "AccountHolder", "BankCode", "Balance", "IsActive" });
 
-                    SqlServerIndexBuilderExtensions.IncludeProperties(b.HasIndex("UserId"), new[] { "AccountNumber", "AccountHolder", "BankCode", "BankName", "AccountType", "Balance", "IsActive" });
-
-                    b.HasIndex("UserId", "AccountNumber")
+                    b.HasIndex("UserId", "AccountNumber", "BankCode", "ProviderId")
                         .IsUnique()
-                        .HasDatabaseName("IX_Accounts_UserId_AccountNumber");
+                        .HasDatabaseName("IX_Accounts_UserId_AccountNumber_BankCode_Provider_Unique")
+                        .HasFilter("[BankCode] IS NOT NULL");
 
-                    b.HasIndex("UserId", "IsActive")
-                        .HasDatabaseName("IX_Accounts_UserId_IsActive");
+                    b.HasIndex("UserId", "Status", "DeletedAt", "IsPinned", "CreatedAt")
+                        .HasDatabaseName("IX_Accounts_UserId_Filter_Sort");
 
-                    SqlServerIndexBuilderExtensions.IncludeProperties(b.HasIndex("UserId", "IsActive"), new[] { "AccountNumber", "AccountHolder", "BankCode", "BankName", "AccountType", "Balance" });
+                    SqlServerIndexBuilderExtensions.IncludeProperties(b.HasIndex("UserId", "Status", "DeletedAt", "IsPinned", "CreatedAt"), new[] { "AccountNumber", "AccountHolder", "BankCode", "Balance", "IsActive" });
 
                     b.ToTable("Accounts", (string)null);
                 });
@@ -157,7 +152,7 @@ namespace MyWallet.Infrastructure.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<string>("NapasCode")
+                    b.Property<string>("NapasBin")
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
@@ -166,7 +161,7 @@ namespace MyWallet.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<bool?>("Status")
+                    b.Property<bool>("Status")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
@@ -194,8 +189,10 @@ namespace MyWallet.Infrastructure.Migrations
 
                     SqlServerIndexBuilderExtensions.IncludeProperties(b.HasIndex("IsActive"), new[] { "BankCode", "ShortName", "BankName", "LogoUrl" });
 
-                    b.HasIndex("NapasCode")
-                        .HasDatabaseName("IX_BankInfos_NapasCode");
+                    b.HasIndex("NapasBin")
+                        .IsUnique()
+                        .HasDatabaseName("IX_BankInfos_NapasBin")
+                        .HasFilter("[NapasBin] IS NOT NULL");
 
                     b.HasIndex("IsActive", "BankName")
                         .HasDatabaseName("IX_BankInfos_IsActive_BankName");
@@ -205,25 +202,110 @@ namespace MyWallet.Infrastructure.Migrations
                     b.ToTable("BankInfos", (string)null);
                 });
 
-            modelBuilder.Entity("MyWallet.Domain.Entities.QRHistory", b =>
+            modelBuilder.Entity("MyWallet.Domain.Entities.Provider", b =>
                 {
-                    b.Property<long>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasMaxLength(32)
-                        .HasColumnType("bigint");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
-
-                    b.Property<Guid?>("AccountId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("decimal(18,2)");
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("LogoUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("Status")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Providers_Code");
+
+                    b.ToTable("Providers", (string)null);
+                });
+
+            modelBuilder.Entity("MyWallet.Domain.Entities.QRHistory", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("AccountHolderSnapshot")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<Guid?>("AccountId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AccountNumberSnapshot")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<decimal?>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("BankCodeSnapshot")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("BankNameSnapshot")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("BankShortNameSnapshot")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(3)
+                        .HasColumnType("nvarchar(3)")
+                        .HasDefaultValue("VND");
 
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
@@ -232,33 +314,139 @@ namespace MyWallet.Infrastructure.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<bool>("IsDeleted")
+                    b.Property<DateTime?>("ExpiredAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsFixedAmount")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
-                    b.Property<string>("QRData")
+                    b.Property<string>("NapasBinSnapshot")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime?>("PaidAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("ProviderId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("QrData")
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
 
-                    b.Property<string>("QRImageUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                    b.Property<string>("QrMode")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("ReceiverType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasDefaultValue("CREATED");
+
+                    b.Property<string>("TransactionRef")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<Guid?>("UserId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("TransactionRef")
+                        .IsUnique()
+                        .HasDatabaseName("IX_QRHistory_TransactionRef");
+
                     b.HasIndex("AccountId", "CreatedAt")
-                        .HasDatabaseName("IX_QRHistories_Account_Paging")
-                        .HasFilter("[IsDeleted] = 0");
+                        .HasDatabaseName("IX_QRHistories_Account_Paging");
 
                     b.HasIndex("UserId", "CreatedAt")
-                        .HasDatabaseName("IX_QRHistories_User_Paging")
-                        .HasFilter("[IsDeleted] = 0");
+                        .HasDatabaseName("IX_QRHistories_User_Paging");
 
                     b.ToTable("QRHistories", (string)null);
+                });
+
+            modelBuilder.Entity("MyWallet.Domain.Entities.QRStyle", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("QrId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("StyleJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("QrId")
+                        .IsUnique();
+
+                    b.ToTable("QRStyles", (string)null);
+                });
+
+            modelBuilder.Entity("MyWallet.Domain.Entities.QRStyleLibrary", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsDefault")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("StyleJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Type");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("UserId", "IsDefault")
+                        .IsUnique()
+                        .HasFilter("[IsDefault] = 1");
+
+                    b.HasIndex("UserId", "Type");
+
+                    b.ToTable("QRStyleLibraries", (string)null);
                 });
 
             modelBuilder.Entity("MyWallet.Domain.Entities.Role", b =>
@@ -291,7 +479,7 @@ namespace MyWallet.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<bool?>("Status")
+                    b.Property<bool>("Status")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
@@ -371,7 +559,7 @@ namespace MyWallet.Infrastructure.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
-                    b.Property<bool?>("Status")
+                    b.Property<bool>("Status")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
@@ -426,7 +614,7 @@ namespace MyWallet.Infrastructure.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<bool?>("Status")
+                    b.Property<bool>("Status")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
@@ -478,7 +666,7 @@ namespace MyWallet.Infrastructure.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
-                    b.Property<bool?>("Status")
+                    b.Property<bool>("Status")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
@@ -527,6 +715,27 @@ namespace MyWallet.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Account");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("MyWallet.Domain.Entities.QRStyle", b =>
+                {
+                    b.HasOne("MyWallet.Domain.Entities.QRHistory", "QR")
+                        .WithMany()
+                        .HasForeignKey("QrId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("QR");
+                });
+
+            modelBuilder.Entity("MyWallet.Domain.Entities.QRStyleLibrary", b =>
+                {
+                    b.HasOne("MyWallet.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("User");
                 });

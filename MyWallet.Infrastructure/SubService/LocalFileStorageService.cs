@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using MyWallet.Application.Contracts.ISubServices;
 using MyWallet.Domain.Constants;
-using System.Runtime.CompilerServices;
 using DomainException = MyWallet.Domain.Exceptions.DomainException;
 
 namespace MyWallet.Infrastructure.SubService

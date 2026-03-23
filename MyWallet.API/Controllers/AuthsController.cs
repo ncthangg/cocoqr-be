@@ -5,8 +5,9 @@ using Microsoft.AspNetCore.Mvc;
 using MyWallet.Application.Common.Extensions;
 using MyWallet.Application.Contracts.IServices;
 using MyWallet.Application.Contracts.ISubServices;
-using MyWallet.Application.DTOs.Response;
-using MyWallet.Application.DTOs.Response.Base;
+using MyWallet.Application.DTOs.Auths.Responses;
+using MyWallet.Application.DTOs.Base.BaseRes;
+using MyWallet.Application.DTOs.Users.Responses;
 using MyWallet.Domain.Constants;
 
 namespace MyWallet.API.Controllers

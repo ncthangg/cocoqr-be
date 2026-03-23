@@ -20,7 +20,7 @@ namespace MyWallet.Infrastructure.Persistence.DbConfigurations
                 .IsRequired()
                 .HasMaxLength(20);
 
-            builder.Property(b => b.NapasCode)
+            builder.Property(b => b.NapasBin)
                 .HasMaxLength(20);
 
             builder.Property(b => b.SwiftCode)
@@ -42,11 +42,12 @@ namespace MyWallet.Infrastructure.Persistence.DbConfigurations
                 .HasDefaultValue(true);
 
             // BaseEntity properties
-            builder.Property(b => b.CreatedAt)
+            builder.Property(a => a.CreatedAt)
                 .IsRequired()
                 .HasDefaultValueSql("GETUTCDATE()");
 
-            builder.Property(b => b.Status)
+            builder.Property(a => a.Status)
+                .IsRequired()
                 .HasDefaultValue(true);
 
             // Indexes
@@ -54,8 +55,9 @@ namespace MyWallet.Infrastructure.Persistence.DbConfigurations
                 .IsUnique()
                 .HasDatabaseName("IX_BankInfos_BankCode");
 
-            builder.HasIndex(b => b.NapasCode)
-                .HasDatabaseName("IX_BankInfos_NapasCode");
+            builder.HasIndex(b => b.NapasBin)
+                .IsUnique()
+                .HasDatabaseName("IX_BankInfos_NapasBin");
 
             // Truy vấn phổ biến: load danh sách ngân hàng active (covering index)
             builder.HasIndex(b => b.IsActive)

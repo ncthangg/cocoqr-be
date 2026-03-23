@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using MyWallet.Application.Contracts.IContext;
 using MyWallet.Domain.Constants.Enum;
-using MyWallet.Domain.Entities;
 using MyWallet.Domain.Helper;
 using System.Security.Claims;
 
@@ -25,8 +24,7 @@ namespace MyWallet.Application.Common.Context
         public IEnumerable<string> RoleNames => HttpContext?.User?.FindAll(ClaimTypes.Role).Select(c => c.Value)
                                                  ?? Enumerable.Empty<string>();
 
-        public string? SecurityStamp =>
-            HttpContext?.User?.FindFirst("security-stamp")?.Value;
+        public string? SecurityStamp => HttpContext?.User?.FindFirst("security-stamp")?.Value;
 
         public string IpAddress
         {
@@ -41,8 +39,7 @@ namespace MyWallet.Application.Common.Context
             }
         }
 
-        public string? UserAgent =>
-            HttpContext?.Request.Headers["User-Agent"].ToString();
+        public string? UserAgent => HttpContext?.Request.Headers["User-Agent"].ToString();
 
         public string Browser
         {
@@ -78,8 +75,7 @@ namespace MyWallet.Application.Common.Context
             }
         }
 
-        public string? Referer =>
-            HttpContext?.Request.Headers["Referer"].ToString();
+        public string? Referer => HttpContext?.Request.Headers["Referer"].ToString();
 
         public string VisitorId
         {
@@ -143,7 +139,12 @@ namespace MyWallet.Application.Common.Context
         public bool IsAdmin()
         {
             return IsAuthenticated() && RoleNames.Any(r => Enum.TryParse<RoleCategory>(r, true, out var roleEnum)
-                                                          && roleEnum == RoleCategory.Admin);
+                                                          && roleEnum == RoleCategory.ADMIN);
+        }
+        public bool IsUser()
+        {
+            return IsAuthenticated() && RoleNames.Any(r => Enum.TryParse<RoleCategory>(r, true, out var roleEnum)
+                                                          && roleEnum == RoleCategory.USER);
         }
     }
 }

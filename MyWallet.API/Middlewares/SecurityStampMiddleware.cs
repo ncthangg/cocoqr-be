@@ -13,25 +13,31 @@ namespace MyWallet.API.Middlewares
 
         public async Task Invoke(HttpContext context, IUserService userService)
         {
-            //if (context.User.Identity?.IsAuthenticated == true)
-            //{
-            //    var userId = context.User.FindFirst("id")?.Value;
-            //    var tokenStamp = context.User.FindFirst("security_stamp")?.Value;
+            if (context.User.Identity?.IsAuthenticated == true)
+            {
+                var userIdStr = context.User.FindFirst("id")?.Value;
+                var tokenStamp = context.User.FindFirst("security_stamp")?.Value;
 
-            //    if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(tokenStamp))
-            //    {
-            //        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            //        return;
-            //    }
+                if (string.IsNullOrEmpty(userIdStr) || string.IsNullOrEmpty(tokenStamp))
+                {
+                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                    return;
+                }
 
-            //    //var user = await userService.ToString(userId);
+                if (!Guid.TryParse(userIdStr, out var userId))
+                {
+                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                    return;
+                }
 
-            //    //if (user == null || user.SecurityStamp != tokenStamp)
-            //    //{
-            //    //    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            //    //    return;
-            //    //}
-            //}
+                var user = await userService.GetByIdAsync(userId);
+
+                if (user == null || user.SecurityStamp != tokenStamp || user.Status == false)
+                {
+                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                    return;
+                }
+            }
 
             await _next(context);
         }

@@ -48,11 +48,12 @@ namespace MyWallet.Infrastructure.Persistence.DbConfigurations
                 .HasMaxLength(255);
 
             // BaseEntity properties
-            builder.Property(u => u.CreatedAt)
+            builder.Property(a => a.CreatedAt)
                 .IsRequired()
                 .HasDefaultValueSql("GETUTCDATE()");
 
-            builder.Property(u => u.Status)
+            builder.Property(a => a.Status)
+                .IsRequired()
                 .HasDefaultValue(true);
 
             builder.HasMany(u => u.UserTokens)

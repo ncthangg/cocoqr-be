@@ -2,15 +2,10 @@
 using MyWallet.Application.Contracts.IContext;
 using MyWallet.Application.Contracts.IServices;
 using MyWallet.Application.Contracts.ISubServices;
-using MyWallet.Application.DTOs.Request;
-using MyWallet.Application.DTOs.Response;
-using MyWallet.Application.DTOs.Response.Base;
+using MyWallet.Application.Contracts.IUnitOfWork;
+using MyWallet.Application.DTOs.Roles.Responses;
+using MyWallet.Application.DTOs.UserRoles.Requests;
 using MyWallet.Domain.Constants;
-using MyWallet.Domain.Entities;
-using MyWallet.Domain.Helper;
-using MyWallet.Domain.Interface.IUnitOfWork;
-using System.Collections.Generic;
-using System.Reflection.Emit;
 using ApplicationException = MyWallet.Application.Exceptions.ApplicationException;
 
 namespace MyWallet.Application.Services
@@ -27,23 +22,6 @@ namespace MyWallet.Application.Services
             _userContext = userContext;
             _idGenerator = idGenerator;
         }
-        public async Task<PagingVM<GetUserRoleRes>> GetAllUserRoles(int pageNumber, int pageSize, Guid? roleId)
-        {
-            var (items, totalCount) = await _unitOfWork.UserRoles.GetAllUserRolesAsync(pageNumber,
-                                                                      pageSize,
-                                                                      roleId);
-
-            var list = items.Select(p => UserRoleMapper.ToGetUserRoleRes(p)).ToList();
-
-            return new PagingVM<GetUserRoleRes>
-            {
-                List = list,
-                PageNumber = pageNumber,
-                PageSize = pageSize,
-                TotalItems = totalCount,
-                TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize)
-            };
-        }
         public async Task<IEnumerable<GetRoleRes>> GetRolesByUserIdAsync(Guid userId)
         {
             if (userId == Guid.Empty)
@@ -52,59 +30,37 @@ namespace MyWallet.Application.Services
             var roles = await _unitOfWork.UserRoles.GetRolesByUserIdAsync(userId)
                 ?? throw new ApplicationException(ErrorCode.NotFound, $"Role of {userId} not found");
 
-            var userDict = await UserHelper.GetUserNameDictAsync<Role>(roles.ToList(), _unitOfWork.Users);
-
-            return roles.Select(p => RoleMapper.ToGetRoleRes(p, userDict)).ToList();
+            return roles.Select(p => RoleMapper.ToGetRoleRes(p)).ToList();
         }
-        public async Task<bool> AddUserToRoleAsync(AddUserRoleReq req)
+        public async Task<bool> PostPutUserRolesAsync(PostPutUserRoleReq req)
         {
-            //var isAdmin = _userContext.IsAdmin();
-
-            //if (!isAdmin)
-            //{
-            //    throw new ApplicationException(ErrorCode.Unauthorized, ErrorMessages.Unauthorized);
-            //}
-            var user = await _unitOfWork.Users.GetByIdAsync(req.UserId);
-            if (user == null)
-            {
-                throw new ApplicationException(ErrorCode.NotFound, "User not found");
-            }
-
-            // Check role
-            var role = await _unitOfWork.Roles.GetByIdAsync(req.RoleId) 
-                ?? throw new ApplicationException(ErrorCode.NotFound, "Role not found");
-
-            // Check duplicate
-            var existed = await _unitOfWork.UserRoles.ExistsAsync( req.UserId, req.RoleId);
-            if (existed)
-            {
-                throw new ApplicationException(ErrorCode.BadRequest, "User already has this role");
-            }
-
-            var result = await _unitOfWork.UserRoles.AddUserToRoleAsync(_idGenerator.NewId(), req.UserId, req.RoleId);
-
-            return result > 0;
-        }
-        public async Task<bool> RemoveUserFromRoleAsync(Guid userId, Guid roleId)
-        {
-            var isAdmin = _userContext.IsAdmin();
-
-            if (!isAdmin)
-            {
+            if (!_userContext.IsAdmin())
                 throw new ApplicationException(ErrorCode.Unauthorized, ErrorMessages.Unauthorized);
-            }
 
-            if (userId == Guid.Empty || roleId == Guid.Empty)
+            var user = await _unitOfWork.Users.GetByIdAsync(req.UserId)
+                ?? throw new ApplicationException(ErrorCode.NotFound, "User not found");
+
+            var currentRoles = await _unitOfWork.UserRoles.GetRolesByUserIdAsync(req.UserId);
+
+            var currentRoleIds = currentRoles.Select(r => r.Id).ToHashSet();
+            var newRoleIds = req.RoleIds.ToHashSet();
+
+            var rolesToAdd = newRoleIds.Except(currentRoleIds);
+            var rolesToRemove = currentRoleIds.Except(newRoleIds);
+
+            foreach (var roleId in rolesToAdd)
             {
-                throw new ApplicationException(ErrorCode.BadRequest, "UserId or RoleId is invalid");
+                await _unitOfWork.UserRoles.AddUserToRoleAsync(
+                    _idGenerator.NewId(),
+                    req.UserId,
+                    roleId
+                );
             }
 
-            var affected = await _unitOfWork.UserRoles.RemoveUserFromRoleAsync(userId, roleId);
+            if (rolesToRemove != null)
+                await _unitOfWork.UserRoles.RemoveUserFromRoleAsync(req.UserId, rolesToRemove);
 
-            if (affected == 0)
-                throw new ApplicationException(ErrorCode.NotFound, "User role not found");
-
-            return affected > 0;
+            return true;
         }
     }
 }

@@ -33,6 +33,7 @@ namespace MyWallet.Infrastructure.Persistence.DbConfigurations
                 .HasDefaultValueSql("GETUTCDATE()");
 
             builder.Property(a => a.Status)
+                .IsRequired()
                 .HasDefaultValue(true);
 
             // Indexes
