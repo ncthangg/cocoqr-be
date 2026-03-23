@@ -12,6 +12,7 @@ COPY MyWallet.API/MyWallet.API.csproj MyWallet.API/
 COPY MyWallet.Application/MyWallet.Application.csproj MyWallet.Application/
 COPY MyWallet.Domain/MyWallet.Domain.csproj MyWallet.Domain/
 COPY MyWallet.Infrastructure/MyWallet.Infrastructure.csproj MyWallet.Infrastructure/
+COPY MyWallet.QR_Generator/MyWallet.QR_Generator.csproj MyWallet.QR_Generator/
 
 # Restore dependencies (cached unless .csproj files change)
 RUN dotnet restore MyWallet.API/MyWallet.API.csproj
@@ -21,6 +22,7 @@ COPY MyWallet.API/ MyWallet.API/
 COPY MyWallet.Application/ MyWallet.Application/
 COPY MyWallet.Domain/ MyWallet.Domain/
 COPY MyWallet.Infrastructure/ MyWallet.Infrastructure/
+COPY MyWallet.QR_Generator/ MyWallet.QR_Generator/
 
 # Publish
 RUN dotnet publish MyWallet.API/MyWallet.API.csproj \
