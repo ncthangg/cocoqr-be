@@ -152,7 +152,7 @@ namespace MyWallet.Infrastructure.Persistence.Seeder
                     }
 
                     #region Delete 
-                    var toDelete = dbRoles.Values.Where(x => !jsonCodes.Contains(x.Name)).ToList();
+                    var toDelete = dbRoles.Values.Where(x => !jsonCodes.Contains(x.Name.ToLower())).ToList();
 
                     _context.Roles.RemoveRange(toDelete);
                     #endregion

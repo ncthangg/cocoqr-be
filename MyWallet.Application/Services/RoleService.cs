@@ -6,6 +6,7 @@ using MyWallet.Application.Contracts.IUnitOfWork;
 using MyWallet.Application.DTOs.Roles.Requests;
 using MyWallet.Application.DTOs.Roles.Responses;
 using MyWallet.Domain.Constants;
+using MyWallet.Domain.Constants.Enum;
 using ApplicationException = MyWallet.Application.Exceptions.ApplicationException;
 
 namespace MyWallet.Application.Services
@@ -14,13 +15,10 @@ namespace MyWallet.Application.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IUserContext _userContext;
-        private readonly IIdGenerator _idGenerator;
-
-        public RoleService(IUnitOfWork unitOfWork, IUserContext userContext, IIdGenerator idGenerator)
+        public RoleService(IUnitOfWork unitOfWork, IUserContext userContext)
         {
             _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
             _userContext = userContext;
-            _idGenerator = idGenerator;
         }
         public async Task<IEnumerable<GetRoleRes>> GetAllAsync()
         {
@@ -29,16 +27,6 @@ namespace MyWallet.Application.Services
 
 
             return roles.Select(p => RoleMapper.ToGetRoleRes(p)).ToList();
-        }
-        public async Task<GetRoleRes> GetByIdAsync(Guid id)
-        {
-            if (id == Guid.Empty)
-                throw new ApplicationException(ErrorCode.ValidationError, "Invalid userId ID");
-
-            var role = await _unitOfWork.Roles.GetByIdAsync(id)
-                ?? throw new ApplicationException(ErrorCode.NotFound, $"Role {id} not found");
-
-            return RoleMapper.ToGetRoleRes(role);
         }
         public async Task PutAsync(Guid id, PutRoleReq req)
         {
@@ -58,12 +46,11 @@ namespace MyWallet.Application.Services
             var role = await _unitOfWork.Roles.GetByIdAsync(id)
                 ?? throw new ApplicationException(ErrorCode.NotFound, $"Role {id} not found");
 
-            role.Name = req.Name.Trim().ToLower();
-            role.NameUpperCase = req.Name.Trim().ToUpper();
-            role.SetUpdated(userId);
+            if (role.Name.Trim().ToLower() == RoleCategory.ADMIN.ToString().ToLower() && req.Status == false)
+                throw new ApplicationException(ErrorCode.ValidationError, "Admin role cannot be deactivated");
 
-            if (!role.IsValidRole())
-                throw new ApplicationException(ErrorCode.ValidationError, "Invalid role");
+            role.Status = req.Status;
+            role.SetUpdated(userId);
 
             await _unitOfWork.Roles.UpdateAsync(role);
         }

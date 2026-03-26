@@ -24,6 +24,7 @@
         public BankSyncAction Action { get; set; }
         public string BankCode { get; set; }
         public string BankName { get; set; }
+        public bool IsActive { get; set; }
 
         // Chỉ có giá trị khi Action = Update
         public List<BankFieldDiff> Diffs { get; set; }

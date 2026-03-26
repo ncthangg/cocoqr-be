@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using MyWallet.Application.Common.Extensions;
 using MyWallet.Application.Contracts.IServices;
 using MyWallet.Application.Contracts.ISubServices;
+using MyWallet.Application.DTOs.Auths.Requests;
 using MyWallet.Application.DTOs.Auths.Responses;
 using MyWallet.Application.DTOs.Base.BaseRes;
 using MyWallet.Application.DTOs.Users.Responses;
@@ -109,6 +110,17 @@ namespace MyWallet.API.Controllers
                 Console.WriteLine($"SignInGoogle error: {ex.Message}\n{ex.StackTrace}");
                 return Redirect($"{origin}?error={Uri.EscapeDataString(ex.Message)}");
             }
+        }
+
+        [HttpPost("switch-role")]
+        [AllowAnonymous]
+        public async Task<IActionResult> SwitchRole([FromBody] SwitchRoleReq request)
+        {
+            var result = await _authService.SwitchRoleAsync(request);
+            return Ok(new BaseResponseModel<SwitchRoleRes>(
+                code: SuccessCode.Success,
+                message: null,
+                data: result));
         }
 
         [HttpGet("me")]

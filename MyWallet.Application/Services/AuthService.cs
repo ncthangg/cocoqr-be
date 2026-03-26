@@ -6,6 +6,7 @@ using MyWallet.Application.Contracts.IContext;
 using MyWallet.Application.Contracts.IServices;
 using MyWallet.Application.Contracts.ISubServices;
 using MyWallet.Application.Contracts.IUnitOfWork;
+using MyWallet.Application.DTOs.Auths.Requests;
 using MyWallet.Application.DTOs.Auths.Responses;
 using MyWallet.Application.DTOs.Users.Responses;
 using MyWallet.Domain.Constants;
@@ -22,7 +23,6 @@ namespace MyWallet.Application.Services
         private readonly ITokenConfiguration _tokenConfiguration;
         private readonly IUserContext _userContext;
         private readonly IIdGenerator _idGenerator;
-        //private readonly IRedisService _redisService;
 
         private readonly ITokenService _tokenService;
 
@@ -30,17 +30,15 @@ namespace MyWallet.Application.Services
             ITokenConfiguration tokenConfiguration,
             IUserContext userContext,
             IIdGenerator idGenerator,
-            //IRedisService redisService,
             ITokenService tokenService)
         {
             _unitOfWork = unitOfWork;
             _tokenConfiguration = tokenConfiguration;
             _userContext = userContext;
             _idGenerator = idGenerator;
-            //_redisService = redisService;
-
             _tokenService = tokenService;
         }
+
         public async Task<GetUserRes> Me()
         {
             var userId = _userContext.UserId
@@ -56,6 +54,7 @@ namespace MyWallet.Application.Services
                 PictureUrl = user.PictureUrl,
             };
         }
+
         public async Task<SignInGoogleRes> SignInGoogle(HttpContext context)
         {
             var auth = await context.AuthenticateAsync(Google.OAuthTempConfigPath);
@@ -112,16 +111,20 @@ namespace MyWallet.Application.Services
                     throw new ApplicationException(ErrorCode.Unauthorized, "Tài khoản đang bị tạm khóa. Vui lòng liên hệ Admin để biết thêm chi tiết.");
             }
 
-            var roles = await _unitOfWork.UserRoles.GetRolesByUserIdAsync(user.Id);
+            var roles = (await _unitOfWork.UserRoles.GetRolesByUserIdAsync(user.Id)).ToList();
 
             if (!roles.Any())
                 throw new ApplicationException(ErrorCode.BadRequest, "Đăng nhập thất bại, Role of user not found");
 
-            // 4. Generate JWT for this user
-            TokenRes jwt = await _tokenService.GenerateTokens(user.Id, roles, null);
+            TokenRes? jwt = null;
+            if (roles.Count == 1)
+            {
+                jwt = await _tokenService.GenerateTokens(user.Id, roles, null);
+            }
 
             return new SignInGoogleRes
             {
+                UserId = user.Id,
                 UserRes = new()
                 {
                     Email = user.Email,
@@ -130,6 +133,30 @@ namespace MyWallet.Application.Services
                 },
                 TokenRes = jwt,
                 RoleRes = roles.Select(p => RoleMapper.ToGetRoleRes(p)).ToList()
+            };
+        }
+
+        public async Task<SwitchRoleRes> SwitchRoleAsync(SwitchRoleReq request)
+        {
+            if (request.UserId == Guid.Empty || request.RoleId == Guid.Empty)
+                throw new ApplicationException(ErrorCode.ValidationError, "Invalid userId/roleId");
+
+            var user = await _unitOfWork.Users.GetByIdAsync(request.UserId)
+                ?? throw new ApplicationException(ErrorCode.NotFound, ErrorMessages.UserNotFound);
+
+            if (user.Status == false)
+                throw new ApplicationException(ErrorCode.Unauthorized, "Tài khoản đang bị tạm khóa. Vui lòng liên hệ Admin để biết thêm chi tiết.");
+
+            var roles = (await _unitOfWork.UserRoles.GetRolesByUserIdAsync(request.UserId)).ToList();
+            var selectedRole = roles.FirstOrDefault(x => x.Id == request.RoleId)
+                ?? throw new ApplicationException(ErrorCode.Forbidden, "Role không thuộc về user.");
+
+            var token = await _tokenService.GenerateTokens(user.Id, new[] { selectedRole }, null);
+
+            return new SwitchRoleRes
+            {
+                TokenRes = token,
+                RoleRes = RoleMapper.ToGetRoleRes(selectedRole)
             };
         }
     }

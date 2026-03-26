@@ -6,7 +6,6 @@ namespace MyWallet.Application.Contracts.IServices
     public interface IRoleService
     {
         Task<IEnumerable<GetRoleRes>> GetAllAsync();
-        Task<GetRoleRes> GetByIdAsync(Guid id);
         Task PutAsync(Guid id, PutRoleReq req);
     }
 }

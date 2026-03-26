@@ -14,10 +14,24 @@ namespace MyWallet.Application.Common.Mapper
                 NameUpperCase = u.NameUpperCase,
 
                 Status = u.Status,
-                CreatedAt = u.CreatedAt,
-                UpdatedAt = u.UpdatedAt,
-                DeletedAt = u.DeletedAt,
+                //CreatedAt = u.CreatedAt,
+                //UpdatedAt = u.UpdatedAt,
+                //DeletedAt = u.DeletedAt,
 
+            };
+        }
+        public static GetRoleRes ToGetRoleByAdminRes(Role u)
+        {
+            return new GetRoleRes
+            {
+                Id = u.Id,
+                Name = u.Name,
+                NameUpperCase = u.NameUpperCase,
+
+                //Status = u.Status,
+                //CreatedAt = u.CreatedAt,
+                //UpdatedAt = u.UpdatedAt,
+                //DeletedAt = u.DeletedAt,
             };
         }
     }
