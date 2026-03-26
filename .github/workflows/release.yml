@@ -1,23 +1,30 @@
-name: Release MyWallet BE
+name: Release CocoQR BE
 
 on:
   push:
     tags:
-      - "v*"
+      - "v*.*.*"
+      - "v*.*.*-rc*"
+
+concurrency:
+  group: release-${{ github.ref_name }}
+  cancel-in-progress: false
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     outputs:
-      version: ${{ steps.vars.outputs.VERSION }}
+      version: ${{ steps.vars.outputs.version }}
 
     steps:
       - uses: actions/checkout@v4
 
       - name: Extract version
         id: vars
-        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+        run: echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
       - name: Login Docker Hub
         uses: docker/login-action@v3
@@ -28,12 +35,12 @@ jobs:
       - name: Build image
         run: |
           docker build \
-            -t ${{ secrets.DOCKER_USERNAME }}/mywallet-be:${{ steps.vars.outputs.VERSION }} \
+            -t ${{ secrets.DOCKER_USERNAME }}/mywallet-be:${{ steps.vars.outputs.version }} \
             .
 
       - name: Push image
         run: |
-          docker push ${{ secrets.DOCKER_USERNAME }}/mywallet-be:${{ steps.vars.outputs.VERSION }}
+          docker push ${{ secrets.DOCKER_USERNAME }}/mywallet-be:${{ steps.vars.outputs.version }}
 
   deploy-staging:
     if: contains(github.ref_name, '-rc')
@@ -70,21 +77,18 @@ jobs:
 
       - name: Check if RC exists
         run: |
-          VERSION=${GITHUB_REF#refs/tags/}
-          BASE_VERSION=${VERSION%%-*}
+          set -euo pipefail
 
-          echo "Checking RC for $BASE_VERSION"
-
-          RC_TAGS=$(git tag -l "${BASE_VERSION}-rc*")
+          VERSION=${{ needs.build.outputs.version }}
+          RC_TAGS=$(git tag -l "${VERSION}-rc*")
 
           if [ -z "$RC_TAGS" ]; then
-            echo "❌ No RC tag found for ${BASE_VERSION}"
+            echo "❌ No RC tag found for ${VERSION}"
             exit 1
           fi
 
-           echo "Found RC tags:"
-           echo "$RC_TAGS"
-           echo "✅ RC exists. Continue deploying."
+          echo "✅ Found RC tags:"
+          echo "$RC_TAGS"
 
       - name: Deploy to Production via SSH
         uses: appleboy/ssh-action@v1.0.3
