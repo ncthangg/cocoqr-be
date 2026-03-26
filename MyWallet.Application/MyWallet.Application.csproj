@@ -27,6 +27,7 @@
     <Folder Include="DTOs\QRStyleLibrary\Queries\" />
     <Folder Include="DTOs\Roles\Queries\" />
     <Folder Include="DTOs\UserRoles\Queries\" />
+    <Folder Include="DTOs\UserRoles\Responses\" />
     <Folder Include="DTOs\Users\Queries\" />
     <Folder Include="DTOs\Users\Requests\" />
   </ItemGroup>
