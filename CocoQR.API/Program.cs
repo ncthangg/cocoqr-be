@@ -70,7 +70,7 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI(c =>
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "My CocoQR API - DEVELOP")
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "CocoQR API - DEVELOP")
     );
 }
 
@@ -78,7 +78,7 @@ if (app.Environment.IsStaging())
 {
     app.UseSwagger();
     app.UseSwaggerUI(c =>
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "My CocoQR API - STAGING")
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "CocoQR API - STAGING")
     );
 }
 

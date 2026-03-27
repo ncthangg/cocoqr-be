@@ -38,24 +38,24 @@ persistence, and Redis integration.
 ## Project Structure
 
 ```text
-MyWallet.BE/
-|-- MyWallet.API/             # HTTP API, controllers, middleware, config
-|-- MyWallet.Application/     # Use cases, DTOs, service contracts, services
-|-- MyWallet.Domain/          # Domain entities, constants, shared rules
-|-- MyWallet.Infrastructure/  # EF Core, repositories, seeders, security
-|-- MyWallet.QR_Generator/    # QR code generation module
-|-- MyWallet.QR_Decoder/      # QR decoder project referenced by the solution
-|-- MyWallet_BE.sln           # Solution entry point
+CocoQR.BE/
+|-- CocoQR.API/             # HTTP API, controllers, middleware, config
+|-- CocoQR.Application/     # Use cases, DTOs, service contracts, services
+|-- CocoQR.Domain/          # Domain entities, constants, shared rules
+|-- CocoQR.Infrastructure/  # EF Core, repositories, seeders, security
+|-- CocoQR.QR_Generator/    # QR code generation module
+|-- CocoQR.QR_Decoder/      # QR decoder project referenced by the solution
+|-- CocoQR_BE.sln           # Solution entry point
 ```
 
 Main responsibilities:
 
-- `MyWallet.API`: request pipeline, authentication setup, CORS,
+- `CocoQR.API`: request pipeline, authentication setup, CORS,
   middleware, controllers, Swagger.
-- `MyWallet.Application`: business services, DTOs, contracts, mapping,
+- `CocoQR.Application`: business services, DTOs, contracts, mapping,
   request-oriented logic.
-- `MyWallet.Domain`: core entities, constants, and domain-level types.
-- `MyWallet.Infrastructure`: database access, repositories, Redis,
+- `CocoQR.Domain`: core entities, constants, and domain-level types.
+- `CocoQR.Infrastructure`: database access, repositories, Redis,
   token services, file storage, and seeders.
 
 ## Getting Started
@@ -71,21 +71,21 @@ Main responsibilities:
 
 1. Clone the repository.
 2. Update configuration values in
-   `MyWallet.API/appsettings.json` or environment-specific settings.
+   `CocoQR.API/appsettings.json` or environment-specific settings.
 3. Restore dependencies:
 
 ```bash
-dotnet restore MyWallet_BE.sln
+dotnet restore CocoQR_BE.sln
 ```
 
 ### Run the API
 
 ```bash
-dotnet run --project MyWallet.API
+dotnet run --project CocoQR.API
 ```
 
 Default local profiles are configured in
-`MyWallet.API/Properties/launchSettings.json`:
+`CocoQR.API/Properties/launchSettings.json`:
 
 - HTTP: `http://localhost:5092`
 - HTTPS: `https://localhost:7234`
@@ -95,7 +95,7 @@ Swagger is enabled in `Development` and `Staging`.
 ### Apply database migrations
 
 ```bash
-dotnet run --project MyWallet.API -- --migrate
+dotnet run --project CocoQR.API -- --migrate
 ```
 
 In `Development`, the API also attempts to apply pending migrations on
@@ -106,10 +106,10 @@ startup.
 Common commands for local development:
 
 ```bash
-dotnet restore MyWallet_BE.sln
-dotnet build MyWallet_BE.sln
-dotnet run --project MyWallet.API
-dotnet run --project MyWallet.API -- --migrate
+dotnet restore CocoQR_BE.sln
+dotnet build CocoQR_BE.sln
+dotnet run --project CocoQR.API
+dotnet run --project CocoQR.API -- --migrate
 ```
 
 There is no dedicated script runner in this repository; standard
@@ -118,7 +118,7 @@ There is no dedicated script runner in this repository; standard
 ## Environment
 
 The API reads its primary configuration from
-`MyWallet.API/appsettings.json`.
+`CocoQR.API/appsettings.json`.
 
 Important settings:
 
@@ -152,10 +152,10 @@ Notes:
 
 The solution follows a layered architecture:
 
-1. `MyWallet.API` handles HTTP concerns and middleware.
-2. `MyWallet.Application` contains business logic and contracts.
-3. `MyWallet.Domain` defines core models and shared constants.
-4. `MyWallet.Infrastructure` implements persistence and external
+1. `CocoQR.API` handles HTTP concerns and middleware.
+2. `CocoQR.Application` contains business logic and contracts.
+3. `CocoQR.Domain` defines core models and shared constants.
+4. `CocoQR.Infrastructure` implements persistence and external
    integrations.
 
 Important scenarios currently supported:
@@ -171,10 +171,10 @@ Important scenarios currently supported:
 Coding conventions used in this repository:
 
 - Keep responsibilities separated by project layer.
-- Put HTTP-specific concerns in `MyWallet.API`.
-- Put business rules and service contracts in `MyWallet.Application`.
+- Put HTTP-specific concerns in `CocoQR.API`.
+- Put business rules and service contracts in `CocoQR.Application`.
 - Put persistence and external service implementations in
-  `MyWallet.Infrastructure`.
+  `CocoQR.Infrastructure`.
 - Use dependency injection through dedicated registration extensions.
 - Keep API routes lowercase and use DTOs for request and response models.
 - Return consistent response envelopes from controllers.
@@ -192,10 +192,10 @@ Contributions should preserve the existing project layering and keep new
 features aligned with the current separation of concerns. When adding
 new endpoints, prefer:
 
-- controller changes in `MyWallet.API`
-- business logic in `MyWallet.Application`
-- repository or integration work in `MyWallet.Infrastructure`
-- shared domain changes in `MyWallet.Domain`
+- controller changes in `CocoQR.API`
+- business logic in `CocoQR.Application`
+- repository or integration work in `CocoQR.Infrastructure`
+- shared domain changes in `CocoQR.Domain`
 
 Before opening a change, verify that configuration, authentication, and
 database impacts are documented clearly.

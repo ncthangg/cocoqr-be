@@ -5,27 +5,27 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS build
 WORKDIR /src
 
 # Copy solution file first for better caching
-COPY MyWallet_BE.sln .
+COPY CocoQR.sln .
 
 # Copy project files separately for better cache utilization
-COPY MyWallet.API/MyWallet.API.csproj MyWallet.API/
-COPY MyWallet.Application/MyWallet.Application.csproj MyWallet.Application/
-COPY MyWallet.Domain/MyWallet.Domain.csproj MyWallet.Domain/
-COPY MyWallet.Infrastructure/MyWallet.Infrastructure.csproj MyWallet.Infrastructure/
-COPY MyWallet.QR_Generator/MyWallet.QR_Generator.csproj MyWallet.QR_Generator/
+COPY CocoQR.API/CocoQR.API.csproj CocoQR.API/
+COPY CocoQR.Application/CocoQR.Application.csproj CocoQR.Application/
+COPY CocoQR.Domain/CocoQR.Domain.csproj CocoQR.Domain/
+COPY CocoQR.Infrastructure/CocoQR.Infrastructure.csproj CocoQR.Infrastructure/
+COPY CocoQR.QR_Generator/CocoQR.QR_Generator.csproj CocoQR.QR_Generator/
 
 # Restore dependencies (cached unless .csproj files change)
-RUN dotnet restore MyWallet.API/MyWallet.API.csproj
+RUN dotnet restore CocoQR.API/CocoQR.API.csproj
 
 # Copy source code (only invalidates cache when code changes)
-COPY MyWallet.API/ MyWallet.API/
-COPY MyWallet.Application/ MyWallet.Application/
-COPY MyWallet.Domain/ MyWallet.Domain/
-COPY MyWallet.Infrastructure/ MyWallet.Infrastructure/
-COPY MyWallet.QR_Generator/ MyWallet.QR_Generator/
+COPY CocoQR.API/ CocoQR.API/
+COPY CocoQR.Application/ CocoQR.Application/
+COPY CocoQR.Domain/ CocoQR.Domain/
+COPY CocoQR.Infrastructure/ CocoQR.Infrastructure/
+COPY CocoQR.QR_Generator/ CocoQR.QR_Generator/
 
 # Publish
-RUN dotnet publish MyWallet.API/MyWallet.API.csproj \
+RUN dotnet publish CocoQR.API/CocoQR.API.csproj \
     -c Release \
     -o /app/publish 
 
@@ -46,7 +46,7 @@ ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
 # Set timezone (VN)
 ENV TZ=Asia/Ho_Chi_Minh
 
-COPY --from=build /app/publish .
+COPY --from=build /app/publish .    
 
 EXPOSE 8080
-ENTRYPOINT ["dotnet", "MyWallet.API.dll"]
+ENTRYPOINT ["dotnet", "CocoQR.API.dll"]

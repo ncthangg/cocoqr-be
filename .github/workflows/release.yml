@@ -35,12 +35,12 @@ jobs:
       - name: Build image
         run: |
           docker build \
-            -t ${{ secrets.DOCKER_USERNAME }}/mywallet-be:${{ steps.vars.outputs.version }} \
+            -t ${{ secrets.DOCKER_USERNAME }}/cocoqr-be:${{ steps.vars.outputs.version }} \
             .
 
       - name: Push image
         run: |
-          docker push ${{ secrets.DOCKER_USERNAME }}/mywallet-be:${{ steps.vars.outputs.version }}
+          docker push ${{ secrets.DOCKER_USERNAME }}/cocoqr-be:${{ steps.vars.outputs.version }}
 
   deploy-staging:
     if: contains(github.ref_name, '-rc')
@@ -57,11 +57,11 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
-            docker pull ${{ secrets.DOCKER_USERNAME }}/mywallet-be:${{ needs.build.outputs.version }}
-            cd /opt/mywallet-be-staging
+            docker pull ${{ secrets.DOCKER_USERNAME }}/cocoqr-be:${{ needs.build.outputs.version }}
+            cd /opt/cocoqr-be-staging
             export IMAGE_TAG=${{ needs.build.outputs.version }}
             docker compose --profile migrate run --rm migrator || exit 1
-            docker compose up -d mywallet-be-staging
+            docker compose up -d cocoqr-be-staging
             docker image prune -f
 
   deploy-production:
@@ -98,9 +98,9 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
-            docker pull ${{ secrets.DOCKER_USERNAME }}/mywallet-be:${{ needs.build.outputs.version }}
-            cd /opt/mywallet-be-production
+            docker pull ${{ secrets.DOCKER_USERNAME }}/cocoqr-be:${{ needs.build.outputs.version }}
+            cd /opt/cocoqr-be-production
             export IMAGE_TAG=${{ needs.build.outputs.version }}
             docker compose --profile migrate run --rm migrator || exit 1
-            docker compose up -d mywallet-be-production
+            docker compose up -d cocoqr-be-production
             docker image prune -a -f
