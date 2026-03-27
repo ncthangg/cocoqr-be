@@ -50,18 +50,18 @@ namespace CocoQR.Infrastructure.SubService
                 string uploadPath;
                 string relativePath;
 
-                if (folder == FileStorage.Folders.QRs)
-                {
-                    // Create directory path: wwwroot/{folder}/{year-month}
-                    var yearMonth = DateTime.UtcNow.ToString("yyyy-MM");
-                    uploadPath = Path.Combine(_environment.WebRootPath, folder, yearMonth);
-                    relativePath = $"{folder}/{yearMonth}/{uniqueFileName}";
-                }
-                else
-                {
+                //if (folder == FileStorage.Folders.QRs)
+                //{
+                //    // Create directory path: wwwroot/{folder}/{year-month}
+                //    var yearMonth = DateTime.UtcNow.ToString("yyyy-MM");
+                //    uploadPath = Path.Combine(_environment.WebRootPath, folder, yearMonth);
+                //    relativePath = $"{folder}/{yearMonth}/{uniqueFileName}";
+                //}
+                //else
+                //{
                     uploadPath = Path.Combine(_environment.WebRootPath, folder);
                     relativePath = $"{folder}/{uniqueFileName}";
-                }
+                //}
 
 
                 Directory.CreateDirectory(uploadPath);

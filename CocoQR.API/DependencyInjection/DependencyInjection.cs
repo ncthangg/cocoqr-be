@@ -25,7 +25,6 @@ namespace CocoQR.API.DependencyInjection
             services.ConfigAuthentication(configuration);
             services.ConfigAuthorization();
             services.ConfigSwagger();
-            services.AddLoggings();
             services.ConfigController();
         }
         private static void JWTConfig(this IServiceCollection services, IConfiguration configuration)
@@ -255,10 +254,6 @@ namespace CocoQR.API.DependencyInjection
                 options.DefaultPolicy = defaultAuthPolicyBuilder.Build();
             });
 
-        }
-        private static void AddLoggings(this IServiceCollection services)
-        {
-            services.AddLogging();
         }
         private static void ConfigController(this IServiceCollection services)
         {

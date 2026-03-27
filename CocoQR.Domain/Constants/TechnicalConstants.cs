@@ -64,9 +64,13 @@
         public static class Folders
         {
             public const string Assets = "assets";
-            public const string QRs = "qrs";
 
             public const string Banks = "banks";
+        }
+        public static class EnvKeys
+        {
+            public const string Logs = "Folder_Logs";
+            public const string Banks = "Folder_Backups";
         }
     }
 }
