@@ -31,7 +31,6 @@
   <ItemGroup>
     <Folder Include="wwwroot\assets\" />
     <Folder Include="wwwroot\assets\banks\" />
-    <Folder Include="wwwroot\qrs\" />
   </ItemGroup>
 
   <ItemGroup>
