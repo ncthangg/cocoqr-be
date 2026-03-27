@@ -34,7 +34,7 @@ namespace CocoQR.Infrastructure.SubService
             var configS3 = new AmazonS3Config
             {
                 ServiceURL = _settings.Endpoint,
-                ForcePathStyle = false
+                ForcePathStyle = true
             };
 
             return new AmazonS3Client(
