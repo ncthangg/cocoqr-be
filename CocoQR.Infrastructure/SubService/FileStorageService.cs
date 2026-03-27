@@ -34,7 +34,7 @@ namespace CocoQR.Infrastructure.SubService
             var configS3 = new AmazonS3Config
             {
                 ServiceURL = _settings.Endpoint,
-                ForcePathStyle = true
+                ForcePathStyle = false
             };
 
             return new AmazonS3Client(
@@ -50,10 +50,13 @@ namespace CocoQR.Infrastructure.SubService
             {
                 if (_env.IsProduction())
                 {
-                    return await UploadFileToCloudAsync(file, folder);
+                    await UploadFileToCloudAsync(file, folder);
+                    return await UploadFileToLocalAsync(file, folder);
                 }
-
-                return await UploadFileToLocalAsync(file, folder);
+                else
+                {
+                    return await UploadFileToLocalAsync(file, folder);
+                }
             }
             catch (DomainException)
             {
@@ -244,7 +247,7 @@ namespace CocoQR.Infrastructure.SubService
             var transferUtility = new TransferUtility(client);
             await transferUtility.UploadAsync(uploadRequest);
 
-            var fileUrl = $"{_settings.Endpoint}/{_settings.Bucket}/{folder}/{fileName}";
+            var fileUrl = $"{_settings.Endpoint}/{folder}/{fileName}";
             _logger.LogInformation("File uploaded successfully to cloud: {FileName} -> {FileUrl}", file.FileName, fileUrl);
 
             return fileUrl;
