@@ -60,6 +60,12 @@ jobs:
             docker pull ${{ secrets.DOCKER_USERNAME }}/cocoqr-be:${{ needs.build.outputs.version }}
             cd /opt/cocoqr-be-staging
             export IMAGE_TAG=${{ needs.build.outputs.version }}
+
+            export ConnectionStrings__DefaultConnection="${{ secrets.DB_CONNECTION_STRINGS }}"
+            export JWT__SecretKey="${{ secrets.JWT_SECRET_KEY }}"
+            export Oauth__ClientId="${{ secrets.OAUTH_CLIENT_ID }}"
+            export Oauth__ClientSecret="${{ secrets.OAUTH_CLIENT_SECRET }}"
+
             docker compose --profile migrate run --rm migrator || exit 1
             docker compose up -d cocoqr-be-staging
             docker image prune -f
@@ -101,6 +107,16 @@ jobs:
             docker pull ${{ secrets.DOCKER_USERNAME }}/cocoqr-be:${{ needs.build.outputs.version }}
             cd /opt/cocoqr-be-production
             export IMAGE_TAG=${{ needs.build.outputs.version }}
+
+            export JWT__SecretKey="${{ secrets.JWT_SECRET_KEY }}"
+            export ConnectionStrings__DefaultConnection="${{ secrets.DB_CONNECTION_STRINGS }}"
+            export Oauth__ClientId="${{ secrets.OAUTH_CLIENT_ID }}"
+            export Oauth__ClientSecret="${{ secrets.OAUTH_CLIENT_SECRET }}"
+
+            export DigitalOcean__AccessKey="${{ secrets.DO_ACCESS_KEY }}"
+            export DigitalOcean__Endpoint="${{ secrets.DO_END_POINT }}"
+            export DigitalOcean__SecretKey="${{ secrets.DO_SECRET_KEY }}"
+
             docker compose --profile migrate run --rm migrator || exit 1
             docker compose up -d cocoqr-be-production
             docker image prune -a -f
