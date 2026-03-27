@@ -66,7 +66,9 @@ jobs:
             export Oauth__ClientId="${{ secrets.OAUTH_CLIENT_ID }}"
             export Oauth__ClientSecret="${{ secrets.OAUTH_CLIENT_SECRET }}"
 
-            docker compose --profile migrate run --rm migrator || exit 1
+            docker compose --profile migrate run --rm \
+              -e ConnectionStrings__DefaultConnection \
+              migrator || exit 1
             docker compose up -d cocoqr-be-staging
             docker image prune -f
 
@@ -117,6 +119,8 @@ jobs:
             export DigitalOcean__Endpoint="${{ secrets.DO_END_POINT }}"
             export DigitalOcean__SecretKey="${{ secrets.DO_SECRET_KEY }}"
 
-            docker compose --profile migrate run --rm migrator || exit 1
+            docker compose --profile migrate run --rm \
+              -e ConnectionStrings__DefaultConnection \
+              migrator || exit 1
             docker compose up -d cocoqr-be-production
             docker image prune -a -f
