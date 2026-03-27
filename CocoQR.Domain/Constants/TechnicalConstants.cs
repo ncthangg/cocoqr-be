@@ -64,13 +64,14 @@
         public static class Folders
         {
             public const string Assets = "assets";
-
+            public const string Providers = "providers";
             public const string Banks = "banks";
         }
         public static class EnvKeys
         {
+            public const string Assets = "Folder_Assets";
             public const string Logs = "Folder_Logs";
-            public const string Banks = "Folder_Backups";
+            public const string Backups = "Folder_Backups";
         }
     }
 }

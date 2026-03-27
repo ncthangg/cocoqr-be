@@ -74,7 +74,7 @@ namespace CocoQR.Application.Services
                 if (!string.IsNullOrEmpty(imageUrl))
                     await _fileStorageService.DeleteFileAsync(imageUrl);
 
-                imageUrl = await _fileStorageService.UploadFileAsync(req.LogoUrl, $"{FileStorage.Folders.Assets}/{FileStorage.Folders.Banks}");
+                imageUrl = await _fileStorageService.UploadFileAsync(req.LogoUrl, $"{FileStorage.Folders.Assets}/{FileStorage.Folders.Providers}");
             }
             if (!Enum.TryParse<ProviderCode>(req.Code, true, out var providerCode))
             {

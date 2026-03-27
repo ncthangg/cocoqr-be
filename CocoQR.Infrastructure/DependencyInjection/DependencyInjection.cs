@@ -29,7 +29,8 @@ namespace CocoQR.Infrastructure.DependencyInjection
             services.AddDatabase(configuration);
             services.AddSubServices();
             services.AddSeeder();
-            services.AddConfig(configuration);
+            services.AddJWTConfig(configuration);
+            services.AddDOConfig(configuration);
             services.ConfigRedis(configuration);
         }
         private static void AddDbConnectionFactory(this IServiceCollection services)
@@ -74,7 +75,7 @@ namespace CocoQR.Infrastructure.DependencyInjection
 
             services.AddScoped<IGoogleService, GoogleService>();
             services.AddScoped<ITokenService, TokenService>();
-            services.AddScoped<IFileStorageService, LocalFileStorageService>();
+            services.AddScoped<IFileStorageService, FileStorageService>();
             services.AddScoped<IIdGenerator, SqlServerIdGenerator>();
         }
         private static void AddSeeder(this IServiceCollection services)
@@ -84,10 +85,14 @@ namespace CocoQR.Infrastructure.DependencyInjection
             services.AddScoped<ProviderSeeder>();
             // optionally register QR style seeder
         }
-        private static void AddConfig(this IServiceCollection services, IConfiguration configuration)
+        private static void AddJWTConfig(this IServiceCollection services, IConfiguration configuration)
         {
             services.Configure<TokenConfiguration>(configuration.GetSection(Jwt.JwtConst));
             services.AddScoped<ITokenConfiguration>(sp => sp.GetRequiredService<IOptions<TokenConfiguration>>().Value);
+        }
+        private static void AddDOConfig(this IServiceCollection services, IConfiguration configuration)
+        {
+            services.Configure<DigitalOceanSettings>(configuration.GetSection("DigitalOcean"));
         }
         private static IServiceCollection ConfigRedis(this IServiceCollection services, IConfiguration configuration)
         {
