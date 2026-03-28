@@ -132,12 +132,15 @@ jobs:
               && sed -i "s/^IMAGE_TAG=.*/IMAGE_TAG=${IMAGE_TAG}/" .env \
               || echo "IMAGE_TAG=${IMAGE_TAG}" >> .env
 
+            docker compose --profile migrate run --rm \
+              -e ConnectionStrings__DefaultConnection="${{ secrets.DB_CONNECTION_STRINGS }}" \
+              migrator || exit 1
+
             export ConnectionStrings__DefaultConnection="${{ secrets.DB_CONNECTION_STRINGS }}"
             export JWT__SecretKey="${{ secrets.JWT_SECRET_KEY }}"
             export Oauth__ClientId="${{ secrets.OAUTH_CLIENT_ID }}"
             export Oauth__ClientSecret="${{ secrets.OAUTH_CLIENT_SECRET }}"
 
-            docker compose --profile migrate run --rm migrator || exit 1
             docker compose up -d cocoqr-be-staging
             docker image prune -f
 
@@ -185,6 +188,10 @@ jobs:
             grep -q "^IMAGE_TAG=" .env 2>/dev/null \
               && sed -i "s/^IMAGE_TAG=.*/IMAGE_TAG=${IMAGE_TAG}/" .env \
               || echo "IMAGE_TAG=${IMAGE_TAG}" >> .env
+
+            docker compose --profile migrate run --rm \
+              -e ConnectionStrings__DefaultConnection="${{ secrets.DB_CONNECTION_STRINGS }}" \
+              migrator || exit 1
               
             export JWT__SecretKey="${{ secrets.JWT_SECRET_KEY }}"
             export ConnectionStrings__DefaultConnection="${{ secrets.DB_CONNECTION_STRINGS }}"
@@ -195,6 +202,5 @@ jobs:
             export DigitalOcean__Endpoint="${{ secrets.DO_END_POINT }}"
             export DigitalOcean__SecretKey="${{ secrets.DO_SECRET_KEY }}"
 
-            docker compose --profile migrate run --rm migrator || exit 1
             docker compose up -d cocoqr-be-production
             docker image prune -a -f
