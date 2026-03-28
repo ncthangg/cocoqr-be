@@ -27,8 +27,8 @@ COPY CocoQR.QR_Generator/ CocoQR.QR_Generator/
 # Publish
 RUN dotnet publish CocoQR.API/CocoQR.API.csproj \
     -c Release \
-    -o /app/publish 
-
+    -o /app/publish
+    
 # =========================
 # RUNTIME STAGE
 # =========================
@@ -46,7 +46,7 @@ ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
 # Set timezone (VN)
 ENV TZ=Asia/Ho_Chi_Minh
 
-COPY --from=build /app/publish .    
+COPY --from=build /app/publish .
 
 EXPOSE 8080
 ENTRYPOINT ["dotnet", "CocoQR.API.dll"]

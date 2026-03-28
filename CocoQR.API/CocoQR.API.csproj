@@ -7,10 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Remove="Seed\Data\banks_v1.json" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="8.0.23" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.23" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
@@ -20,12 +16,6 @@
     <ProjectReference Include="..\CocoQR.Application\CocoQR.Application.csproj" />
     <ProjectReference Include="..\CocoQR.Infrastructure\CocoQR.Infrastructure.csproj" />
     <ProjectReference Include="..\CocoQR.QR_Generator\CocoQR.QR_Generator.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="Seed\Data\banks_v1.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
 
   <ItemGroup>
