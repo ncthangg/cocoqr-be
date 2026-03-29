@@ -94,16 +94,10 @@ namespace CocoQR.Infrastructure.BackgroundServices
                     return Path.GetFullPath(configuredLogPath);
                 }
 
-                return Path.GetFullPath(Path.Combine(GetEnvironmentRoot(), configuredLogPath));
+                return Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, configuredLogPath));
             }
 
-            return Path.Combine(GetEnvironmentRoot(), Folders.Logs);
-        }
-
-        private string GetEnvironmentRoot()
-        {
-            var storageRoot = Environment.GetEnvironmentVariable(EnvKeys.Root) ?? "/data/cocoqr";
-            return Path.GetFullPath(Path.Combine(storageRoot, _env.EnvironmentName.ToLowerInvariant()));
+            return Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, Folders.Logs));
         }
 
         private static string GetUploadedMarker(string filePath)

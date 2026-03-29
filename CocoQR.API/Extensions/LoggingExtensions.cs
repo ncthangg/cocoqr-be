@@ -24,7 +24,7 @@ namespace CocoQR.API.Extensions
                 return builder;
             }
 
-            var logFolder = ResolveLogFolder(env);
+            var logFolder = ResolveLogFolder();
             Directory.CreateDirectory(Path.Combine(logFolder, Folders.Info));
             Directory.CreateDirectory(Path.Combine(logFolder, Folders.Warning));
             Directory.CreateDirectory(Path.Combine(logFolder, Folders.Error));
@@ -68,7 +68,7 @@ namespace CocoQR.API.Extensions
             return builder;
         }
 
-        private static string ResolveLogFolder(IWebHostEnvironment env)
+        private static string ResolveLogFolder()
         {
             var configuredLogPath = Environment.GetEnvironmentVariable(EnvKeys.Logs);
             if (!string.IsNullOrWhiteSpace(configuredLogPath))
@@ -78,16 +78,10 @@ namespace CocoQR.API.Extensions
                     return Path.GetFullPath(configuredLogPath);
                 }
 
-                return Path.GetFullPath(Path.Combine(ResolveEnvironmentRoot(env), configuredLogPath));
+                return Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, configuredLogPath));
             }
 
-            return Path.Combine(ResolveEnvironmentRoot(env), Folders.Logs);
-        }
-
-        private static string ResolveEnvironmentRoot(IWebHostEnvironment env)
-        {
-            var storageRoot = Environment.GetEnvironmentVariable(EnvKeys.Root) ?? "/data/cocoqr";
-            return Path.GetFullPath(Path.Combine(storageRoot, env.EnvironmentName.ToLowerInvariant()));
+            return Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, Folders.Logs));
         }
     }
 }

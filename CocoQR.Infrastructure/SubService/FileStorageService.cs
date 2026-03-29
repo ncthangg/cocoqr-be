@@ -496,12 +496,6 @@ namespace CocoQR.Infrastructure.SubService
                 .TrimStart('/');
         }
 
-        private string GetEnvironmentStorageRootPath()
-        {
-            var storageRoot = Environment.GetEnvironmentVariable(EnvKeys.Root) ?? "/data/cocoqr";
-            return Path.GetFullPath(Path.Combine(storageRoot, _env.EnvironmentName.ToLowerInvariant()));
-        }
-
         private string GetLogRootPath()
         {
             var configuredLogPath = Environment.GetEnvironmentVariable(EnvKeys.Logs);
@@ -512,10 +506,10 @@ namespace CocoQR.Infrastructure.SubService
                     return Path.GetFullPath(configuredLogPath);
                 }
 
-                return Path.GetFullPath(Path.Combine(GetEnvironmentStorageRootPath(), configuredLogPath));
+                return Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, configuredLogPath));
             }
 
-            return Path.Combine(GetEnvironmentStorageRootPath(), Folders.Logs);
+            return Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, Folders.Logs));
         }
 
         private void ValidateSettings()
