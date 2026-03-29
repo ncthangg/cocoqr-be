@@ -20,6 +20,7 @@ namespace CocoQR.Infrastructure.SubService
         private readonly DigitalOceanSettings _settings;
         private readonly IFileCleanupQueue _cleanupQueue;
 
+        private bool _isValidConfig;
         public FileStorageService(
             IWebHostEnvironment environment,
             ILogger<FileStorageService> logger,
@@ -30,6 +31,11 @@ namespace CocoQR.Infrastructure.SubService
             _logger = logger;
             _settings = options.Value;
             _cleanupQueue = cleanupQueue;
+
+            if (!_env.IsDevelopment())
+            {
+                ValidateSettings();
+            }
         }
 
         private IAmazonS3 GetClient()
@@ -45,6 +51,7 @@ namespace CocoQR.Infrastructure.SubService
                 _settings.SecretKey,
                 configS3);
         }
+
         #region FUNCTIONS FOR 1 FILE ONLY
         public async Task<string> UploadFileAsync(IFormFile file, string folder)
         {
@@ -57,8 +64,6 @@ namespace CocoQR.Infrastructure.SubService
 
                 var relativePath = $"{folder}/{fileName}";
 
-                _logger.LogInformation($"relativePath: {relativePath}");
-                _logger.LogInformation($"_env: {_env.EnvironmentName}");
                 if (_env.IsDevelopment())
                 {
                     return await UploadFileToLocalAsync(file, relativePath);
@@ -66,12 +71,10 @@ namespace CocoQR.Infrastructure.SubService
 
                 if (ShouldUseCloudStorage())
                 {
-                    _logger.LogInformation($"ShouldUseCloudStorage: {ShouldUseCloudStorage()}");
                     await UploadFileToCloudAsync(file, relativePath);
 
                     try
                     {
-                        _logger.LogInformation("UploadFileToLocalAsync");
                         return await UploadFileToLocalAsync(file, relativePath);
                     }
                     catch (Exception localEx)
@@ -444,9 +447,6 @@ namespace CocoQR.Infrastructure.SubService
             return NormalizePath(fileUrlOrPath);
         }
 
-        /// <summary>
-        /// Validates file extension
-        /// </summary>
         private static bool IsAllowedExtension(string extension)
         {
             return FileStorage.AllowedImageExtensions.Contains(extension)
@@ -516,6 +516,40 @@ namespace CocoQR.Infrastructure.SubService
             }
 
             return Path.Combine(GetEnvironmentStorageRootPath(), Folders.Logs);
+        }
+
+        private void ValidateSettings()
+        {
+            _isValidConfig = true;
+
+            if (string.IsNullOrWhiteSpace(_settings.AccessKey))
+            {
+                _logger.LogError("DigitalOcean AccessKey missing");
+                _isValidConfig = false;
+            }
+
+            if (string.IsNullOrWhiteSpace(_settings.SecretKey))
+            {
+                _logger.LogError("DigitalOcean SecretKey missing");
+                _isValidConfig = false;
+            }
+
+            if (string.IsNullOrWhiteSpace(_settings.Bucket))
+            {
+                _logger.LogError("DigitalOcean Bucket missing");
+                _isValidConfig = false;
+            }
+
+            if (string.IsNullOrWhiteSpace(_settings.Endpoint))
+            {
+                _logger.LogError("DigitalOcean Endpoint missing");
+                _isValidConfig = false;
+            }
+
+            if (!_isValidConfig)
+            {
+                _logger.LogWarning("DigitalOcean disabled due to invalid config");
+            }
         }
         #endregion
     }
