@@ -1,13 +1,10 @@
-﻿using Amazon.S3;
-using Amazon.S3.Model;
-using Amazon.S3.Transfer;
-using CocoQR.Application.Contracts.ISubServices;
+﻿using CocoQR.Application.Contracts.ISubServices;
 using CocoQR.Domain.Constants;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using static CocoQR.Domain.Constants.FileStorage;
 using DomainException = CocoQR.Domain.Exceptions.DomainException;
 
@@ -17,41 +14,22 @@ namespace CocoQR.Infrastructure.SubService
     {
         private readonly IWebHostEnvironment _env;
         private readonly ILogger<FileStorageService> _logger;
-        private readonly DigitalOceanSettings _settings;
+        private readonly ICloudStorage _cloudStorage;
         private readonly IFileCleanupQueue _cleanupQueue;
+        private readonly string _baseUrl;
 
-        private bool _isValidConfig;
         public FileStorageService(
             IWebHostEnvironment environment,
             ILogger<FileStorageService> logger,
-            IOptions<DigitalOceanSettings> options,
-            IFileCleanupQueue cleanupQueue)
+            ICloudStorage cloudStorage,
+            IFileCleanupQueue cleanupQueue,
+            IConfiguration configuration)
         {
             _env = environment;
             _logger = logger;
-            _settings = options.Value;
+            _cloudStorage = cloudStorage;
             _cleanupQueue = cleanupQueue;
-
-            if (!_env.IsDevelopment())
-            {
-                ValidateSettings();
-            }
-        }
-
-        private IAmazonS3 GetClient()
-        {
-            var serviceUrl = GetNormalizedEndpoint();
-
-            var configS3 = new AmazonS3Config
-            {
-                ServiceURL = serviceUrl,
-                ForcePathStyle = true
-            };
-
-            return new AmazonS3Client(
-                _settings.AccessKey,
-                _settings.SecretKey,
-                configS3);
+            _baseUrl = (configuration["FileUrl:BaseUrl"] ?? string.Empty).Trim().TrimEnd('/');
         }
 
         #region FUNCTIONS FOR 1 FILE ONLY
@@ -59,16 +37,14 @@ namespace CocoQR.Infrastructure.SubService
         {
             ValidateFile(file);
 
+            var relativePath = BuildRelativePath(folder, file.FileName);
+
             try
             {
-                var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
-                var fileName = $"{Guid.NewGuid():N}{extension}";
-
-                var relativePath = $"{folder}/{fileName}";
-
                 if (_env.IsDevelopment())
                 {
-                    return await UploadFileToLocalAsync(file, relativePath);
+                    await UploadFileToLocalAsync(file, relativePath);
+                    return GetFileUrl(relativePath);
                 }
 
                 if (ShouldUseCloudStorage())
@@ -77,7 +53,7 @@ namespace CocoQR.Infrastructure.SubService
 
                     try
                     {
-                        return await UploadFileToLocalAsync(file, relativePath);
+                        await UploadFileToLocalAsync(file, relativePath);
                     }
                     catch (Exception localEx)
                     {
@@ -93,9 +69,15 @@ namespace CocoQR.Infrastructure.SubService
 
                         throw new DomainException(ErrorCode.InternalError, "Uploaded cloud but failed to save local file", localEx);
                     }
+
+                    return GetFileUrl(relativePath);
                 }
 
                 throw new DomainException(ErrorCode.InternalError, "Unsupported environment for file upload");
+            }
+            catch (DomainException)
+            {
+                throw;
             }
             catch (Exception ex)
             {
@@ -144,20 +126,8 @@ namespace CocoQR.Infrastructure.SubService
                 }
 
                 var key = BuildCloudKey($"{Folders.Logs}/{relativePath}");
-
-                using var stream = File.OpenRead(filePath);
-
-                var uploadRequest = new TransferUtilityUploadRequest
-                {
-                    InputStream = stream,
-                    Key = key,
-                    BucketName = _settings.Bucket
-                };
-
-                var client = GetClient();
-                var transferUtility = new TransferUtility(client);
-
-                await transferUtility.UploadAsync(uploadRequest);
+                await using var stream = File.OpenRead(filePath);
+                await _cloudStorage.UploadAsync(stream, key);
 
                 _logger.LogInformation("Log uploaded: {Key}", key);
             }
@@ -224,6 +194,39 @@ namespace CocoQR.Infrastructure.SubService
             var relativePath = StripEnvironmentPrefix(GetRelativePathFromUrlOrPath(filePath));
             var physicalPath = GetPhysicalPath(relativePath);
             return Task.FromResult(File.Exists(physicalPath));
+        }
+
+        public string GetFileUrl(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+                return string.Empty;
+
+            if (Uri.TryCreate(path, UriKind.Absolute, out _))
+            {
+                if (!ShouldUseCloudStorage())
+                {
+                    return path;
+                }
+
+                var relativePath = GetRelativePathFromUrlOrPath(path);
+                return string.IsNullOrWhiteSpace(relativePath)
+                    ? path
+                    : _cloudStorage.GetPublicUrl(BuildCloudKey(relativePath));
+            }
+
+            var normalizedPath = TrimToEnvironmentPrefix(path);
+
+            if (ShouldUseCloudStorage())
+            {
+                return _cloudStorage.GetPublicUrl(BuildCloudKey(normalizedPath));
+            }
+
+            if (!string.IsNullOrWhiteSpace(_baseUrl))
+            {
+                return BuildUrl(_baseUrl, StripEnvironmentPrefix(normalizedPath));
+            }
+
+            return NormalizePath(StripEnvironmentPrefix(normalizedPath));
         }
 
         /// <summary>
@@ -361,19 +364,9 @@ namespace CocoQR.Infrastructure.SubService
 
             var key = BuildCloudKey(relativePath);
 
-            var uploadRequest = new TransferUtilityUploadRequest
-            {
-                InputStream = stream,
-                Key = key,
-                BucketName = $"{_settings.Bucket}",
-                CannedACL = S3CannedACL.PublicRead
-            };
+            await _cloudStorage.UploadAsync(stream, key);
 
-            var client = GetClient();
-            var transferUtility = new TransferUtility(client);
-            await transferUtility.UploadAsync(uploadRequest);
-
-            var url = BuildPublicObjectUrl(key);
+            var url = _cloudStorage.GetPublicUrl(key);
             _logger.LogInformation("Uploaded cloud: {Url}", url);
         }
 
@@ -409,14 +402,8 @@ namespace CocoQR.Infrastructure.SubService
 
             try
             {
-                var request = new DeleteObjectRequest
-                {
-                    BucketName = _settings.Bucket,
-                    Key = key
-                };
-
-                var client = GetClient();
-                await client.DeleteObjectAsync(request, cancellationToken);
+                cancellationToken.ThrowIfCancellationRequested();
+                await _cloudStorage.DeleteAsync(key);
 
                 _logger.LogInformation("Cloud file deleted: {Key}", key);
                 return true;
@@ -435,18 +422,10 @@ namespace CocoQR.Infrastructure.SubService
 
             if (Uri.TryCreate(fileUrlOrPath, UriKind.Absolute, out var uri))
             {
-                var path = uri.AbsolutePath.TrimStart('/');
-                var bucketPrefix = $"{_settings.Bucket}/";
-
-                if (path.StartsWith(bucketPrefix, StringComparison.OrdinalIgnoreCase))
-                {
-                    path = path[bucketPrefix.Length..];
-                }
-
-                return NormalizePath(path);
+                return TrimToEnvironmentPrefix(uri.AbsolutePath);
             }
 
-            return NormalizePath(fileUrlOrPath);
+            return TrimToEnvironmentPrefix(fileUrlOrPath);
         }
 
         private static bool IsAllowedExtension(string extension)
@@ -462,7 +441,7 @@ namespace CocoQR.Infrastructure.SubService
 
         private string BuildCloudKey(string path)
         {
-            var normalized = NormalizePath(path);
+            var normalized = TrimToEnvironmentPrefix(path);
             var envPrefix = GetEnvironmentPrefix();
 
             if (normalized.StartsWith(envPrefix, StringComparison.OrdinalIgnoreCase))
@@ -471,46 +450,6 @@ namespace CocoQR.Infrastructure.SubService
             }
 
             return $"{envPrefix}{normalized}";
-        }
-
-        private string BuildPublicObjectUrl(string key)
-        {
-            var endpoint = GetNormalizedEndpoint();
-            return $"{endpoint}/{NormalizePath(key)}";
-        }
-
-        private string GetNormalizedEndpoint()
-        {
-            var rawEndpoint = (_settings.Endpoint ?? string.Empty).Trim().TrimEnd('/');
-            if (!Uri.TryCreate(rawEndpoint, UriKind.Absolute, out var endpointUri))
-            {
-                return rawEndpoint;
-            }
-
-            var bucket = (_settings.Bucket ?? string.Empty).Trim().Trim('/');
-            var cleanedPath = endpointUri.AbsolutePath.Trim('/');
-
-            // Keep endpoint host as configured and remove accidental '/{bucket}' path suffix to avoid duplicated bucket folder.
-            if (!string.IsNullOrWhiteSpace(bucket))
-            {
-                if (cleanedPath.Equals(bucket, StringComparison.OrdinalIgnoreCase))
-                {
-                    cleanedPath = string.Empty;
-                }
-                else if (cleanedPath.StartsWith($"{bucket}/", StringComparison.OrdinalIgnoreCase))
-                {
-                    cleanedPath = cleanedPath[(bucket.Length + 1)..];
-                }
-            }
-
-            var builder = new UriBuilder(endpointUri)
-            {
-                Path = string.IsNullOrWhiteSpace(cleanedPath) ? string.Empty : cleanedPath,
-                Query = string.Empty,
-                Fragment = string.Empty
-            };
-
-            return builder.Uri.ToString().TrimEnd('/');
         }
 
         private string StripEnvironmentPrefix(string path)
@@ -529,6 +468,32 @@ namespace CocoQR.Infrastructure.SubService
         private string GetEnvironmentPrefix()
         {
             return $"{_env.EnvironmentName.ToLowerInvariant()}/";
+        }
+
+        private string TrimToEnvironmentPrefix(string path)
+        {
+            var normalized = NormalizePath(path);
+            var envPrefix = GetEnvironmentPrefix();
+            var envPrefixIndex = normalized.IndexOf(envPrefix, StringComparison.OrdinalIgnoreCase);
+
+            if (envPrefixIndex > 0)
+            {
+                return normalized[envPrefixIndex..];
+            }
+
+            return normalized;
+        }
+
+        private static string BuildRelativePath(string folder, string originalFileName)
+        {
+            var extension = Path.GetExtension(originalFileName).ToLowerInvariant();
+            var fileName = $"{Guid.NewGuid():N}{extension}";
+            return $"{NormalizePath(folder)}/{fileName}";
+        }
+
+        private static string BuildUrl(string endpoint, string path)
+        {
+            return $"{endpoint.TrimEnd('/')}/{NormalizePath(path)}";
         }
 
         private static string NormalizePath(string path)
@@ -552,40 +517,6 @@ namespace CocoQR.Infrastructure.SubService
             }
 
             return Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, Folders.Logs));
-        }
-
-        private void ValidateSettings()
-        {
-            _isValidConfig = true;
-
-            if (string.IsNullOrWhiteSpace(_settings.AccessKey))
-            {
-                _logger.LogError("DigitalOcean AccessKey missing");
-                _isValidConfig = false;
-            }
-
-            if (string.IsNullOrWhiteSpace(_settings.SecretKey))
-            {
-                _logger.LogError("DigitalOcean SecretKey missing");
-                _isValidConfig = false;
-            }
-
-            if (string.IsNullOrWhiteSpace(_settings.Bucket))
-            {
-                _logger.LogError("DigitalOcean Bucket missing");
-                _isValidConfig = false;
-            }
-
-            if (string.IsNullOrWhiteSpace(_settings.Endpoint))
-            {
-                _logger.LogError("DigitalOcean Endpoint missing");
-                _isValidConfig = false;
-            }
-
-            if (!_isValidConfig)
-            {
-                _logger.LogWarning("DigitalOcean disabled due to invalid config");
-            }
         }
         #endregion
     }

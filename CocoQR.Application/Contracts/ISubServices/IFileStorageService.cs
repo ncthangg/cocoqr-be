@@ -16,5 +16,6 @@ namespace CocoQR.Application.Contracts.ISubServices
 
         Task<Stream> GetFileStreamAsync(string filePath);
         string GetPhysicalPath(string filePath);
+        string GetFileUrl(string path);
     }
 }

@@ -34,7 +34,7 @@ namespace CocoQR.Infrastructure.DependencyInjection
             services.AddBackgroundServices(env);
             services.AddSeeder();
             services.AddJWTConfig(configuration);
-            services.AddDOConfig(configuration);
+            services.AddCloudConfig(configuration);
             services.ConfigRedis(configuration);
         }
         private static void AddDbConnectionFactory(this IServiceCollection services)
@@ -80,6 +80,12 @@ namespace CocoQR.Infrastructure.DependencyInjection
             services.AddScoped<IGoogleService, GoogleService>();
             services.AddScoped<ITokenService, TokenService>();
             services.AddSingleton<IFileCleanupQueue, FileCleanupQueue>();
+
+            // Default cloud provider: DigitalOcean Spaces.
+            // Switch to Cloudinary by replacing this registration with:
+            // services.AddScoped<ICloudStorage, CloudinaryStorage>();
+            services.AddScoped<ICloudStorage, DigitalOceanStorage>();
+
             services.AddScoped<FileStorageService>();
             services.AddScoped<IFileStorageService>(sp => sp.GetRequiredService<FileStorageService>());
             services.AddScoped<IIdGenerator, SqlServerIdGenerator>();
@@ -104,9 +110,10 @@ namespace CocoQR.Infrastructure.DependencyInjection
             services.Configure<TokenConfiguration>(configuration.GetSection(Jwt.JwtConst));
             services.AddScoped<ITokenConfiguration>(sp => sp.GetRequiredService<IOptions<TokenConfiguration>>().Value);
         }
-        private static void AddDOConfig(this IServiceCollection services, IConfiguration configuration)
+        private static void AddCloudConfig(this IServiceCollection services, IConfiguration configuration)
         {
             services.Configure<DigitalOceanSettings>(configuration.GetSection("DigitalOcean"));
+            services.Configure<CloudinarySettings>(configuration.GetSection("Cloudinary"));
         }
         private static IServiceCollection ConfigRedis(this IServiceCollection services, IConfiguration configuration)
         {

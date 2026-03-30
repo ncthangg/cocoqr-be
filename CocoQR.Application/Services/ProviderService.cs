@@ -30,7 +30,13 @@ namespace CocoQR.Application.Services
             var providers = await _unitOfWork.Providers.GetAllAsync(_userContext.IsAdmin())
             ?? throw new ApplicationException(ErrorCode.NotFound, $"ProviderCode not found");
 
-            return providers.Select(p => ProviderMapper.ToGetProviderRes(p)).ToList();
+            var list = providers.Select(p => ProviderMapper.ToGetProviderRes(p)).ToList();
+            foreach (var item in list)
+            {
+                item.LogoUrl = ResolveFileUrl(item.LogoUrl);
+            }
+
+            return list;
         }
         public async Task<GetProviderRes> GetByIdAsync(Guid id)
         {
@@ -40,7 +46,9 @@ namespace CocoQR.Application.Services
             var role = await _unitOfWork.Providers.GetByIdAsync(id)
                 ?? throw new ApplicationException(ErrorCode.NotFound, $"ProviderCode {id} not found");
 
-            return ProviderMapper.ToGetProviderRes(role);
+            var result = ProviderMapper.ToGetProviderRes(role);
+            result.LogoUrl = ResolveFileUrl(result.LogoUrl);
+            return result;
         }
         public async Task PutAsync(Guid id, PutProviderReq req)
         {
@@ -109,6 +117,16 @@ namespace CocoQR.Application.Services
             {
                 await _fileStorageService.DeleteFileAsync(previousImageUrl);
             }
+        }
+
+        private string? ResolveFileUrl(string? path)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                return path;
+            }
+
+            return _fileStorageService.GetFileUrl(path);
         }
     }
 }

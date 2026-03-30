@@ -17,12 +17,14 @@ namespace CocoQR.Application.Services
         private readonly IUnitOfWork _unitOfWork;
         private readonly IUserContext _userContext;
         private readonly IIdGenerator _idGenerator;
+        private readonly IFileStorageService _fileStorageService;
 
-        public AccountService(IUnitOfWork unitOfWork, IUserContext userContext, IIdGenerator idGenerator)
+        public AccountService(IUnitOfWork unitOfWork, IUserContext userContext, IIdGenerator idGenerator, IFileStorageService fileStorageService)
         {
             _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
             _userContext = userContext;
             _idGenerator = idGenerator;
+            _fileStorageService = fileStorageService;
         }
 
         public async Task<PagingVM<GetAccountRes>> GetAllAsync(int pageNumber, int pageSize,
@@ -70,6 +72,8 @@ namespace CocoQR.Application.Services
                 throw new ApplicationException(ErrorCode.Unauthorized, ErrorMessages.Unauthorized);
             }
 
+            list = list.Select(ResolveLogoUrls).ToList();
+
             return new PagingVM<GetAccountRes>
             {
                 List = list,
@@ -91,11 +95,11 @@ namespace CocoQR.Application.Services
 
             if (_userContext.IsAdmin())
             {
-                return AccountMapper.ToGetAccountByAdminRes(account);
+                return ResolveLogoUrls(AccountMapper.ToGetAccountByAdminRes(account));
             }
             else if (_userContext.IsUser())
             {
-                return AccountMapper.ToGetAccountRes(account);
+                return ResolveLogoUrls(AccountMapper.ToGetAccountRes(account));
             }
             else
             {
@@ -221,6 +225,23 @@ namespace CocoQR.Application.Services
                 ?? throw new ApplicationException(ErrorCode.NotFound, $"Account {id} not found");
 
             await _unitOfWork.Accounts.DeleteAsync(id);
+        }
+
+        private GetAccountRes ResolveLogoUrls(GetAccountRes item)
+        {
+            item.BankLogoUrl = ResolveFileUrl(item.BankLogoUrl);
+            item.ProviderLogoUrl = ResolveFileUrl(item.ProviderLogoUrl);
+            return item;
+        }
+
+        private string? ResolveFileUrl(string? path)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                return path;
+            }
+
+            return _fileStorageService.GetFileUrl(path);
         }
     }
 }

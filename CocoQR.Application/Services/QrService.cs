@@ -1,6 +1,7 @@
 ﻿using CocoQR.Application.Common.Mapper;
 using CocoQR.Application.Contracts.IContext;
 using CocoQR.Application.Contracts.IServices;
+using CocoQR.Application.Contracts.ISubServices;
 using CocoQR.Application.Contracts.IUnitOfWork;
 using CocoQR.Application.DTOs.Base.BaseRes;
 using CocoQR.Application.DTOs.QR.Requests;
@@ -19,15 +20,18 @@ namespace CocoQR.Application.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IUserContext _userContext;
+        private readonly IFileStorageService _fileStorageService;
 
         private readonly IQrPayloadEngine _qrEngine;
 
         public QrService(IUnitOfWork unitOfWork, IUserContext userContext,
+                    IFileStorageService fileStorageService,
                     IQrPayloadEngine qrEngine,
                     IQrImageRenderer qrImageRenderer)
         {
             _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
             _userContext = userContext;
+            _fileStorageService = fileStorageService;
 
             _qrEngine = qrEngine;
         }
@@ -91,6 +95,8 @@ namespace CocoQR.Application.Services
                 throw new ApplicationException(ErrorCode.Unauthorized, ErrorMessages.Unauthorized);
             }
 
+            list = list.Select(ResolveLogoUrls).ToList();
+
             return new PagingVM<GetQrRes>
             {
                 List = list,
@@ -112,11 +118,11 @@ namespace CocoQR.Application.Services
 
             if (_userContext.IsAdmin())
             {
-                return QrMapper.ToGetQrHistoryByAdminRes(account);
+                return ResolveLogoUrls(QrMapper.ToGetQrHistoryByAdminRes(account));
             }
             else if (_userContext.IsUser())
             {
-                return QrMapper.ToGetQrHistoryRes(account);
+                return ResolveLogoUrls(QrMapper.ToGetQrHistoryRes(account));
             }
             else
             {
@@ -351,6 +357,16 @@ namespace CocoQR.Application.Services
                 throw new ApplicationException(ErrorCode.ServiceUnavailable, "Phương thức thanh toán đang bảo trì.");
 
             return provider;
+        }
+
+        private GetQrRes ResolveLogoUrls(GetQrRes item)
+        {
+            if (!string.IsNullOrWhiteSpace(item.ProviderLogoUrl))
+            {
+                item.ProviderLogoUrl = _fileStorageService.GetFileUrl(item.ProviderLogoUrl);
+            }
+
+            return item;
         }
         #endregion
     }
