@@ -83,8 +83,8 @@ namespace CocoQR.Infrastructure.DependencyInjection
 
             // Default cloud provider: DigitalOcean Spaces.
             // Switch to Cloudinary by replacing this registration with:
-            // services.AddScoped<ICloudStorage, CloudinaryStorage>();
-            services.AddScoped<ICloudStorage, DigitalOceanStorage>();
+            services.AddScoped<ICloudStorage, CloudinaryStorage>();
+            // services.AddScoped<ICloudStorage, DigitalOceanStorage>();
 
             services.AddScoped<FileStorageService>();
             services.AddScoped<IFileStorageService>(sp => sp.GetRequiredService<FileStorageService>());
