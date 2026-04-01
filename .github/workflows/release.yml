@@ -210,5 +210,9 @@ jobs:
             export DigitalOcean__Endpoint="${{ secrets.DO_END_POINT }}"
             export DigitalOcean__SecretKey="${{ secrets.DO_SECRET_KEY }}"
 
+            export Cloudinary__ApiKey="${{ secrets.CLOUDINARY_API_KEY }}"
+            export Cloudinary__ApiSecret="${{ secrets.CLOUDINARY_API_SECRET }}"
+            export Cloudinary__CloudName="${{ secrets.CLOUDINARY_CLOUD_NAME }}"
+
             docker compose up -d cocoqr-be-production
             docker image prune -a -f
