@@ -24,8 +24,6 @@ namespace CocoQR.Application.Common.Extensions
 
             var baseUrl = $"{scheme}://{host}{portString}";
 
-            Console.WriteLine($"[GetBaseUrl] Scheme: {scheme}, Host: {host}, Port: {request.Host.Port}, Result: {baseUrl}");
-
             return baseUrl;
         }
 
@@ -43,8 +41,6 @@ namespace CocoQR.Application.Common.Extensions
             var baseUrl = GetBaseUrl(request);
             var encodedOrigin = Uri.EscapeDataString(origin);
             var result = $"{baseUrl}{callbackPath}?origin={encodedOrigin}";
-
-            Console.WriteLine($"[GetCallbackUrl] BaseUrl: {baseUrl}, CallbackPath: {callbackPath}, Result: {result}");
 
             return result;
         }

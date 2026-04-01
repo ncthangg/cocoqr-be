@@ -32,6 +32,8 @@ persistence, and Redis integration.
 - Redis via `StackExchange.Redis`
 - JWT Bearer Authentication
 - Google OAuth Authentication
+- AWS S3 SDK (`AWSSDK.S3`) for DigitalOcean Spaces
+- Cloudinary (`CloudinaryDotNet`)
 - Swagger / OpenAPI
 - QRCoder
 
@@ -45,7 +47,7 @@ CocoQR.BE/
 |-- CocoQR.Infrastructure/  # EF Core, repositories, seeders, security
 |-- CocoQR.QR_Generator/    # QR code generation module
 |-- CocoQR.QR_Decoder/      # QR decoder project referenced by the solution
-|-- CocoQR_BE.sln           # Solution entry point
+|-- CocoQR.sln              # Solution entry point
 ```
 
 Main responsibilities:
@@ -75,7 +77,7 @@ Main responsibilities:
 3. Restore dependencies:
 
 ```bash
-dotnet restore CocoQR_BE.sln
+dotnet restore CocoQR.sln
 ```
 
 ### Run the API
@@ -106,8 +108,8 @@ startup.
 Common commands for local development:
 
 ```bash
-dotnet restore CocoQR_BE.sln
-dotnet build CocoQR_BE.sln
+dotnet restore CocoQR.sln
+dotnet build CocoQR.sln
 dotnet run --project CocoQR.API
 dotnet run --project CocoQR.API -- --migrate
 ```
@@ -141,12 +143,146 @@ Important settings:
 | `Auth:AllowedOrigins` | Allowed CORS origins |
 | `ASPNETCORE_ENVIRONMENT` | Runtime environment |
 
+Cloud storage settings:
+
+| Key | Purpose |
+| --- | --- |
+| `DigitalOcean:AccessKey` | Spaces access key (S3 credential) |
+| `DigitalOcean:SecretKey` | Spaces secret key |
+| `DigitalOcean:Bucket` | Spaces bucket name |
+| `DigitalOcean:Region` | Spaces region (for example `sgp1`) |
+| `DigitalOcean:Endpoint` | Public bucket endpoint, for example `https://{bucket}.{region}.digitaloceanspaces.com` |
+| `Cloudinary:ApiKey` | Cloudinary API key |
+| `Cloudinary:ApiSecret` | Cloudinary API secret |
+| `Cloudinary:CloudName` | Cloudinary cloud name |
+| `Cloudinary:ProjectName` | Root virtual folder prefix in Cloudinary |
+| `Cloudinary:BaseUrl` | Cloudinary delivery base URL (for example `https://res.cloudinary.com`) |
+| `FileUrl:BaseUrl` (optional) | Base URL used in Development when serving local files |
+
 Notes:
 
 - JWT settings are validated at startup and must be populated.
 - Redis is required by the current infrastructure registration.
 - `Auth:AllowedOrigins` should contain the frontend origins allowed to
   call the API with credentials.
+
+## File Storage Usage
+
+The project uses `IFileStorageService` as the application-level API and
+`ICloudStorage` provider adapters in infrastructure.
+
+Provider registration is configured in
+`CocoQR.Infrastructure/DependencyInjection/DependencyInjection.cs`.
+Current default:
+
+```csharp
+services.AddScoped<ICloudStorage, DigitalOceanStorage>();
+// services.AddScoped<ICloudStorage, CloudinaryStorage>();
+```
+
+To switch provider:
+
+1. Fill the corresponding section in `CocoQR.API/appsettings.json`.
+2. Update the `ICloudStorage` registration in infrastructure DI.
+3. Restart the API.
+
+Runtime behavior by environment:
+
+| Environment | Upload behavior | URL returned by API |
+| --- | --- | --- |
+| `Development` | Save local file only (`wwwroot/...`) | Relative path, or absolute URL if `FileUrl:BaseUrl` is set |
+| `Staging` / `Production` | Upload cloud first, then save local mirror | Public cloud URL |
+
+## Storage Path Convention
+
+### 1) Business file upload path
+
+For uploaded business files (bank/provider logos), the service builds:
+
+- Folder from use case, for example:
+  - `assets/banks`
+  - `assets/providers`
+- Filename as GUID with original extension:
+  - `{guidN}{ext}`
+
+Example relative path:
+
+```text
+assets/providers/2f6e9e6f3e9a4c35b9d5c31f2a4a3d7c.png
+```
+
+Cloud object key always includes environment prefix:
+
+```text
+{environment}/{relativePath}
+```
+
+Example (`Staging`):
+
+```text
+staging/assets/providers/2f6e9e6f3e9a4c35b9d5c31f2a4a3d7c.png
+```
+
+### 2) DigitalOcean Spaces URL pattern
+
+`DigitalOceanStorage` keeps the key as-is and returns:
+
+```text
+{DigitalOcean:Endpoint}/{environment}/{relativePath}
+```
+
+Example:
+
+```text
+https://cocoqr.sgp1.digitaloceanspaces.com/staging/assets/providers/2f6e9e6f3e9a4c35b9d5c31f2a4a3d7c.png
+```
+
+### 3) Cloudinary URL pattern
+
+`CloudinaryStorage` prepends `ProjectName` before the environment key.
+Final virtual storage path:
+
+```text
+{ProjectName}/{environment}/{relativePath}
+```
+
+Delivery URL pattern depends on resource type:
+
+- Image: `/image/upload/...`
+- Video: `/video/upload/...`
+- Other files (documents/logs): `/raw/upload/...`
+
+Image example:
+
+```text
+https://res.cloudinary.com/{CloudName}/image/upload/{ProjectName}/staging/assets/providers/2f6e9e6f3e9a4c35b9d5c31f2a4a3d7c.png
+```
+
+### 4) Log upload path to cloud
+
+In `Staging`/`Production`, `LogUploadService` uploads old `.txt` files
+from log level folders:
+
+- `logs/information`
+- `logs/warning`
+- `logs/error`
+
+Cloud key format:
+
+```text
+{environment}/logs/{level}/{filename}.txt
+```
+
+Examples:
+
+- DigitalOcean key: `production/logs/error/2026-04-01.txt`
+- Cloudinary virtual path: `{ProjectName}/production/logs/error/2026-04-01.txt`
+
+### 5) File validation limits
+
+- Max upload size: `10 MB`
+- Allowed image extensions: `.jpg`, `.jpeg`, `.png`, `.gif`, `.webp`, `.svg`
+- Allowed document extensions: `.pdf`, `.doc`, `.docx`, `.xls`, `.xlsx`, `.txt`, `.csv`
 
 ## Architecture
 

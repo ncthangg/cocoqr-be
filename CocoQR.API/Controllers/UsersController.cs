@@ -9,7 +9,7 @@ namespace CocoQR.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class UsersController : Controller
+    public class UsersController : ControllerBase
     {
         private readonly IUserService _userService;
         public UsersController(IUserService userService)

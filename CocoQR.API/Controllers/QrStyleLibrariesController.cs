@@ -10,7 +10,7 @@ namespace CocoQR.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class QrStyleLibrariesController : Controller
+    public class QrStyleLibrariesController : ControllerBase
     {
         private readonly IQrStyleLibraryService _qrStyleLibService;
         public QrStyleLibrariesController(IQrStyleLibraryService qrStyleLibService)
