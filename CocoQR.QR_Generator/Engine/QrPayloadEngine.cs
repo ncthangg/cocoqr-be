@@ -86,11 +86,6 @@ namespace CocoQR.QR_Generator.Engine
             var napasBin = request.NapasBinOverride
                 ?? (BankBins.Exists(request.BankCode) ? BankBins.GetBin(request.BankCode) : null);
 
-            Console.WriteLine($"[QR DEBUG] Payload: {finalPayload}");
-            Console.WriteLine($"[QR DEBUG] BIN used: {napasBin}");
-            Console.WriteLine($"[QR DEBUG] Account: {request.AccountNumber}");
-            Console.WriteLine($"[QR DEBUG] CRC valid: {CRC16Service.Verify(finalPayload)}");
-
             return new QrGenerateResult
             {
                 Payload = finalPayload,

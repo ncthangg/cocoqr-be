@@ -7,6 +7,7 @@ using Microsoft.OpenApi.Models;
 using CocoQR.API.Configurations;
 using CocoQR.API.Validators;
 using CocoQR.Domain.Constants;
+using Microsoft.Extensions.DependencyInjection;
 using System.Text;
 using System.Text.Json;
 
@@ -130,7 +131,11 @@ namespace CocoQR.API.DependencyInjection
                     },
                     OnRemoteFailure = context =>
                     {
-                        Console.WriteLine($"Google Auth Error: {context.Failure?.Message}");
+                        var logger = context.HttpContext.RequestServices
+                            .GetService<ILoggerFactory>()
+                            ?.CreateLogger("GoogleOAuth");
+                        logger?.LogWarning(context.Failure, "Google authentication remote failure.");
+
                         context.Response.Redirect("/");
                         context.HandleResponse();
                         return Task.CompletedTask;
@@ -159,10 +164,9 @@ namespace CocoQR.API.DependencyInjection
                 {
                     OnMessageReceived = context =>
                     {
-                        Console.WriteLine("OnMessageReceived called");
                         var accessToken = context.Request.Query["access_token"];
                         var path = context.HttpContext.Request.Path;
-                        Console.WriteLine($"Path: {path}, TokenRes: {accessToken}");
+
                         if (path.StartsWithSegments("/notificationHub"))
                         {
                             if (!string.IsNullOrEmpty(accessToken))
@@ -173,14 +177,13 @@ namespace CocoQR.API.DependencyInjection
 
                         return Task.CompletedTask;
                     },
-                    OnTokenValidated = context =>
-                    {
-                        Console.WriteLine("true TokenRes validated");
-                        return Task.CompletedTask;
-                    },
                     OnAuthenticationFailed = context =>
                     {
-                        Console.WriteLine("false TokenRes invalid: " + context.Exception.Message);
+                        var logger = context.HttpContext.RequestServices
+                            .GetService<ILoggerFactory>()
+                            ?.CreateLogger("JwtBearer");
+                        logger?.LogWarning(context.Exception, "JWT authentication failed.");
+
                         return Task.CompletedTask;
                     }
                 };

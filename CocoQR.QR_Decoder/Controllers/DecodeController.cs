@@ -21,6 +21,10 @@ namespace CocoQR.QR_Decoder.Controllers
             using var stream = file.OpenReadStream();
 
             var payload = await _qrDecoder.DecodeAsync(stream);
+            if (string.IsNullOrWhiteSpace(payload))
+            {
+                return BadRequest("Unable to decode QR payload from the provided image.");
+            }
 
             var vietQrInfo = _qrDecoder.ParsePayload(payload);
 

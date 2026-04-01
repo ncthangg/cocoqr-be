@@ -19,10 +19,15 @@ namespace CocoQR.API.Controllers
     {
         private readonly IAuthService _authService;
         private readonly IGoogleService _googleService;
-        public AuthsController(IAuthService authService, IGoogleService googleService)
+        private readonly ILogger<AuthsController> _logger;
+        public AuthsController(
+            IAuthService authService,
+            IGoogleService googleService,
+            ILogger<AuthsController> logger)
         {
             _authService = authService;
             _googleService = googleService;
+            _logger = logger;
         }
 
         [HttpGet("google-auth/signin")]
@@ -34,12 +39,11 @@ namespace CocoQR.API.Controllers
 
             try
             {
-                Console.WriteLine($"\n=== SignIn Called ===");
-                Console.WriteLine($"Origin: {origin}");
-                Console.WriteLine($"Request Host: {Request.Host}");
-                Console.WriteLine($"Request Scheme: {Request.Scheme}");
-                Console.WriteLine($"X-Forwarded-Proto: {Request.Headers["X-Forwarded-Proto"]}");
-                Console.WriteLine($"X-Forwarded-Host: {Request.Headers["X-Forwarded-Host"]}");
+                _logger.LogInformation(
+                    "Google sign-in requested. Origin: {Origin}, Host: {Host}, Scheme: {Scheme}",
+                    origin,
+                    Request.Host,
+                    Request.Scheme);
 
                 // ✅ Clear cookies
                 Response.Cookies.Delete("GoogleOAuthTemp");
@@ -48,9 +52,7 @@ namespace CocoQR.API.Controllers
                 // ✅ Use extension method (single source of truth)
                 var redirectUri = Request.GetCallbackUrl(origin);
 
-                Console.WriteLine($"BaseUrl: {Request.GetBaseUrl()}");
-                Console.WriteLine($"RedirectUri: {redirectUri}");
-                Console.WriteLine("====================\n");
+                _logger.LogDebug("Google sign-in redirect URI generated: {RedirectUri}", redirectUri);
 
                 var props = new AuthenticationProperties
                 {
@@ -62,7 +64,7 @@ namespace CocoQR.API.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error: {ex.Message}");
+                _logger.LogWarning(ex, "Google sign-in endpoint failed for origin: {Origin}", origin);
                 return BadRequest(new
                 {
                     error = ex.Message
@@ -84,11 +86,11 @@ namespace CocoQR.API.Controllers
 
                 if (!result.Succeeded)
                 {
-                    Console.WriteLine($"Authentication failed: {result.Failure?.Message}");
+                    _logger.LogWarning("Google callback auth failed: {Failure}", result.Failure?.Message);
                     return Redirect($"{origin}?error=auth_failed");
                 }
 
-                Console.WriteLine($"Authentication succeeded. Processing user...");
+                _logger.LogInformation("Google callback authentication succeeded. Processing user profile.");
 
                 // ✅ Now process the authenticated user
                 var signInResult = await _authService.SignInGoogle(HttpContext);
@@ -100,14 +102,13 @@ namespace CocoQR.API.Controllers
                 );
 
                 var html = _googleService.BuildSuccessHtml(response, origin);
-
-                Console.WriteLine($"Returning success HTML");
+                _logger.LogInformation("Google callback completed successfully for origin: {Origin}", origin);
 
                 return Content(html, "text/html");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"SignInGoogle error: {ex.Message}\n{ex.StackTrace}");
+                _logger.LogError(ex, "Google callback processing failed for origin: {Origin}", origin);
                 return Redirect($"{origin}?error={Uri.EscapeDataString(ex.Message)}");
             }
         }
@@ -137,7 +138,7 @@ namespace CocoQR.API.Controllers
 
         [HttpPost("signout")]
         [Authorize]
-        public async Task<IActionResult> SignOut()
+        public async Task<IActionResult> SignOutUser()
         {
             try
             {
@@ -155,7 +156,7 @@ namespace CocoQR.API.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Logout error: {ex.Message}");
+                _logger.LogWarning(ex, "Google signout failed for user: {UserId}", User.FindFirst("id")?.Value);
                 return BadRequest(new { error = ex.Message });
             }
         }
