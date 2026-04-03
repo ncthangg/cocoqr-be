@@ -1,9 +1,10 @@
-﻿using Microsoft.Extensions.Configuration;
-using CocoQR.Application.Contracts.ISubServices;
+﻿using CocoQR.Application.Contracts.ISubServices;
 using CocoQR.Application.DTOs.Auths.Responses;
 using CocoQR.Application.DTOs.Base.BaseRes;
 using CocoQR.Domain.Constants;
+using Microsoft.Extensions.Configuration;
 using System.Text.Json;
+using ApplicationException = CocoQR.Application.Exceptions.ApplicationException;
 
 namespace CocoQR.Infrastructure.SubService
 {
@@ -21,7 +22,7 @@ namespace CocoQR.Infrastructure.SubService
         {
             if (!_allowedOrigins.Contains(origin))
             {
-                throw new UnauthorizedAccessException("Invalid origin");
+                throw new ApplicationException(ErrorCode.Unauthorized, ErrorMessages.InvalidOrigin);
             }
 
             var json = JsonSerializer.Serialize(response, new JsonSerializerOptions

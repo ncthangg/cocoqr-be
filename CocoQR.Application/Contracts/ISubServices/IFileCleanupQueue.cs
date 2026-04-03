@@ -1,8 +1,6 @@
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
+using CocoQR.Application.DTOs.Settings;
 
-namespace CocoQR.Infrastructure.SubService
+namespace CocoQR.Application.Contracts.ISubServices
 {
     public interface IFileCleanupQueue
     {

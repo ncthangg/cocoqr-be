@@ -1,13 +1,12 @@
-﻿using Microsoft.AspNetCore.Authentication;
+﻿using CocoQR.API.Configurations;
+using CocoQR.API.Validators;
+using CocoQR.Domain.Constants;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.OAuth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using CocoQR.API.Configurations;
-using CocoQR.API.Validators;
-using CocoQR.Domain.Constants;
-using Microsoft.Extensions.DependencyInjection;
 using System.Text;
 using System.Text.Json;
 

@@ -1,6 +1,6 @@
-﻿using CocoQR.Application.DTOs.Providers.Queries;
+﻿using CocoQR.Application.Contracts.ISubServices;
+using CocoQR.Application.DTOs.Providers.Queries;
 using CocoQR.Application.DTOs.Providers.Responses;
-using CocoQR.Application.Contracts.ISubServices;
 using CocoQR.Domain.Entities;
 
 namespace CocoQR.Application.Common.Mapper

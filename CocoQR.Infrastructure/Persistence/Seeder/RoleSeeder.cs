@@ -1,12 +1,12 @@
-﻿using Microsoft.AspNetCore.Hosting;
-using Microsoft.EntityFrameworkCore;
-using CocoQR.Application.Contracts.ISubServices;
+﻿using CocoQR.Application.Contracts.ISubServices;
 using CocoQR.Application.DTOs.Roles.Requests;
 using CocoQR.Application.DTOs.Seed;
 using CocoQR.Domain.Constants;
 using CocoQR.Domain.Entities;
 using CocoQR.Domain.Exceptions;
 using CocoQR.Infrastructure.Persistence.MyDbContext;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 
 namespace CocoQR.Infrastructure.Persistence.Seeder
@@ -175,7 +175,7 @@ namespace CocoQR.Infrastructure.Persistence.Seeder
         // ── Helpers ────────────────────────────────────────────────
         private async Task<(string filePath, List<PostRoleJsonReq> roles)> ReadSeedFileAsync()
         {
-            var filePath = Path.Combine(_env.ContentRootPath, "Seed", "Data", "roles_v1.json");
+            var filePath = Path.Combine(_env.ContentRootPath, "Seed", "Details", "roles_v1.json");
 
             if (!File.Exists(filePath))
                 throw new DomainException(ErrorCode.NotFound, $"Seed file not found: {filePath}");

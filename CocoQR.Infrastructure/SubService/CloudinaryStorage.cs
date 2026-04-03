@@ -1,37 +1,27 @@
 using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
+using CocoQR.Application.Contracts.IConfigs;
 using CocoQR.Application.Contracts.ISubServices;
+using CocoQR.Domain.Constants;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
+using ApplicationException = CocoQR.Application.Exceptions.ApplicationException;
 
 namespace CocoQR.Infrastructure.SubService
 {
     public class CloudinaryStorage : ICloudStorage
     {
-        private const string DeliveryTypeSegment = "upload";
-
-        private static readonly HashSet<string> ImageExtensions = new(StringComparer.OrdinalIgnoreCase)
-        {
-            ".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".tiff", ".svg", ".avif"
-        };
-
-        private static readonly HashSet<string> VideoExtensions = new(StringComparer.OrdinalIgnoreCase)
-        {
-            ".mp4", ".mov", ".avi", ".wmv", ".mkv", ".webm", ".m4v", ".flv"
-        };
-
-        private readonly CloudinarySettings _settings;
+        private readonly ICloudinaryConfiguration _settings;
         private readonly IHostEnvironment _hostEnvironment;
         private readonly ILogger<CloudinaryStorage> _logger;
         private readonly bool _isValid;
 
         public CloudinaryStorage(
-            IOptions<CloudinarySettings> options,
+            ICloudinaryConfiguration settings,
             IHostEnvironment hostEnvironment,
             ILogger<CloudinaryStorage> logger)
         {
-            _settings = options.Value;
+            _settings = settings;
             _hostEnvironment = hostEnvironment;
             _logger = logger;
             _isValid = ValidateSettings();
@@ -46,7 +36,7 @@ namespace CocoQR.Infrastructure.SubService
 
             var storagePath = BuildStoragePath(path);
             if (string.IsNullOrWhiteSpace(storagePath))
-                throw new ArgumentException("Path is required", nameof(path));
+                throw new ArgumentException(ValidationMessages.RequiredPath, nameof(path));
 
             if (stream.CanSeek)
             {
@@ -87,7 +77,14 @@ namespace CocoQR.Infrastructure.SubService
 
             if (uploadResult.Error != null)
             {
-                throw new InvalidOperationException($"Cloudinary upload failed: {uploadResult.Error.Message}");
+                throw new ApplicationException(
+                    ErrorCode.ServiceUnavailable,
+                    ErrorMessages.CloudinaryUploadFailed,
+                    data: new
+                    {
+                        Provider = "Cloudinary",
+                        Error = uploadResult.Error.Message
+                    });
             }
         }
 
@@ -107,7 +104,14 @@ namespace CocoQR.Infrastructure.SubService
             var deletionResult = await GetClient().DestroyAsync(deletionParams);
             if (deletionResult.Error != null)
             {
-                throw new InvalidOperationException($"Cloudinary delete failed: {deletionResult.Error.Message}");
+                throw new ApplicationException(
+                    ErrorCode.ServiceUnavailable,
+                    ErrorMessages.CloudinaryDeleteFailed,
+                    data: new
+                    {
+                        Provider = "Cloudinary",
+                        Error = deletionResult.Error.Message
+                    });
             }
         }
 
@@ -118,14 +122,14 @@ namespace CocoQR.Infrastructure.SubService
                 return string.Empty;
 
             var resourceTypeSegment = GetResourceTypeSegment(ResolveResourceType(storagePath));
-            return $"{GetPublicBaseUrl()}/{resourceTypeSegment}/{DeliveryTypeSegment}/{storagePath}";
+            return $"{GetPublicBaseUrl()}/{resourceTypeSegment}/{CloudinaryConfig.DeliveryTypeUpload}/{storagePath}";
         }
 
         private void EnsureConfigured()
         {
             if (!_isValid)
             {
-                throw new InvalidOperationException("Cloudinary storage is not configured correctly.");
+                throw new ApplicationException(ErrorCode.ServiceUnavailable, ErrorMessages.CloudinaryStorageNotConfigured);
             }
         }
 
@@ -205,12 +209,12 @@ namespace CocoQR.Infrastructure.SubService
             var configuredBaseUrl = (_settings.BaseUrl ?? string.Empty).Trim().TrimEnd('/');
             if (string.IsNullOrWhiteSpace(configuredBaseUrl))
             {
-                return $"https://res.cloudinary.com/{cloudName}";
+                return $"{CloudinaryConfig.DefaultBaseUrl}/{cloudName}";
             }
 
             if (!Uri.TryCreate(configuredBaseUrl, UriKind.Absolute, out var baseUri))
             {
-                return $"https://res.cloudinary.com/{cloudName}";
+                return $"{CloudinaryConfig.DefaultBaseUrl}/{cloudName}";
             }
 
             var segments = baseUri.AbsolutePath
@@ -220,7 +224,7 @@ namespace CocoQR.Infrastructure.SubService
                 .ToList();
 
             if (segments.Count >= 2
-                && string.Equals(segments[^1], DeliveryTypeSegment, StringComparison.OrdinalIgnoreCase)
+                && string.Equals(segments[^1], CloudinaryConfig.DeliveryTypeUpload, StringComparison.OrdinalIgnoreCase)
                 && IsResourceTypeSegment(segments[^2]))
             {
                 segments.RemoveRange(segments.Count - 2, 2);
@@ -243,9 +247,9 @@ namespace CocoQR.Infrastructure.SubService
 
         private static bool IsResourceTypeSegment(string segment)
         {
-            return string.Equals(segment, "raw", StringComparison.OrdinalIgnoreCase)
-                || string.Equals(segment, "image", StringComparison.OrdinalIgnoreCase)
-                || string.Equals(segment, "video", StringComparison.OrdinalIgnoreCase);
+            return string.Equals(segment, CloudinaryConfig.ResourceTypeRaw, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(segment, CloudinaryConfig.ResourceTypeImage, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(segment, CloudinaryConfig.ResourceTypeVideo, StringComparison.OrdinalIgnoreCase);
         }
 
         private static ResourceType ResolveResourceType(string path)
@@ -256,12 +260,12 @@ namespace CocoQR.Infrastructure.SubService
                 return ResourceType.Raw;
             }
 
-            if (ImageExtensions.Contains(extension))
+            if (FileStorage.AllowedImageExtensions.Contains(extension))
             {
                 return ResourceType.Image;
             }
 
-            if (VideoExtensions.Contains(extension))
+            if (FileStorage.AllowedVideoExtensions.Contains(extension))
             {
                 return ResourceType.Video;
             }
@@ -273,9 +277,9 @@ namespace CocoQR.Infrastructure.SubService
         {
             return resourceType switch
             {
-                ResourceType.Image => "image",
-                ResourceType.Video => "video",
-                _ => "raw"
+                ResourceType.Image => CloudinaryConfig.ResourceTypeImage,
+                ResourceType.Video => CloudinaryConfig.ResourceTypeVideo,
+                _ => CloudinaryConfig.ResourceTypeRaw
             };
         }
 

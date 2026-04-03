@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Http;
-using CocoQR.Application.Common.Mapper;
+﻿using CocoQR.Application.Common.Mapper;
 using CocoQR.Application.Contracts.IConfigs;
 using CocoQR.Application.Contracts.IContext;
 using CocoQR.Application.Contracts.IServices;
@@ -12,6 +10,8 @@ using CocoQR.Application.DTOs.Users.Responses;
 using CocoQR.Domain.Constants;
 using CocoQR.Domain.Constants.Enum;
 using CocoQR.Domain.Entities;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
 using ApplicationException = CocoQR.Application.Exceptions.ApplicationException;
 
@@ -138,8 +138,10 @@ namespace CocoQR.Application.Services
 
         public async Task<SwitchRoleRes> SwitchRoleAsync(SwitchRoleReq request)
         {
+            ArgumentNullException.ThrowIfNull(request);
+
             if (request.UserId == Guid.Empty || request.RoleId == Guid.Empty)
-                throw new ApplicationException(ErrorCode.ValidationError, "Invalid userId/roleId");
+                throw new ArgumentException("Invalid userId/roleId", nameof(request));
 
             var user = await _unitOfWork.Users.GetByIdAsync(request.UserId)
                 ?? throw new ApplicationException(ErrorCode.NotFound, ErrorMessages.UserNotFound);

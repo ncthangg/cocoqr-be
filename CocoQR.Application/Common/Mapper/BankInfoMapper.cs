@@ -1,5 +1,5 @@
-﻿using CocoQR.Application.DTOs.Banks.Responses;
-using CocoQR.Application.Contracts.ISubServices;
+﻿using CocoQR.Application.Contracts.ISubServices;
+using CocoQR.Application.DTOs.Banks.Responses;
 using CocoQR.Domain.Entities;
 
 namespace CocoQR.Application.Common.Mapper

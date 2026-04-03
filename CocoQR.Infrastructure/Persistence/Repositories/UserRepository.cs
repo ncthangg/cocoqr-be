@@ -1,9 +1,9 @@
-﻿using Dapper;
-using CocoQR.Application.Contracts.IRepositories;
+﻿using CocoQR.Application.Contracts.IRepositories;
 using CocoQR.Application.Contracts.IUnitOfWork;
 using CocoQR.Application.DTOs.Users.Responses;
 using CocoQR.Domain.Entities;
 using CocoQR.Infrastructure.Persistence.Repositories.Base;
+using Dapper;
 
 namespace CocoQR.Infrastructure.Persistence.Repositories
 {

@@ -25,7 +25,7 @@ namespace CocoQR.Application.Services
         public async Task<IEnumerable<GetRoleRes>> GetRolesByUserIdAsync(Guid userId)
         {
             if (userId == Guid.Empty)
-                throw new ApplicationException(ErrorCode.ValidationError, "Invalid user ID");
+                throw new ArgumentException("Invalid user ID", nameof(userId));
 
             var roles = await _unitOfWork.UserRoles.GetRolesByUserIdAsync(userId)
                 ?? throw new ApplicationException(ErrorCode.NotFound, $"Role of {userId} not found");
@@ -34,6 +34,14 @@ namespace CocoQR.Application.Services
         }
         public async Task<bool> PostPutUserRolesAsync(PostPutUserRoleReq req)
         {
+            ArgumentNullException.ThrowIfNull(req);
+
+            if (req.UserId == Guid.Empty)
+                throw new ArgumentException("Invalid user ID", nameof(req.UserId));
+
+            if (req.RoleIds == null)
+                throw new ArgumentException("RoleIds is required", nameof(req.RoleIds));
+
             if (!_userContext.IsAdmin())
                 throw new ApplicationException(ErrorCode.Unauthorized, ErrorMessages.Unauthorized);
 

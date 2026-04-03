@@ -6,13 +6,13 @@ using CocoQR.Application.Contracts.ISubServices;
 using CocoQR.Application.Contracts.IUnitOfWork;
 using CocoQR.Domain.Constants;
 using CocoQR.Infrastructure.BackgroundServices;
+using CocoQR.Infrastructure.Configs;
 using CocoQR.Infrastructure.Persistence.MyDbContext;
 using CocoQR.Infrastructure.Persistence.Repositories;
 using CocoQR.Infrastructure.Persistence.Seeder;
 using CocoQR.Infrastructure.Persistence.UnitOfWork;
 using CocoQR.Infrastructure.Security;
 using CocoQR.Infrastructure.SubService;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -55,6 +55,10 @@ namespace CocoQR.Infrastructure.DependencyInjection
 
             services.AddScoped<IBankInfoRepository, BankInfoRepository>();
             services.AddScoped<IProviderRepository, ProviderRepository>();
+            services.AddScoped<IContactMessageRepository, ContactMessageRepository>();
+            services.AddScoped<IEmailLogRepository, EmailLogRepository>();
+            services.AddScoped<ISmtpSettingRepository, SmtpSettingRepository>();
+            services.AddScoped<IEmailTemplateRepository, EmailTemplateRepository>();
 
             services.AddScoped<IUserRoleRepository, UserRoleRepository>();
             services.AddScoped<IUserTokenRepository, UserTokenRepository>();
@@ -79,6 +83,7 @@ namespace CocoQR.Infrastructure.DependencyInjection
 
             services.AddScoped<IGoogleService, GoogleService>();
             services.AddScoped<ITokenService, TokenService>();
+            services.AddScoped<IEmailService, EmailService>();
             services.AddSingleton<IFileCleanupQueue, FileCleanupQueue>();
 
             // Default cloud provider: DigitalOcean Spaces.
@@ -114,6 +119,9 @@ namespace CocoQR.Infrastructure.DependencyInjection
         {
             services.Configure<DigitalOceanSettings>(configuration.GetSection("DigitalOcean"));
             services.Configure<CloudinarySettings>(configuration.GetSection("Cloudinary"));
+
+            services.AddScoped<IDigitalOceanConfiguration>(sp => sp.GetRequiredService<IOptions<DigitalOceanSettings>>().Value);
+            services.AddScoped<ICloudinaryConfiguration>(sp => sp.GetRequiredService<IOptions<CloudinarySettings>>().Value);
         }
         private static IServiceCollection ConfigRedis(this IServiceCollection services, IConfiguration configuration)
         {
@@ -122,8 +130,9 @@ namespace CocoQR.Infrastructure.DependencyInjection
                 var connectionString = configuration[Redis.RedisConnection];
 
                 if (string.IsNullOrWhiteSpace(connectionString))
-                    throw new InvalidOperationException(
-                        $"Redis connection string '{Redis.RedisConnection}' is not configured.");
+                    throw new ArgumentException(
+                        string.Format(ErrorMessages.ConfigurationValueRequired, Redis.RedisConnection),
+                        Redis.RedisConnection);
 
                 // --- Cấu hình bổ sung ---
                 var options = ConfigurationOptions.Parse(connectionString);

@@ -1,7 +1,7 @@
-﻿using Microsoft.AspNetCore.Http;
-using CocoQR.Application.Contracts.IContext;
+﻿using CocoQR.Application.Contracts.IContext;
 using CocoQR.Domain.Constants.Enum;
 using CocoQR.Domain.Helper;
+using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
 
 namespace CocoQR.Application.Common.Context

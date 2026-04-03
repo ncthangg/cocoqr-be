@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using CocoQR.Application.Contracts.IConfigs;
 
-namespace CocoQR.Infrastructure.SubService
+namespace CocoQR.Infrastructure.Configs
 {
-    public class DigitalOceanSettings
+    public class DigitalOceanSettings : IDigitalOceanConfiguration
     {
         public string AccessKey { get; set; } = default!;
         public string SecretKey { get; set; } = default!;

@@ -1,4 +1,5 @@
 ﻿using CocoQR.Application.Contracts.ISubServices;
+using CocoQR.Application.DTOs.Settings;
 using CocoQR.Domain.Constants;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -29,7 +30,7 @@ namespace CocoQR.Infrastructure.SubService
             _logger = logger;
             _cloudStorage = cloudStorage;
             _cleanupQueue = cleanupQueue;
-            _baseUrl = (configuration["FileUrl:BaseUrl"] ?? string.Empty).Trim().TrimEnd('/');
+            _baseUrl = (configuration[FileUrl.BaseUrlConfigPath] ?? string.Empty).Trim().TrimEnd('/');
         }
 
         #region FUNCTIONS FOR 1 FILE ONLY
@@ -141,7 +142,7 @@ namespace CocoQR.Infrastructure.SubService
             }
         }
         #endregion
-       
+
         #region FUNCTIONS FOR MULTIPLE FILES
         public async Task<List<string>> UploadFilesAsync(IEnumerable<IFormFile> files, string folder)
         {

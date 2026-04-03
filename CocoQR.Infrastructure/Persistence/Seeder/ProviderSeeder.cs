@@ -1,12 +1,12 @@
-﻿using Microsoft.AspNetCore.Hosting;
-using Microsoft.EntityFrameworkCore;
-using CocoQR.Application.Contracts.ISubServices;
+﻿using CocoQR.Application.Contracts.ISubServices;
 using CocoQR.Application.DTOs.Providers.Requests;
 using CocoQR.Application.DTOs.Seed;
 using CocoQR.Domain.Constants;
 using CocoQR.Domain.Entities;
 using CocoQR.Domain.Exceptions;
 using CocoQR.Infrastructure.Persistence.MyDbContext;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -107,7 +107,7 @@ namespace CocoQR.Infrastructure.Persistence.Seeder
                 {
                     var filePath = Path.Combine(_env.ContentRootPath,
                                                 "Seed",
-                                                "Data",
+                                                "Details",
                                                 "providers_v1.json");
 
                     if (!File.Exists(filePath))
@@ -183,7 +183,7 @@ namespace CocoQR.Infrastructure.Persistence.Seeder
         // ── Helpers ────────────────────────────────────────────────
         private async Task<(string filePath, List<PostProviderJsonReq>)> ReadSeedFileAsync()
         {
-            var filePath = Path.Combine(_env.ContentRootPath, "Seed", "Data", "providers_v1.json");
+            var filePath = Path.Combine(_env.ContentRootPath, "Seed", "Details", "providers_v1.json");
 
             if (!File.Exists(filePath))
                 throw new DomainException(ErrorCode.NotFound, $"Seed file not found: {filePath}");

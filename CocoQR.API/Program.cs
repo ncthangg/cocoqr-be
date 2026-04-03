@@ -1,5 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using CocoQR.API.DependencyInjection;
+﻿using CocoQR.API.DependencyInjection;
 using CocoQR.API.Extensions;
 using CocoQR.API.Middlewares;
 using CocoQR.Application.DependencyInjection;
@@ -7,6 +6,7 @@ using CocoQR.Infrastructure.DependencyInjection;
 using CocoQR.Infrastructure.Persistence.MyDbContext;
 using CocoQR.Infrastructure.Persistence.Seeder;
 using CocoQR.QR_Generator.DependencyInjection;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 

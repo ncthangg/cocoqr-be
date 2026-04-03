@@ -8,6 +8,7 @@ using CocoQR.Domain.Constants;
 using CocoQR.Domain.Constants.Enum;
 using CocoQR.Domain.Entities;
 using ApplicationException = CocoQR.Application.Exceptions.ApplicationException;
+using DomainException = CocoQR.Domain.Exceptions.DomainException;
 
 namespace CocoQR.Application.Services
 {
@@ -49,6 +50,8 @@ namespace CocoQR.Application.Services
 
         public async Task<Guid> PostUserStyleAsync(PostQRStyleReq request)
         {
+            ArgumentNullException.ThrowIfNull(request);
+
             if (!_userContext.IsAuthenticated())
                 throw new ApplicationException(ErrorCode.Unauthorized, ErrorMessages.Unauthorized);
 
@@ -75,6 +78,11 @@ namespace CocoQR.Application.Services
 
         public async Task PutUserStyleAsync(Guid styleId, PutQRStyleReq request)
         {
+            ArgumentNullException.ThrowIfNull(request);
+
+            if (styleId == Guid.Empty)
+                throw new ArgumentException("Invalid style ID", nameof(styleId));
+
             if (!_userContext.IsAuthenticated())
                 throw new ApplicationException(ErrorCode.Unauthorized, ErrorMessages.Unauthorized);
 
@@ -123,6 +131,9 @@ namespace CocoQR.Application.Services
 
         public async Task DeleteUserStyleAsync(Guid styleId)
         {
+            if (styleId == Guid.Empty)
+                throw new ArgumentException("Invalid style ID", nameof(styleId));
+
             if (!_userContext.IsAuthenticated())
                 throw new ApplicationException(ErrorCode.Unauthorized, ErrorMessages.Unauthorized);
 
@@ -169,6 +180,9 @@ namespace CocoQR.Application.Services
 
         private async Task EnsureNameNotDuplicatedAsync(string name, Guid? userId, QRStyleType type, bool isAdmin, Guid? excludeId)
         {
+            if (string.IsNullOrWhiteSpace(name))
+                throw new ArgumentException("Style name is required", nameof(name));
+
             var normalized = name.Trim().ToLower();
             var items = await _unitOfWork.QRStyleLibraries.GetAllAsync(userId, type, null, isAdmin);
 
@@ -178,7 +192,7 @@ namespace CocoQR.Application.Services
                 && string.Equals(x.Name?.Trim(), normalized, StringComparison.OrdinalIgnoreCase));
 
             if (duplicated)
-                throw new ApplicationException(ErrorCode.Conflict, "Style name already exists");
+                throw new DomainException(ErrorCode.DuplicateEntry, "Style name already exists");
         }
     }
 }

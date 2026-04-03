@@ -48,7 +48,7 @@ namespace CocoQR.Application.Services
         public async Task<GetBankInfoRes> GetByIdAsync(Guid id)
         {
             if (id == Guid.Empty)
-                throw new ApplicationException(ErrorCode.ValidationError, "Invalid bank ID");
+                throw new ArgumentException("Invalid bank ID", nameof(id));
 
             var bank = await _unitOfWork.BankInfos.GetByIdAsync(id)
                 ?? throw new ApplicationException(ErrorCode.NotFound, $"Bank {id} not found");
@@ -57,6 +57,8 @@ namespace CocoQR.Application.Services
         }
         public async Task PutAsync(Guid id, PutBankInfoReq req)
         {
+            ArgumentNullException.ThrowIfNull(req);
+
             var isAdmin = _userContext.IsAdmin();
 
             if (!isAdmin)
@@ -65,10 +67,10 @@ namespace CocoQR.Application.Services
             }
 
             Guid userId = _userContext.UserId
-                ?? throw new ApplicationException(ErrorCode.Unauthorized, "User ID not found in context!");
+                ?? throw new ApplicationException(ErrorCode.Unauthorized, ErrorMessages.UserIDNotFoundInTheContext);
 
             if (id == Guid.Empty)
-                throw new ApplicationException(ErrorCode.ValidationError, "Invalid bank ID");
+                throw new ArgumentException("Invalid bank ID", nameof(id));
 
             var oldItem = await _unitOfWork.BankInfos.GetByIdAsync(id)
                ?? throw new ApplicationException(ErrorCode.NotFound, ErrorMessages.EntityNotFound);

@@ -1,8 +1,4 @@
-﻿using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Google;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using CocoQR.Application.Common.Extensions;
+﻿using CocoQR.Application.Common.Extensions;
 using CocoQR.Application.Contracts.IServices;
 using CocoQR.Application.Contracts.ISubServices;
 using CocoQR.Application.DTOs.Auths.Requests;
@@ -10,6 +6,10 @@ using CocoQR.Application.DTOs.Auths.Responses;
 using CocoQR.Application.DTOs.Base.BaseRes;
 using CocoQR.Application.DTOs.Users.Responses;
 using CocoQR.Domain.Constants;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Google;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace CocoQR.API.Controllers
 {

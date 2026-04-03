@@ -4,12 +4,12 @@
     {
         string Code { get; }
         string Message { get; }
-        object? Data { get; }
+        object? Details { get; }
     }
     public class DomainException : Exception, IBusinessException
     {
         public string Code { get; }
-        public object? Data { get; }
+        public object? Details { get; }
 
         public DomainException(
             string code,
@@ -19,7 +19,7 @@
             : base(message, innerException)
         {
             Code = code;
-            Data = data;
+            Details = data;
         }
     }
 }

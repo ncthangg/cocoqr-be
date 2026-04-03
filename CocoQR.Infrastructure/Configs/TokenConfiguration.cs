@@ -1,6 +1,6 @@
 ﻿using CocoQR.Application.Contracts.IConfigs;
 
-namespace CocoQR.Infrastructure.Security
+namespace CocoQR.Infrastructure.Configs
 {
     public class TokenConfiguration : ITokenConfiguration
     {

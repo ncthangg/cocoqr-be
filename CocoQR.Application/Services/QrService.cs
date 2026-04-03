@@ -11,7 +11,6 @@ using CocoQR.Domain.Constants.Enum;
 using CocoQR.Domain.Entities;
 using CocoQR.QR_Generator.Interface;
 using CocoQR.QR_Generator.Models;
-using System.ComponentModel.DataAnnotations;
 using ApplicationException = CocoQR.Application.Exceptions.ApplicationException;
 
 namespace CocoQR.Application.Services
@@ -58,7 +57,7 @@ namespace CocoQR.Application.Services
                                                           bool? status)
         {
             if (userId == Guid.Empty)
-                throw new ApplicationException(ErrorCode.ValidationError, "Invalid userId ID");
+                throw new ArgumentException(ValidationMessages.InvalidUserId, nameof(userId));
 
             if (!_userContext.IsAdmin() && !_userContext.IsUser())
             {
@@ -107,11 +106,11 @@ namespace CocoQR.Application.Services
 
         public async Task<GetQrRes> GetByIdAsync(long id)
         {
-            if (id == null)
-                throw new ApplicationException(ErrorCode.ValidationError, "Invalid qr ID");
+            if (id <= 0)
+                throw new ArgumentException(ValidationMessages.InvalidQrId, nameof(id));
 
             var account = await _unitOfWork.QRHistories.GetByIdAsync(id, _userContext.UserId, _userContext.IsAdmin())
-                ?? throw new ApplicationException(ErrorCode.NotFound, $"Account {id} not found");
+                ?? throw new ApplicationException(ErrorCode.NotFound, string.Format(ErrorMessages.AccountByIdNotFound, id));
 
 
             if (_userContext.IsAdmin())
@@ -129,6 +128,8 @@ namespace CocoQR.Application.Services
         }
         public async Task<PostQrRes> GenerateAsync(PostQrReq request)
         {
+            ArgumentNullException.ThrowIfNull(request);
+
             // 1. Resolve provider để xác định Mode
             var provider = await GetProviderAsync(request.ProviderId);
             var mode = ResolveMode(provider.Code, request.QrMode);
@@ -196,9 +197,12 @@ namespace CocoQR.Application.Services
 
         public async Task<PostQrRes> RegenerateImageAsync(Guid qrHistoryId)
         {
+            if (qrHistoryId == Guid.Empty)
+                throw new ArgumentException("Invalid QR history ID", nameof(qrHistoryId));
+
             // Lấy payload từ DB → render lại ảnh — không cần lưu ảnh
             var history = await _unitOfWork.QRHistories.GetByIdAsync(qrHistoryId)
-                ?? throw new ApplicationException(ErrorCode.NotFound, "QR history không tồn tại.");
+                ?? throw new ApplicationException(ErrorCode.NotFound, ErrorMessages.QrHistoryNotFound);
 
             var style = await _unitOfWork.QRStyles.GetByQrIdAsync(history.Id);
 
@@ -235,10 +239,10 @@ namespace CocoQR.Application.Services
             if (request.StyleId.HasValue)
             {
                 var styleLib = await _unitOfWork.QRStyleLibraries.GetByIdAsync(request.StyleId.Value)
-                    ?? throw new ApplicationException(ErrorCode.NotFound, "Style library not found");
+                    ?? throw new ApplicationException(ErrorCode.NotFound, ErrorMessages.StyleLibraryNotFound);
 
                 if (!styleLib.IsActive)
-                    throw new ApplicationException(ErrorCode.BadRequest, "Style library is inactive");
+                    throw new ApplicationException(ErrorCode.BadRequest, ErrorMessages.StyleLibraryInactive);
 
                 if (styleLib.Type == QRStyleType.USER)
                 {
@@ -246,7 +250,7 @@ namespace CocoQR.Application.Services
                         ?? throw new ApplicationException(ErrorCode.Unauthorized, ErrorMessages.Unauthorized);
 
                     if (styleLib.UserId != currentUserId)
-                        throw new ApplicationException(ErrorCode.Forbidden, "No permission for selected style");
+                        throw new ApplicationException(ErrorCode.Forbidden, ErrorMessages.StylePermissionDenied);
                 }
             }
 
@@ -277,18 +281,18 @@ namespace CocoQR.Application.Services
             if (request.AccountId.HasValue)
             {
                 var account = await _unitOfWork.Accounts.GetByIdAsync(request.AccountId.Value)
-                    ?? throw new ApplicationException(ErrorCode.NotFound, "Account không tồn tại.");
+                    ?? throw new ApplicationException(ErrorCode.NotFound, ErrorMessages.AccountNotFound);
 
                 // 🔐 SECURITY: check ownership
                 if (account.UserId != userId)
-                    throw new ApplicationException(ErrorCode.Forbidden, "Không có quyền truy cập account.");
+                    throw new ApplicationException(ErrorCode.Forbidden, ErrorMessages.AccountAccessDenied);
 
                 if (!account.IsActive)
-                    throw new ApplicationException(ErrorCode.Forbidden, "Account inactive.");
+                    throw new ApplicationException(ErrorCode.Forbidden, ErrorMessages.AccountInactive);
 
                 // 🚫 IGNORE request.AccountNumber / BankCode
                 var bank = await _unitOfWork.BankInfos.GetByBankCodeAsync(account.BankCode)
-                    ?? throw new ApplicationException(ErrorCode.NotFound, "Bank không tồn tại.");
+                    ?? throw new ApplicationException(ErrorCode.NotFound, ErrorMessages.BankNotFound);
 
                 return (
                     account.AccountNumber,
@@ -308,13 +312,13 @@ namespace CocoQR.Application.Services
             if (mode == QrMode.VietQR)
             {
                 if (string.IsNullOrWhiteSpace(request.AccountNumber))
-                    throw new ValidationException("AccountNumber required");
+                    throw new ArgumentException(ValidationMessages.RequiredAccountNumber, nameof(request.AccountNumber));
 
                 if (string.IsNullOrWhiteSpace(request.BankCode))
-                    throw new ValidationException("BankCode required");
+                    throw new ArgumentException(ValidationMessages.RequiredBankCode, nameof(request.BankCode));
 
                 var bank = await _unitOfWork.BankInfos.GetByBankCodeAsync(request.BankCode)
-                    ?? throw new ApplicationException(ErrorCode.NotFound, "Bank không tồn tại.");
+                    ?? throw new ApplicationException(ErrorCode.NotFound, ErrorMessages.BankNotFound);
 
                 return (
                     request.AccountNumber,
@@ -330,7 +334,7 @@ namespace CocoQR.Application.Services
             if (mode == QrMode.MomoNative)
             {
                 if (string.IsNullOrWhiteSpace(request.AccountNumber))
-                    throw new ValidationException("Phone required");
+                    throw new ArgumentException(ValidationMessages.RequiredPhone, nameof(request.AccountNumber));
 
                 return (
                     request.AccountNumber,
@@ -343,16 +347,19 @@ namespace CocoQR.Application.Services
             }
 
             // 👉 fallback
-            throw new ApplicationException(ErrorCode.InternalError, "Mode không hỗ trợ");
+            throw new ApplicationException(ErrorCode.InternalError, ErrorMessages.UnsupportedMode);
         }
 
         private async Task<Provider> GetProviderAsync(Guid providerId)
         {
+            if (providerId == Guid.Empty)
+                throw new ArgumentException("Invalid provider ID", nameof(providerId));
+
             var provider = await _unitOfWork.Providers.GetByIdAsync(providerId)
-                ?? throw new ApplicationException(ErrorCode.NotFound, "Provider không tồn tại.");
+                ?? throw new ApplicationException(ErrorCode.NotFound, ErrorMessages.ProviderNotFound);
 
             if (!provider.IsActive)
-                throw new ApplicationException(ErrorCode.ServiceUnavailable, "Phương thức thanh toán đang bảo trì.");
+                throw new ApplicationException(ErrorCode.ServiceUnavailable, ErrorMessages.PaymentMethodMaintenance);
 
             return provider;
         }

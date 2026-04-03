@@ -49,4 +49,32 @@
         SYSTEM,
         USER
     }
+
+    public enum ContactMessageStatus
+    {
+        NEW,
+        REPLIED,
+        IGNORED
+    }
+
+    public enum EmailLogStatus
+    {
+        SUCCESS,
+        FAIL
+    }
+
+    public enum EmailDirection
+    {
+        INCOMING,
+        OUTGOING
+    }
+
+    public enum SmtpSettingType
+    {
+        Unknown,
+        System,
+        Contact,
+        Admin,
+        Support
+    }
 }

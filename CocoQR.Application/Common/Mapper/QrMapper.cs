@@ -1,6 +1,6 @@
-﻿using CocoQR.Application.DTOs.QR.Queries;
+﻿using CocoQR.Application.Contracts.ISubServices;
+using CocoQR.Application.DTOs.QR.Queries;
 using CocoQR.Application.DTOs.QR.Responses;
-using CocoQR.Application.Contracts.ISubServices;
 using CocoQR.Domain.Constants.Enum;
 
 namespace CocoQR.Application.Common.Mapper

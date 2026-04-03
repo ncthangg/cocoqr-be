@@ -9,6 +9,7 @@ using CocoQR.Application.DTOs.Base.BaseRes;
 using CocoQR.Domain.Constants;
 using CocoQR.Domain.Entities;
 using ApplicationException = CocoQR.Application.Exceptions.ApplicationException;
+using DomainException = CocoQR.Domain.Exceptions.DomainException;
 
 namespace CocoQR.Application.Services
 {
@@ -85,7 +86,7 @@ namespace CocoQR.Application.Services
         public async Task<GetAccountRes> GetByIdAsync(Guid id)
         {
             if (id == Guid.Empty)
-                throw new ApplicationException(ErrorCode.ValidationError, "Invalid userId ID");
+                throw new ArgumentException("Invalid account ID", nameof(id));
 
             var account = await _unitOfWork.Accounts.GetByIdAsync(id, _userContext.UserId, _userContext.IsAdmin())
                 ?? throw new ApplicationException(ErrorCode.NotFound, $"Account {id} not found");
@@ -107,11 +108,16 @@ namespace CocoQR.Application.Services
 
         public async Task<Guid> PostAccountAsync(PostAccountReq request)
         {
-            Guid userId = _userContext.UserId
-                ?? throw new ApplicationException(ErrorCode.Unauthorized, "User ID not found in context!");
+            ArgumentNullException.ThrowIfNull(request);
 
-            if (request == null)
-                throw new ApplicationException(ErrorCode.ValidationError, "Invalid request");
+            Guid userId = _userContext.UserId
+                ?? throw new ApplicationException(ErrorCode.Unauthorized, ErrorMessages.UserIDNotFoundInTheContext);
+
+            if (request.ProviderId == Guid.Empty)
+                throw new ArgumentException("Invalid provider ID", nameof(request.ProviderId));
+
+            if (string.IsNullOrWhiteSpace(request.AccountNumber))
+                throw new ArgumentException(ValidationMessages.RequiredAccountNumber, nameof(request.AccountNumber));
 
             bool exists = await _unitOfWork.Accounts.AccountNumberExistsAsync(
                 userId,
@@ -120,7 +126,7 @@ namespace CocoQR.Application.Services
                 request.BankCode
             );
             if (exists)
-                throw new ApplicationException(ErrorCode.DuplicateEntry, "Account number already exists");
+                throw new DomainException(ErrorCode.DuplicateEntry, "Account number already exists");
 
             var provider = await _unitOfWork.Providers.GetByIdAsync(request.ProviderId)
                 ?? throw new ApplicationException(ErrorCode.NotFound, "Provider not found");
@@ -130,7 +136,7 @@ namespace CocoQR.Application.Services
             if (provider.Code == Domain.Constants.Enum.ProviderCode.BANK)
             {
                 if (string.IsNullOrWhiteSpace(request.BankCode))
-                    throw new ApplicationException(ErrorCode.ValidationError, "BankCode is required");
+                    throw new ArgumentException(ValidationMessages.RequiredBankCode, nameof(request.BankCode));
 
                 bank = await _unitOfWork.BankInfos.GetByBankCodeAsync(request.BankCode.Trim())
                     ?? throw new ApplicationException(ErrorCode.NotFound, "Bank not found");
@@ -151,7 +157,7 @@ namespace CocoQR.Application.Services
             account.Initialize(_idGenerator.NewId(), userId);
 
             if (!account.IsValidAccount())
-                throw new ApplicationException(ErrorCode.ValidationError, "Invalid account");
+                throw new DomainException(ErrorCode.BusinessRuleViolation, "Invalid account");
 
             await _unitOfWork.Accounts.AddAsync(account);
 
@@ -160,11 +166,19 @@ namespace CocoQR.Application.Services
 
         public async Task PutAccountAsync(Guid id, PutAccountReq request)
         {
+            ArgumentNullException.ThrowIfNull(request);
+
             Guid userId = _userContext.UserId
-                ?? throw new ApplicationException(ErrorCode.Unauthorized, "User ID not found in context!");
+                ?? throw new ApplicationException(ErrorCode.Unauthorized, ErrorMessages.UserIDNotFoundInTheContext);
 
             if (id == Guid.Empty)
-                throw new ApplicationException(ErrorCode.ValidationError, "Invalid account ID");
+                throw new ArgumentException("Invalid account ID", nameof(id));
+
+            if (request.ProviderId == Guid.Empty)
+                throw new ArgumentException("Invalid provider ID", nameof(request.ProviderId));
+
+            if (string.IsNullOrWhiteSpace(request.AccountNumber))
+                throw new ArgumentException(ValidationMessages.RequiredAccountNumber, nameof(request.AccountNumber));
 
             var account = await _unitOfWork.Accounts.GetByIdAsync(id)
                 ?? throw new ApplicationException(ErrorCode.NotFound, $"Account {id} not found");
@@ -180,7 +194,7 @@ namespace CocoQR.Application.Services
                 id
             );
             if (exists)
-                throw new ApplicationException(ErrorCode.DuplicateEntry, "Account number already exists");
+                throw new DomainException(ErrorCode.DuplicateEntry, "Account number already exists");
 
             account.AccountNumber = request.AccountNumber.Trim();
             account.AccountHolder = request.AccountHolder?.Trim();
@@ -191,7 +205,7 @@ namespace CocoQR.Application.Services
             account.SetUpdated(userId);
 
             if (!account.IsValidAccount())
-                throw new ApplicationException(ErrorCode.ValidationError, "Invalid account");
+                throw new DomainException(ErrorCode.BusinessRuleViolation, "Invalid account");
 
             await _unitOfWork.Accounts.UpdateAsync(account);
         }
@@ -201,7 +215,7 @@ namespace CocoQR.Application.Services
             if (_userContext.IsAdmin())
             {
                 if (id == Guid.Empty)
-                    throw new ApplicationException(ErrorCode.ValidationError, "Invalid account ID");
+                    throw new ArgumentException("Invalid account ID", nameof(id));
 
                 var account = await _unitOfWork.Accounts.GetByIdAsync(id)
                     ?? throw new ApplicationException(ErrorCode.NotFound, $"Account {id} not found");
@@ -217,7 +231,7 @@ namespace CocoQR.Application.Services
         public async Task DeleteAccountAsync(Guid id)
         {
             if (id == Guid.Empty)
-                throw new ApplicationException(ErrorCode.ValidationError, "Invalid account ID");
+                throw new ArgumentException("Invalid account ID", nameof(id));
 
             _ = await _unitOfWork.Accounts.GetByIdAsync(id)
                 ?? throw new ApplicationException(ErrorCode.NotFound, $"Account {id} not found");

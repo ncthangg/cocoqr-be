@@ -8,6 +8,7 @@ using CocoQR.Application.DTOs.Providers.Responses;
 using CocoQR.Domain.Constants;
 using CocoQR.Domain.Constants.Enum;
 using ApplicationException = CocoQR.Application.Exceptions.ApplicationException;
+using DomainException = CocoQR.Domain.Exceptions.DomainException;
 
 namespace CocoQR.Application.Services
 {
@@ -35,7 +36,7 @@ namespace CocoQR.Application.Services
         public async Task<GetProviderRes> GetByIdAsync(Guid id)
         {
             if (id == Guid.Empty)
-                throw new ApplicationException(ErrorCode.ValidationError, "Invalid userId ID");
+                throw new ArgumentException("Invalid provider ID", nameof(id));
 
             var role = await _unitOfWork.Providers.GetByIdAsync(id)
                 ?? throw new ApplicationException(ErrorCode.NotFound, $"ProviderCode {id} not found");
@@ -44,6 +45,8 @@ namespace CocoQR.Application.Services
         }
         public async Task PutAsync(Guid id, PutProviderReq req)
         {
+            ArgumentNullException.ThrowIfNull(req);
+
             var isAdmin = _userContext.IsAdmin();
 
             if (!isAdmin)
@@ -52,17 +55,17 @@ namespace CocoQR.Application.Services
             }
 
             if (id == Guid.Empty)
-                throw new ApplicationException(ErrorCode.ValidationError, "Invalid provider ID");
+                throw new ArgumentException("Invalid provider ID", nameof(id));
 
             Guid userId = _userContext.UserId
-                ?? throw new ApplicationException(ErrorCode.Unauthorized, "User ID not found in context!");
+                ?? throw new ApplicationException(ErrorCode.Unauthorized, ErrorMessages.UserIDNotFoundInTheContext);
 
             var provider = await _unitOfWork.Providers.GetByIdAsync(id)
                 ?? throw new ApplicationException(ErrorCode.NotFound, $"ProviderCode {id} not found");
 
             if (!Enum.TryParse<ProviderCode>(req.Code, true, out var providerCode))
             {
-                throw new ApplicationException(ErrorCode.ValidationError, "Invalid provider code");
+                throw new ArgumentException("Invalid provider code", nameof(req.Code));
             }
 
             var previousImageUrl = provider.LogoUrl;
@@ -91,7 +94,7 @@ namespace CocoQR.Application.Services
                 provider.SetUpdated(userId);
 
                 if (!provider.IsValidProvider())
-                    throw new ApplicationException(ErrorCode.ValidationError, "Invalid provider");
+                    throw new DomainException(ErrorCode.BusinessRuleViolation, "Invalid provider");
 
                 await _unitOfWork.Providers.UpdateAsync(provider);
             }

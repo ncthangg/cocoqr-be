@@ -1,10 +1,10 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using CocoQR.Application.Contracts.IServices;
+﻿using CocoQR.Application.Contracts.IServices;
 using CocoQR.Application.DTOs.Accounts.Requests;
 using CocoQR.Application.DTOs.Accounts.Responses;
 using CocoQR.Application.DTOs.Base.BaseRes;
 using CocoQR.Domain.Constants;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace CocoQR.API.Controllers
 {

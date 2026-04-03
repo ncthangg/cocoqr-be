@@ -1,6 +1,6 @@
-﻿using CocoQR.Application.DTOs.Accounts.Queries;
+﻿using CocoQR.Application.Contracts.ISubServices;
+using CocoQR.Application.DTOs.Accounts.Queries;
 using CocoQR.Application.DTOs.Accounts.Responses;
-using CocoQR.Application.Contracts.ISubServices;
 
 namespace CocoQR.Application.Common.Mapper
 {
