@@ -96,6 +96,28 @@ namespace CocoQR.Infrastructure.SubService
         {
             EnsureConfigured();
 
+            if (TryParseCloudinaryUrl(path, out var publicIdFromUrl, out var resourceTypeFromUrl))
+            {
+                var deletionResultFromUrl = await GetClient().DestroyAsync(new DeletionParams(publicIdFromUrl)
+                {
+                    ResourceType = resourceTypeFromUrl
+                });
+
+                if (deletionResultFromUrl.Error != null)
+                {
+                    throw new ApplicationException(
+                        ErrorCode.ServiceUnavailable,
+                        ErrorMessages.CloudinaryDeleteFailed,
+                        data: new
+                        {
+                            Provider = "Cloudinary",
+                            Error = deletionResultFromUrl.Error.Message
+                        });
+                }
+
+                return;
+            }
+
             var storagePath = BuildStoragePath(path);
             if (string.IsNullOrWhiteSpace(storagePath))
                 return;
@@ -121,6 +143,9 @@ namespace CocoQR.Infrastructure.SubService
 
         public string GetPublicUrl(string path)
         {
+            if (Uri.TryCreate(path, UriKind.Absolute, out _))
+                return path;
+
             var storagePath = BuildStoragePath(path);
             if (string.IsNullOrWhiteSpace(storagePath))
                 return string.Empty;
@@ -259,6 +284,11 @@ namespace CocoQR.Infrastructure.SubService
 
         private static ResourceType ResolveResourceType(string path)
         {
+            if (TryParseCloudinaryUrl(path, out _, out var resourceTypeFromUrl))
+            {
+                return resourceTypeFromUrl;
+            }
+
             var extension = Path.GetExtension(path);
             if (string.IsNullOrWhiteSpace(extension))
             {
@@ -290,13 +320,12 @@ namespace CocoQR.Infrastructure.SubService
 
         private static string GetPublicId(string path)
         {
-            var fileName = Path.GetFileName(path);
-            if (string.IsNullOrWhiteSpace(fileName))
+            if (TryParseCloudinaryUrl(path, out var publicIdFromUrl, out _))
             {
-                return string.Empty;
+                return publicIdFromUrl;
             }
 
-            return Path.GetFileNameWithoutExtension(fileName);
+            return NormalizePath(path).TrimEnd('/');
         }
 
         private static string GetAssetFolder(string path)
@@ -321,6 +350,53 @@ namespace CocoQR.Infrastructure.SubService
             return path
                 .Replace('\\', '/')
                 .TrimStart('/');
+        }
+
+        private static bool TryParseCloudinaryUrl(string path, out string publicId, out ResourceType resourceType)
+        {
+            publicId = string.Empty;
+            resourceType = ResourceType.Raw;
+
+            if (!Uri.TryCreate(path, UriKind.Absolute, out var uri))
+            {
+                return false;
+            }
+
+            var segments = uri.AbsolutePath
+                .Split('/', StringSplitOptions.RemoveEmptyEntries)
+                .ToList();
+
+            if (segments.Count < 4)
+            {
+                return false;
+            }
+
+            var uploadIndex = segments.FindIndex(s => string.Equals(s, CloudinaryConfig.DeliveryTypeUpload, StringComparison.OrdinalIgnoreCase));
+            if (uploadIndex <= 0 || uploadIndex >= segments.Count - 1)
+            {
+                return false;
+            }
+
+            var resourceSegment = segments[uploadIndex - 1];
+            if (string.Equals(resourceSegment, CloudinaryConfig.ResourceTypeImage, StringComparison.OrdinalIgnoreCase))
+            {
+                resourceType = ResourceType.Image;
+            }
+            else if (string.Equals(resourceSegment, CloudinaryConfig.ResourceTypeVideo, StringComparison.OrdinalIgnoreCase))
+            {
+                resourceType = ResourceType.Video;
+            }
+            else if (string.Equals(resourceSegment, CloudinaryConfig.ResourceTypeRaw, StringComparison.OrdinalIgnoreCase))
+            {
+                resourceType = ResourceType.Raw;
+            }
+            else
+            {
+                return false;
+            }
+
+            publicId = string.Join('/', segments.Skip(uploadIndex + 1));
+            return !string.IsNullOrWhiteSpace(publicId);
         }
     }
 }
