@@ -39,13 +39,14 @@ namespace CocoQR.Infrastructure.SubService
             ValidateFile(file);
 
             var relativePath = BuildRelativePath(folder, file.FileName);
+            var dbPath = StripEnvironmentPrefix(relativePath);
 
             try
             {
                 if (_env.IsDevelopment())
                 {
                     await UploadFileToLocalAsync(file, relativePath);
-                    return GetFileUrl(relativePath);
+                    return dbPath;
                 }
 
                 if (ShouldUseCloudStorage())
@@ -71,7 +72,7 @@ namespace CocoQR.Infrastructure.SubService
                         throw new DomainException(ErrorCode.InternalError, "Uploaded cloud but failed to save local file", localEx);
                     }
 
-                    return GetFileUrl(relativePath);
+                    return dbPath;
                 }
 
                 throw new DomainException(ErrorCode.InternalError, "Unsupported environment for file upload");
@@ -204,15 +205,8 @@ namespace CocoQR.Infrastructure.SubService
 
             if (Uri.TryCreate(path, UriKind.Absolute, out _))
             {
-                if (!ShouldUseCloudStorage())
-                {
-                    return path;
-                }
-
-                var relativePath = GetRelativePathFromUrlOrPath(path);
-                return string.IsNullOrWhiteSpace(relativePath)
-                    ? path
-                    : _cloudStorage.GetPublicUrl(BuildCloudKey(relativePath));
+                // Preserve canonical absolute URL (e.g. Cloudinary image/upload URL) as-is.
+                return path;
             }
 
             var normalizedPath = TrimToEnvironmentPrefix(path);
