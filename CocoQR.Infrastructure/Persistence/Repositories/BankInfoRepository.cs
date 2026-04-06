@@ -21,7 +21,6 @@ namespace CocoQR.Infrastructure.Persistence.Repositories
 
                 var field = sortField switch
                 {
-                    "bankName" => $"BankName {dir}",
                     "shortName" => $"ShortName {dir}",
                     "bankCode" => $"BankCode {dir}",
                     _ => "ShortName ASC"
@@ -85,7 +84,6 @@ namespace CocoQR.Infrastructure.Persistence.Repositories
             AND Status = 1;
         ";
             }
-
 
             return await QueryPagedAsync<BankInfo>(sql, new
             {

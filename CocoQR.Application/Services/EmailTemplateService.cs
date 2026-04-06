@@ -1,3 +1,4 @@
+using CocoQR.Application.Contracts.ICache;
 using CocoQR.Application.Contracts.IContext;
 using CocoQR.Application.Contracts.IServices;
 using CocoQR.Application.Contracts.ISubServices;
@@ -15,30 +16,43 @@ namespace CocoQR.Application.Services
         private readonly IUnitOfWork _unitOfWork;
         private readonly IUserContext _userContext;
         private readonly IIdGenerator _idGenerator;
+        private readonly ICacheService _cacheService;
 
-        public EmailTemplateService(IUnitOfWork unitOfWork, IUserContext userContext, IIdGenerator idGenerator)
+        public EmailTemplateService(IUnitOfWork unitOfWork, IUserContext userContext, IIdGenerator idGenerator, ICacheService cacheService)
         {
             _unitOfWork = unitOfWork;
             _userContext = userContext;
             _idGenerator = idGenerator;
+            _cacheService = cacheService;
         }
 
         public async Task<IEnumerable<GetEmailTemplateRes>> GetAllAsync()
         {
             EnsureAdmin();
 
+            var cacheKey = "emailTemplates";
+
+            var cached = await _cacheService
+                .GetAsync<IEnumerable<GetEmailTemplateRes>>(cacheKey);
+
+            if (cached != null)
+                return cached;
+
             var templates = await _unitOfWork.EmailTemplates.GetAllAsync();
-            return templates
+
+            var result = templates
                 .OrderBy(x => x.TemplateKey)
                 .Select(ToResponse)
                 .ToList();
-        }
 
-        public Task<GetEmailTemplateRes> GetAsync(string templateKey)
-        {
-            return GetByKeyAsync(templateKey);
-        }
+            await _cacheService.SetAsync(
+                cacheKey,
+                result,
+                TimeSpan.FromMinutes(10)
+            );
 
+            return result;
+        }
         public async Task<GetEmailTemplateRes> GetByIdAsync(Guid id)
         {
             EnsureAdmin();
@@ -54,21 +68,41 @@ namespace CocoQR.Application.Services
             return ToResponse(template);
         }
 
-        public async Task<GetEmailTemplateRes> GetByKeyAsync(string templateKey)
-        {
-            if (string.IsNullOrWhiteSpace(templateKey))
-            {
-                throw new ArgumentException("Template key là bắt buộc.", nameof(templateKey));
-            }
+        //public async Task<GetEmailTemplateRes> GetByKeyAsync(string templateKey)
+        //{
+        //    if (string.IsNullOrWhiteSpace(templateKey))
+        //    {
+        //        throw new ArgumentException("Template key là bắt buộc.", nameof(templateKey));
+        //    }
 
-            var template = await _unitOfWork.EmailTemplates.GetByKeyAsync(templateKey.Trim());
-            if (template == null)
-            {
-                throw new ApplicationException(ErrorCode.NotFound, $"Không tìm thấy template '{templateKey}'.");
-            }
+        //    templateKey = templateKey.Trim();
 
-            return ToResponse(template);
-        }
+        //    var cacheKey = $"emailTemplates:key:{templateKey}";
+
+        //    var cached = await _cacheService.GetAsync<GetEmailTemplateRes>(cacheKey);
+
+        //    if (cached != null)
+        //        return cached;
+
+        //    var template = await _unitOfWork.EmailTemplates.GetByKeyAsync(templateKey);
+
+        //    if (template == null)
+        //    {
+        //        throw new ApplicationException(
+        //            ErrorCode.NotFound,
+        //            $"Không tìm thấy template '{templateKey}'.");
+        //    }
+
+        //    var result = ToResponse(template);
+
+        //    await _cacheService.SetAsync(
+        //        cacheKey,
+        //        result,
+        //        TimeSpan.FromHours(1)
+        //    );
+
+        //    return result;
+        //}
 
         public async Task<Guid> PostAsync(PostEmailTemplateReq request)
         {

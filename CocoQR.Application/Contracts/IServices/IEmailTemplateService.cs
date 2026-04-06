@@ -5,9 +5,8 @@ namespace CocoQR.Application.Contracts.IServices
     public interface IEmailTemplateService
     {
         Task<IEnumerable<GetEmailTemplateRes>> GetAllAsync();
-        Task<GetEmailTemplateRes> GetAsync(string templateKey);
         Task<GetEmailTemplateRes> GetByIdAsync(Guid id);
-        Task<GetEmailTemplateRes> GetByKeyAsync(string templateKey);
+        //Task<GetEmailTemplateRes> GetByKeyAsync(string templateKey);
         Task<Guid> PostAsync(PostEmailTemplateReq request);
         Task PutAsync(Guid id, PutEmailTemplateReq request);
         Task DeleteAsync(Guid id);
