@@ -15,9 +15,11 @@ builder.Services.AddForwardedHeadersConfig();
 
 // Add services to the container.
 builder.Services.AddQrGenerator();
-builder.Services.AddPresentation(builder.Configuration);
-builder.Services.AddApplication();
-builder.Services.AddInfrastructure(builder.Configuration, builder.Environment);
+
+builder.Services.AddPresentation(builder.Configuration)
+                .AddApplication()
+                .AddInfrastructure(builder.Configuration, builder.Environment);
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 
@@ -93,6 +95,7 @@ app.UseAuthorization();
 
 app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 app.UseMiddleware<SecurityStampMiddleware>();
+app.UseMiddleware<PerformanceMiddleware>();
 
 app.MapControllers();
 

@@ -76,7 +76,7 @@
         public const string Section = "FileUrl";
         public const string BaseUrlConfigPath = "FileUrl:BaseUrl";
     }
-    // }
+
     public static class FileStorage
     {
         public static string RootPath { get; set; } = string.Empty;

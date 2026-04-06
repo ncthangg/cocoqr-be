@@ -14,7 +14,7 @@ namespace CocoQR.API.DependencyInjection
 {
     public static class DependencyInjection
     {
-        public static void AddPresentation(this IServiceCollection services, IConfiguration configuration)
+        public static IServiceCollection AddPresentation(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddHttpContextAccessor();
             services.AddHttpClient();
@@ -26,6 +26,7 @@ namespace CocoQR.API.DependencyInjection
             services.ConfigAuthorization();
             services.ConfigSwagger();
             services.ConfigController();
+            return services;
         }
         private static void JWTConfig(this IServiceCollection services, IConfiguration configuration)
         {

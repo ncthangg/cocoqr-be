@@ -6,9 +6,10 @@ namespace CocoQR.Application.DependencyInjection
 {
     public static class DependencyInjection
     {
-        public static void AddApplication(this IServiceCollection services)
+        public static IServiceCollection AddApplication(this IServiceCollection services)
         {
             services.AddService();
+            return services;
         }
         private static void AddService(this IServiceCollection services)
         {
