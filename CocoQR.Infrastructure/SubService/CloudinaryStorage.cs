@@ -45,6 +45,7 @@ namespace CocoQR.Infrastructure.SubService
 
             var client = GetClient();
             var publicId = GetPublicId(storagePath);
+            var assetFolder = GetAssetFolder(storagePath);
             var resourceType = ResolveResourceType(storagePath);
 
             UploadResult uploadResult = resourceType switch
@@ -53,6 +54,7 @@ namespace CocoQR.Infrastructure.SubService
                 {
                     File = new FileDescription(Path.GetFileName(storagePath), stream),
                     PublicId = publicId,
+                    AssetFolder = assetFolder,
                     Overwrite = true,
                     UniqueFilename = false,
                     UseFilename = false
@@ -61,6 +63,7 @@ namespace CocoQR.Infrastructure.SubService
                 {
                     File = new FileDescription(Path.GetFileName(storagePath), stream),
                     PublicId = publicId,
+                    AssetFolder = assetFolder,
                     Overwrite = true,
                     UniqueFilename = false,
                     UseFilename = false
@@ -69,6 +72,7 @@ namespace CocoQR.Infrastructure.SubService
                 {
                     File = new FileDescription(Path.GetFileName(storagePath), stream),
                     PublicId = publicId,
+                    AssetFolder = assetFolder,
                     Overwrite = true,
                     UniqueFilename = false,
                     UseFilename = false
@@ -122,7 +126,8 @@ namespace CocoQR.Infrastructure.SubService
                 return string.Empty;
 
             var resourceTypeSegment = GetResourceTypeSegment(ResolveResourceType(storagePath));
-            return $"{GetPublicBaseUrl()}/{resourceTypeSegment}/{CloudinaryConfig.DeliveryTypeUpload}/{storagePath}";
+            var publicId = GetPublicId(storagePath);
+            return $"{GetPublicBaseUrl()}/{resourceTypeSegment}/{CloudinaryConfig.DeliveryTypeUpload}/{publicId}";
         }
 
         private void EnsureConfigured()
@@ -285,10 +290,30 @@ namespace CocoQR.Infrastructure.SubService
 
         private static string GetPublicId(string path)
         {
-            var extension = Path.GetExtension(path);
-            return string.IsNullOrWhiteSpace(extension)
-                ? path
-                : path[..^extension.Length];
+            var fileName = Path.GetFileName(path);
+            if (string.IsNullOrWhiteSpace(fileName))
+            {
+                return string.Empty;
+            }
+
+            return Path.GetFileNameWithoutExtension(fileName);
+        }
+
+        private static string GetAssetFolder(string path)
+        {
+            var normalized = NormalizePath(path).TrimEnd('/');
+            if (string.IsNullOrWhiteSpace(normalized))
+            {
+                return string.Empty;
+            }
+
+            var lastSlashIndex = normalized.LastIndexOf('/');
+            if (lastSlashIndex <= 0)
+            {
+                return string.Empty;
+            }
+
+            return normalized[..lastSlashIndex];
         }
 
         private static string NormalizePath(string path)
