@@ -16,6 +16,8 @@ namespace CocoQR.Application.Services
 {
     public class ProviderService : IProviderService
     {
+        private static readonly TimeSpan ProvidersCacheExpiry = TimeSpan.FromMinutes(5);
+        private const string ProvidersCacheKey = "providers:system";
         private readonly IUnitOfWork _unitOfWork;
         private readonly IUserContext _userContext;
         private readonly IFileStorageService _fileStorageService;
@@ -42,9 +44,7 @@ namespace CocoQR.Application.Services
             }
             else
             {
-                var cacheKey = "providers:user";
-
-                var cached = await _cacheService.GetAsync<IEnumerable<GetProviderRes>>(cacheKey);
+                var cached = await _cacheService.GetAsync<IEnumerable<GetProviderRes>>(ProvidersCacheKey);
 
                 if (cached != null)
                     return cached;
@@ -57,9 +57,9 @@ namespace CocoQR.Application.Services
                     .ToList();
 
                 await _cacheService.SetAsync(
-                    cacheKey,
+                    ProvidersCacheKey,
                     result,
-                    TimeSpan.FromMinutes(30)
+                    ProvidersCacheExpiry
                 );
 
                 return result;
@@ -129,6 +129,8 @@ namespace CocoQR.Application.Services
                     throw new DomainException(ErrorCode.BusinessRuleViolation, "Invalid provider");
 
                 await _unitOfWork.Providers.UpdateAsync(provider);
+
+                await _cacheService.RemoveAsync(ProvidersCacheKey);
             }
             catch
             {

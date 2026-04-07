@@ -13,6 +13,8 @@ namespace CocoQR.Application.Services
 {
     public class EmailTemplateService : IEmailTemplateService
     {
+        private static readonly TimeSpan EmailTemplatesCacheExpiry = TimeSpan.FromMinutes(5);
+        private const string EmailTemplatesCacheKey = "banks:system";
         private readonly IUnitOfWork _unitOfWork;
         private readonly IUserContext _userContext;
         private readonly IIdGenerator _idGenerator;
@@ -30,10 +32,8 @@ namespace CocoQR.Application.Services
         {
             EnsureAdmin();
 
-            var cacheKey = "emailTemplates";
-
             var cached = await _cacheService
-                .GetAsync<IEnumerable<GetEmailTemplateRes>>(cacheKey);
+                .GetAsync<IEnumerable<GetEmailTemplateRes>>(EmailTemplatesCacheKey);
 
             if (cached != null)
                 return cached;
@@ -46,9 +46,9 @@ namespace CocoQR.Application.Services
                 .ToList();
 
             await _cacheService.SetAsync(
-                cacheKey,
+                EmailTemplatesCacheKey,
                 result,
-                TimeSpan.FromMinutes(10)
+                EmailTemplatesCacheExpiry
             );
 
             return result;
@@ -131,6 +131,7 @@ namespace CocoQR.Application.Services
 
             await _unitOfWork.EmailTemplates.AddAsync(entity);
 
+            await _cacheService.RemoveAsync(EmailTemplatesCacheKey);
             return entity.Id;
         }
 
@@ -167,6 +168,7 @@ namespace CocoQR.Application.Services
             entity.UpdatedAt = DateTime.UtcNow;
 
             await _unitOfWork.EmailTemplates.UpdateAsync(entity);
+            await _cacheService.RemoveAsync(EmailTemplatesCacheKey);
         }
 
         public async Task DeleteAsync(Guid id)
@@ -185,6 +187,7 @@ namespace CocoQR.Application.Services
             }
 
             await _unitOfWork.EmailTemplates.DeleteAsync(id);
+            await _cacheService.RemoveAsync(EmailTemplatesCacheKey);
         }
 
         public async Task<(string Subject, string Body)> RenderAsync(string templateKey, IReadOnlyDictionary<string, string>? variables = null)
@@ -242,7 +245,7 @@ namespace CocoQR.Application.Services
             };
         }
 
-        private static string RenderTemplate(string value, IReadOnlyDictionary<string, string>? variables) 
+        private static string RenderTemplate(string value, IReadOnlyDictionary<string, string>? variables)
         {
             if (string.IsNullOrEmpty(value) || variables == null || variables.Count == 0)
             {

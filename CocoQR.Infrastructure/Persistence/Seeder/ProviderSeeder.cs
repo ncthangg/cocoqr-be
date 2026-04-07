@@ -1,4 +1,5 @@
-﻿using CocoQR.Application.Contracts.ISubServices;
+﻿using CocoQR.Application.Contracts.ICache;
+using CocoQR.Application.Contracts.ISubServices;
 using CocoQR.Application.DTOs.Providers.Requests;
 using CocoQR.Application.DTOs.Seed;
 using CocoQR.Domain.Constants;
@@ -17,12 +18,14 @@ namespace CocoQR.Infrastructure.Persistence.Seeder
         private readonly IWebHostEnvironment _env;
         private readonly CocoQRDbContext _context;
         private readonly IIdGenerator _idGenerator;
+        private readonly ICacheService _cacheService;
 
-        public ProviderSeeder(IWebHostEnvironment env, CocoQRDbContext context, IIdGenerator idGenerator)
+        public ProviderSeeder(IWebHostEnvironment env, CocoQRDbContext context, IIdGenerator idGenerator, ICacheService cacheService)
         {
             _env = env;
             _context = context;
             _idGenerator = idGenerator;
+            _cacheService = cacheService;
         }
 
         public async Task<ProviderSyncPreviewRes> PreviewAsync()
@@ -167,6 +170,7 @@ namespace CocoQR.Infrastructure.Persistence.Seeder
 
                     await _context.SaveChangesAsync();
                     await transaction.CommitAsync();
+                    await _cacheService.RemoveAsync("providers:user");
                 }
                 catch
                 {

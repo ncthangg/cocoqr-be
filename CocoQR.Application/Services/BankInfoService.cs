@@ -16,6 +16,8 @@ namespace CocoQR.Application.Services
 {
     public class BankInfoService : IBankInfoService
     {
+        private static readonly TimeSpan BankCacheExpiry = TimeSpan.FromMinutes(5);
+        private const string BanksCacheKey = "banks:system";
         private readonly IUnitOfWork _unitOfWork;
         private readonly IUserContext _userContext;
         private readonly IFileStorageService _fileStorageService;
@@ -55,9 +57,7 @@ namespace CocoQR.Application.Services
             }
             else
             {
-                var cacheKey = "banks:user";
-
-                var cached = await _cacheService.GetAsync<List<GetBankInfoRes>>(cacheKey);
+                var cached = await _cacheService.GetAsync<List<GetBankInfoRes>>(BanksCacheKey);
 
                 if (cached == null)
                 {
@@ -75,9 +75,10 @@ namespace CocoQR.Application.Services
                         .ToList();
 
                     await _cacheService.SetAsync(
-                        cacheKey,
+                        BanksCacheKey,
                         cached,
-                        TimeSpan.FromMinutes(30));
+                        BankCacheExpiry
+                    );
                 }
 
                 var query = cached.AsQueryable();
@@ -119,24 +120,6 @@ namespace CocoQR.Application.Services
                     TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize)
                 };
             }
-            //    var (items, totalCount) = await _unitOfWork.BankInfos.GetBankInfosAsync(pageNumber,
-            //                                                          pageSize,
-            //                                                          sortField,
-            //                                                          sortDirection,
-            //                                                          isActive,
-            //                                                          searchValue,
-            //                                                          _userContext.IsAdmin());
-
-            //var list = items.Select(p => BankInfoMapper.ToGetBankInfoRes(p, _fileStorageService)).ToList();
-
-            //return new PagingVM<GetBankInfoRes>
-            //{
-            //    List = list,
-            //    PageNumber = pageNumber,
-            //    PageSize = pageSize,
-            //    TotalItems = totalCount,
-            //    TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize)
-            //};
         }
         public async Task<GetBankInfoRes> GetByIdAsync(Guid id)
         {
@@ -192,6 +175,8 @@ namespace CocoQR.Application.Services
                 oldItem.SetUpdated(userId);
 
                 await _unitOfWork.BankInfos.UpdateAsync(oldItem);
+
+                await _cacheService.RemoveAsync(BanksCacheKey);
             }
             catch
             {

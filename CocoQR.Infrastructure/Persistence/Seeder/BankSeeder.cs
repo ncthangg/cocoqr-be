@@ -1,4 +1,5 @@
 ﻿using CloudinaryDotNet.Actions;
+using CocoQR.Application.Contracts.ICache;
 using CocoQR.Application.Contracts.ISubServices;
 using CocoQR.Application.DTOs.Banks.Requests;
 using CocoQR.Application.DTOs.Seed;
@@ -18,13 +19,15 @@ namespace CocoQR.Infrastructure.Persistence.Seeder
         private readonly CocoQRDbContext _context;
         private readonly IIdGenerator _idGenerator;
         private readonly IFileStorageService _fileStorageService;
+        private readonly ICacheService _cacheService;
 
-        public BankSeeder(IWebHostEnvironment env, CocoQRDbContext context, IIdGenerator idGenerator, IFileStorageService fileStorageService)
+        public BankSeeder(IWebHostEnvironment env, CocoQRDbContext context, IIdGenerator idGenerator, IFileStorageService fileStorageService, ICacheService cacheService)
         {
             _env = env;
             _context = context;
             _idGenerator = idGenerator;
             _fileStorageService = fileStorageService;
+            _cacheService = cacheService;
         }
 
         public async Task<BankSyncPreviewRes> PreviewAsync()
@@ -187,6 +190,7 @@ namespace CocoQR.Infrastructure.Persistence.Seeder
 
                     await _context.SaveChangesAsync();
                     await transaction.CommitAsync();
+                    await _cacheService.RemoveAsync("banks:user");
                 }
                 catch
                 {

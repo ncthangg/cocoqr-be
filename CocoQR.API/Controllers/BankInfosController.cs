@@ -33,6 +33,23 @@ namespace CocoQR.API.Controllers
                 data: result,
                 message: null));
         }
+        [HttpGet("by-admin")]
+        [Authorize]
+        public async Task<IActionResult> GetByAdmin([FromQuery] GetBankInfoReq req)
+        {
+            PagingVM<GetBankInfoRes> result = await _bankInfoService.GetsAsync(
+                req.PageNumber,
+                req.PageSize,
+                req.SortField,
+                req.SortDirection,
+                req.IsActive,
+                req.SearchValue);
+
+            return Ok(new BaseResponseModel<PagingVM<GetBankInfoRes>>(
+                code: SuccessCode.Success,
+                data: result,
+                message: null));
+        }
         [HttpPut("{id}")]
         [Authorize]
         public async Task<IActionResult> Put(Guid id, [FromForm] PutBankInfoReq request)
