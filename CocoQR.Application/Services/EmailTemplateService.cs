@@ -14,7 +14,7 @@ namespace CocoQR.Application.Services
     public class EmailTemplateService : IEmailTemplateService
     {
         private static readonly TimeSpan EmailTemplatesCacheExpiry = TimeSpan.FromMinutes(5);
-        private const string EmailTemplatesCacheKey = "banks:system";
+        private const string EmailTemplatesCacheKey = "emailTemplate:system";
         private readonly IUnitOfWork _unitOfWork;
         private readonly IUserContext _userContext;
         private readonly IIdGenerator _idGenerator;
