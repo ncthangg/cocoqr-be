@@ -5,6 +5,11 @@ namespace CocoQR.API.Middlewares
 {
     public class SecurityStampMiddleware
     {
+        private const int RateLimitMaxRequests = 50;
+        private static readonly TimeSpan RateLimitWindow = TimeSpan.FromMinutes(1);
+        private const string UserRateLimitKeyPrefix = "rate:user:";
+        private const string IpRateLimitKeyPrefix = "rate:ip:";
+
         private readonly RequestDelegate _next;
 
         public SecurityStampMiddleware(RequestDelegate next)
@@ -17,13 +22,13 @@ namespace CocoQR.API.Middlewares
             var ip = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
             var userId = context.User.FindFirst("id")?.Value;
             var key = !string.IsNullOrWhiteSpace(userId)
-                ? $"rate:user:{userId}"
-                : $"rate:ip:{ip}";
+                ? $"{UserRateLimitKeyPrefix}{userId}"
+                : $"{IpRateLimitKeyPrefix}{ip}";
 
             var allowed = await rateLimitService.IsAllowedAsync(
                 key,
-                50,
-                TimeSpan.FromMinutes(1)
+                RateLimitMaxRequests,
+                RateLimitWindow
             );
 
             if (!allowed)
