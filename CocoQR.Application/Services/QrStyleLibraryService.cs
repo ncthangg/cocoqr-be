@@ -34,12 +34,19 @@ namespace CocoQR.Application.Services
         public async Task<IEnumerable<GetQrStyleLibraryRes>> GetAllAsync(QRStyleType? type, bool? isActive)
         {
             if (!_userContext.IsAuthenticated())
-                throw new ApplicationException(ErrorCode.Unauthorized, ErrorMessages.Unauthorized);
+            {
+                if (type == QRStyleType.USER)
+                    throw new ApplicationException(ErrorCode.Unauthorized, ErrorMessages.Unauthorized);
+
+                var publicResult = await GetSystemStylesAsync(false);
+
+                return publicResult.ToList();
+            }
 
             IEnumerable<GetQrStyleLibraryRes> result;
             if (_userContext.IsAdmin())
             {
-                result = await GetSystemStylesAsync();
+                result = await GetSystemStylesAsync(_userContext.IsAdmin());
             }
             else if (_userContext.IsUser())
             {
@@ -66,7 +73,7 @@ namespace CocoQR.Application.Services
             return result.ToList();
         }
 
-        protected async Task<IEnumerable<GetQrStyleLibraryRes>> GetSystemStylesAsync()
+        protected async Task<IEnumerable<GetQrStyleLibraryRes>> GetSystemStylesAsync(bool isAdmin)
         {
             var cached = await _cacheService.GetAsync<List<GetQrStyleLibraryRes>>(SystemStylesCacheKey);
             if (cached is not null)
@@ -74,7 +81,7 @@ namespace CocoQR.Application.Services
                 return cached;
             }
 
-            var items = await _unitOfWork.QRStyleLibraries.GetAllAsync(null, QRStyleType.SYSTEM, null, true);
+            var items = await _unitOfWork.QRStyleLibraries.GetAllAsync(null, QRStyleType.SYSTEM, null, isAdmin);
             var mapped = MapToResponse(items);
 
             await _cacheService.SetAsync(SystemStylesCacheKey, mapped, QrStyleCacheExpiry);

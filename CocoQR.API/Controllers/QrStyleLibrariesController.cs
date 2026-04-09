@@ -19,7 +19,6 @@ namespace CocoQR.API.Controllers
         }
 
         [HttpGet]
-        [Authorize]
         public async Task<IActionResult> Get([FromQuery] GetQrStyleLibraryReq req)
         {
             IEnumerable<GetQrStyleLibraryRes> result = await _qrStyleLibService.GetAllAsync(req.Type, req.IsActive);
