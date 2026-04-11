@@ -1,9 +1,9 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using CocoQR.Application.DTOs.Base.BaseRes;
+﻿using CocoQR.Application.DTOs.Base.BaseRes;
 using CocoQR.Application.DTOs.Seed;
 using CocoQR.Domain.Constants;
 using CocoQR.Infrastructure.Persistence.Seeder;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace CocoQR.API.Controllers
 {

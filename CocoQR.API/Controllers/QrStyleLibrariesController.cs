@@ -1,10 +1,10 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using CocoQR.Application.Contracts.IServices;
+﻿using CocoQR.Application.Contracts.IServices;
 using CocoQR.Application.DTOs.Base.BaseRes;
 using CocoQR.Application.DTOs.QRStyleLibrary.Requests;
 using CocoQR.Application.DTOs.QRStyleLibrary.Responses;
 using CocoQR.Domain.Constants;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace CocoQR.API.Controllers
 {
@@ -19,7 +19,6 @@ namespace CocoQR.API.Controllers
         }
 
         [HttpGet]
-        [Authorize]
         public async Task<IActionResult> Get([FromQuery] GetQrStyleLibraryReq req)
         {
             IEnumerable<GetQrStyleLibraryRes> result = await _qrStyleLibService.GetAllAsync(req.Type, req.IsActive);

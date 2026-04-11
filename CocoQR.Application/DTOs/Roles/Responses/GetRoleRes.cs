@@ -1,7 +1,4 @@
-﻿using CocoQR.Application.DTOs.Base.BaseRes;
-using System.Security.Cryptography;
-
-namespace CocoQR.Application.DTOs.Roles.Responses
+﻿namespace CocoQR.Application.DTOs.Roles.Responses
 {
     public class GetRoleRes
     {

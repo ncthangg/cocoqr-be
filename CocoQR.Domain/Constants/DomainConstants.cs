@@ -33,6 +33,14 @@
         public const string DatabaseError = "DATABASE_ERROR";
     }
 
+    public static class ErrorCategory
+    {
+        public const string InvalidArgument = "Invalid Argument";
+        public const string DomainRuleViolation = "Domain Rule Violation";
+        public const string ApplicationUseCaseFailure = "Application Use Case Failure";
+        public const string SystemError = "System Error";
+    }
+
     /// <summary>
     /// Validation messages (Vietnamese)
     /// </summary>
@@ -43,12 +51,26 @@
         public const string RequiredEmail = "Email là bắt buộc";
         public const string RequiredPassword = "Mật khẩu là bắt buộc";
         public const string RequiredUsername = "Tên người dùng là bắt buộc";
+        public const string RequiredToEmail = "ToEmail là bắt buộc";
+        public const string RequiredHost = "Host là bắt buộc";
+        public const string RequiredFromName = "FromName là bắt buộc";
+        public const string RequiredSubject = "Subject là bắt buộc";
+        public const string RequiredBody = "Content là bắt buộc";
+        public const string RequiredPath = "Path là bắt buộc";
+        public const string RequiredAccountNumber = "AccountNumber là bắt buộc";
+        public const string RequiredBankCode = "BankCode là bắt buộc";
+        public const string RequiredPhone = "Phone là bắt buộc";
 
         // Format validation
         public const string InvalidEmail = "Email không hợp lệ";
         public const string InvalidPhoneNumber = "Số điện thoại không hợp lệ";
         public const string InvalidUrl = "URL không hợp lệ";
         public const string InvalidDate = "Ngày tháng không hợp lệ";
+        public const string InvalidPort = "Port không hợp lệ";
+        public const string InvalidSmtpType = "Type không hợp lệ";
+        public const string RequiredSmtpType = "Type is required";
+        public const string InvalidUserId = "Invalid userId ID";
+        public const string InvalidQrId = "Invalid qr ID";
 
         // Length validation
         public const string PasswordTooShort = "Mật khẩu phải có ít nhất {0} ký tự";
@@ -66,7 +88,7 @@
     }
 
     /// <summary>
-    /// Success messages (Vietnamese)
+    /// SUCCESS messages (Vietnamese)
     /// </summary>
     public static class SuccessMessages
     {
@@ -74,7 +96,7 @@
         public const string CreateSuccess = "Tạo thành công";
         public const string UpdateSuccess = "Cập nhật thành công";
         public const string DeleteSuccess = "Xóa thành công";
-        public const string DeleteForeverSuccess = "Xóa vĩnh viễn thành công";
+        public const string DeleteForeverSuccess = "Xóa thành công";
         public const string SaveSuccess = "Lưu thành công";
 
         // User operations
@@ -117,6 +139,31 @@
         public const string ContactNotFound = "Không tìm thấy thông tin liên lạc";
         public const string ProjectNotFound = "Không tìm thấy dự án";
         public const string SkillNotFound = "Không tìm thấy kỹ năng";
+        public const string SmtpSettingInactive = "Cấu hình SMTP đang tắt (IsActive = false), không thể gửi email.";
+        public const string SmtpSettingByTypeNotFound = "Không tìm thấy cấu hình SMTP cho type {0}.";
+        public const string SmtpConnectionFailed = "Không thể kết nối SMTP server {0}:{1}. Vui lòng kiểm tra Host/Port/SSL hoặc firewall mạng.";
+        public const string SmtpSendFailed = "Gửi mail test thất bại trên SMTP server {0}:{1}. Vui lòng kiểm tra tài khoản SMTP và cấu hình bảo mật.";
+        public const string SmtpProtocolFailed = "Gửi mail test thất bại trên SMTP server {0}:{1}. Vui lòng kiểm tra phản hồi của server SMTP.";
+        public const string SmtpAuthenticationFailed = "Xác thực SMTP thất bại với server {0}:{1}. Vui lòng kiểm tra Username/Password.";
+        public const string CloudinaryStorageNotConfigured = "Cloudinary storage chưa được cấu hình đúng.";
+        public const string CloudinaryUploadFailed = "Upload file lên Cloudinary thất bại.";
+        public const string CloudinaryDeleteFailed = "Xóa file trên Cloudinary thất bại.";
+        public const string DigitalOceanStorageNotConfigured = "DigitalOcean storage chưa được cấu hình đúng.";
+        public const string InvalidOrigin = "Origin không hợp lệ";
+        public const string ConfigurationValueRequired = "Giá trị cấu hình '{0}' là bắt buộc.";
+        public const string ConnectionStringNotFound = "Connection string '{0}' không tìm thấy trong cấu hình.";
+        public const string AccountByIdNotFound = "Account {0} not found";
+        public const string QrHistoryNotFound = "QR history không tồn tại.";
+        public const string StyleLibraryNotFound = "Style library not found";
+        public const string StyleLibraryInactive = "Style library is inactive";
+        public const string StylePermissionDenied = "No permission for selected style";
+        public const string AccountNotFound = "Account không tồn tại.";
+        public const string AccountAccessDenied = "Không có quyền truy cập account.";
+        public const string AccountInactive = "Account inactive.";
+        public const string BankNotFound = "Bank không tồn tại.";
+        public const string UnsupportedMode = "Mode không hỗ trợ";
+        public const string ProviderNotFound = "Provider không tồn tại.";
+        public const string PaymentMethodMaintenance = "Phương thức thanh toán đang bảo trì.";
 
         // General errors
         public const string UnexpectedError = "Đã xảy ra lỗi không mong muốn";

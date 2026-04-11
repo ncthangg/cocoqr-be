@@ -1,18 +1,24 @@
 ﻿using CocoQR.Application.Common.Context;
+using CocoQR.Application.Contracts.ICache;
 using CocoQR.Application.Contracts.IConfigs;
 using CocoQR.Application.Contracts.IContext;
+using CocoQR.Application.Contracts.IQueue;
+using CocoQR.Application.Contracts.IRateLimit;
 using CocoQR.Application.Contracts.IRepositories;
 using CocoQR.Application.Contracts.ISubServices;
 using CocoQR.Application.Contracts.IUnitOfWork;
 using CocoQR.Domain.Constants;
 using CocoQR.Infrastructure.BackgroundServices;
+using CocoQR.Infrastructure.Configs;
 using CocoQR.Infrastructure.Persistence.MyDbContext;
 using CocoQR.Infrastructure.Persistence.Repositories;
 using CocoQR.Infrastructure.Persistence.Seeder;
 using CocoQR.Infrastructure.Persistence.UnitOfWork;
+using CocoQR.Infrastructure.Redis.Cache;
+using CocoQR.Infrastructure.Redis.Queue;
+using CocoQR.Infrastructure.Redis.RateLimit;
 using CocoQR.Infrastructure.Security;
 using CocoQR.Infrastructure.SubService;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,22 +26,26 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using StackExchange.Redis;
 using IDbConnectionFactory = CocoQR.Application.Contracts.IDbContext.IDbConnectionFactory;
+using RedisConfig = CocoQR.Domain.Constants.Redis;
 
 namespace CocoQR.Infrastructure.DependencyInjection
 {
     public static class DependencyInjection
     {
-        public static void AddInfrastructure(this IServiceCollection services, IConfiguration configuration, IHostEnvironment env)
+        public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration, IHostEnvironment env)
         {
             services.AddDbConnectionFactory();
             services.AddRepo();
-            services.AddDatabase(configuration);
+            services.AddDatabaseConfig(configuration);
             services.AddSubServices();
             services.AddBackgroundServices(env);
             services.AddSeeder();
             services.AddJWTConfig(configuration);
             services.AddCloudConfig(configuration);
             services.ConfigRedis(configuration);
+            services.AddRedisServices();
+
+            return services;
         }
         private static void AddDbConnectionFactory(this IServiceCollection services)
         {
@@ -55,11 +65,15 @@ namespace CocoQR.Infrastructure.DependencyInjection
 
             services.AddScoped<IBankInfoRepository, BankInfoRepository>();
             services.AddScoped<IProviderRepository, ProviderRepository>();
+            services.AddScoped<IContactMessageRepository, ContactMessageRepository>();
+            services.AddScoped<IEmailLogRepository, EmailLogRepository>();
+            services.AddScoped<ISmtpSettingRepository, SmtpSettingRepository>();
+            services.AddScoped<IEmailTemplateRepository, EmailTemplateRepository>();
 
             services.AddScoped<IUserRoleRepository, UserRoleRepository>();
             services.AddScoped<IUserTokenRepository, UserTokenRepository>();
         }
-        private static void AddDatabase(this IServiceCollection services, IConfiguration configuration)
+        private static void AddDatabaseConfig(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddDbContext<CocoQRDbContext>((sp, options) =>
             {
@@ -79,6 +93,7 @@ namespace CocoQR.Infrastructure.DependencyInjection
 
             services.AddScoped<IGoogleService, GoogleService>();
             services.AddScoped<ITokenService, TokenService>();
+            services.AddScoped<IEmailService, EmailService>();
             services.AddSingleton<IFileCleanupQueue, FileCleanupQueue>();
 
             // Default cloud provider: DigitalOcean Spaces.
@@ -114,33 +129,40 @@ namespace CocoQR.Infrastructure.DependencyInjection
         {
             services.Configure<DigitalOceanSettings>(configuration.GetSection("DigitalOcean"));
             services.Configure<CloudinarySettings>(configuration.GetSection("Cloudinary"));
+
+            services.AddScoped<IDigitalOceanConfiguration>(sp => sp.GetRequiredService<IOptions<DigitalOceanSettings>>().Value);
+            services.AddScoped<ICloudinaryConfiguration>(sp => sp.GetRequiredService<IOptions<CloudinarySettings>>().Value);
         }
-        private static IServiceCollection ConfigRedis(this IServiceCollection services, IConfiguration configuration)
+        private static void ConfigRedis(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddSingleton<IConnectionMultiplexer>(sp =>
             {
-                var connectionString = configuration[Redis.RedisConnection];
+                var connectionString = configuration[RedisConfig.RedisConnection];
 
                 if (string.IsNullOrWhiteSpace(connectionString))
-                    throw new InvalidOperationException(
-                        $"Redis connection string '{Redis.RedisConnection}' is not configured.");
+                    throw new ArgumentException(string.Format(ErrorMessages.ConfigurationValueRequired, RedisConfig.RedisConnection),
+                                                 RedisConfig.RedisConnection);
 
                 // --- Cấu hình bổ sung ---
                 var options = ConfigurationOptions.Parse(connectionString);
-                options.AbortOnConnectFail = configuration.GetValue<bool>(Redis.AbortOnConnectFail);
+                options.AbortOnConnectFail = configuration.GetValue<bool>(RedisConfig.AbortOnConnectFail);
 
-                options.ConnectRetry = configuration.GetValue<int>(Redis.ConnectRetry);
+                options.ConnectRetry = configuration.GetValue<int>(RedisConfig.ConnectRetry);
 
-                options.ConnectTimeout = configuration.GetValue<int>(Redis.ConnectTimeoutMs);
+                options.ConnectTimeout = configuration.GetValue<int>(RedisConfig.ConnectTimeoutMs);
 
-                options.SyncTimeout = configuration.GetValue<int>(Redis.SyncTimeoutMs);
+                options.SyncTimeout = configuration.GetValue<int>(RedisConfig.SyncTimeoutMs);
 
-                options.ReconnectRetryPolicy = new LinearRetry(configuration.GetValue<int>(Redis.ReconnectRetryIntervalMs));
+                options.ReconnectRetryPolicy = new LinearRetry(configuration.GetValue<int>(RedisConfig.ReconnectRetryIntervalMs));
 
                 return ConnectionMultiplexer.Connect(options);
             });
-
-            return services;
+        }
+        private static void AddRedisServices(this IServiceCollection services)
+        {
+            services.AddScoped<ICacheService, RedisCacheService>();
+            services.AddScoped<IQueueService, RedisQueueService>();
+            services.AddScoped<IRateLimitService, RedisRateLimitService>();
         }
 
     }

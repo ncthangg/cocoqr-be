@@ -45,19 +45,20 @@ namespace CocoQR.Application.Services
         public async Task<GetUserBySystemRes> GetByIdAsync(Guid id)
         {
             if (id == Guid.Empty)
-                throw new ApplicationException(ErrorCode.ValidationError, "Invalid userId ID");
+                throw new ArgumentException("Invalid user ID", nameof(id));
 
             var user = await _unitOfWork.Users.GetByIdAsync(id)
                 ?? throw new ApplicationException(ErrorCode.NotFound, $"Account {id} not found");
 
             return UserMapper.ToGetUsersRes(user);
         }
-        public async Task PutStatusAsync(Guid id)
+
+        public async Task PatchStatusAsync(Guid id)
         {
             if (_userContext.IsAdmin())
             {
                 if (id == Guid.Empty)
-                    throw new ApplicationException(ErrorCode.ValidationError, "Invalid account ID");
+                    throw new ArgumentException("Invalid user ID", nameof(id));
 
                 var user = await _unitOfWork.Users.GetByIdAsync(id)
                     ?? throw new ApplicationException(ErrorCode.NotFound, $"Account {id} not found");
@@ -66,7 +67,7 @@ namespace CocoQR.Application.Services
                 user.ChangeStatus();
 
                 var currentUserId = _userContext.UserId
-                    ?? throw new ApplicationException(ErrorCode.Unauthorized, "User ID not found in context!");
+                    ?? throw new ApplicationException(ErrorCode.Unauthorized, ErrorMessages.UserIDNotFoundInTheContext);
 
                 user.SetUpdated(currentUserId);
                 await _unitOfWork.Users.UpdateAsync(user);

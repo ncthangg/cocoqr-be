@@ -12,20 +12,20 @@ namespace CocoQR.Infrastructure.Persistence.Repositories
         }
         public async Task<(IEnumerable<BankInfo>, int totalCount)> GetBankInfosAsync(int pageNumber, int pageSize, string? sortField, string? sortDirection, bool? isActive, string? searchValue, bool isAdmin)
         {
-            var orderBy = "BankName ASC";
+            var orderBy = isAdmin ? "ShortName ASC"
+                                  : "IsActive DESC, ShortName ASC";
 
             if (!string.IsNullOrEmpty(sortField))
             {
                 var dir = sortDirection?.ToUpper() == "DESC" ? "DESC" : "ASC";
 
-                orderBy = sortField switch
+                var field = sortField switch
                 {
-                    "bankName" => $"BankName {dir}",
                     "shortName" => $"ShortName {dir}",
                     "bankCode" => $"BankCode {dir}",
-                    "createdAt" => $"CreatedAt {dir}",
-                    _ => "BankName ASC"
+                    _ => "ShortName ASC"
                 };
+                orderBy = isAdmin ? field : $"IsActive DESC, {field}";
             }
 
             string sql;
@@ -55,13 +55,7 @@ namespace CocoQR.Infrastructure.Persistence.Repositories
         SELECT COUNT(1)
         FROM BankInfos
         WHERE 
-            (@IsActive IS NULL OR IsActive = @IsActive)
-            AND (
-                @SearchValue IS NULL 
-                OR BankName LIKE '%' + @SearchValue + '%'
-                OR ShortName LIKE '%' + @SearchValue + '%'
-                OR BankCode LIKE '%' + @SearchValue + '%'
-            );
+            (@IsActive IS NULL OR IsActive = @IsActive);
         ";
             }
             else
@@ -87,16 +81,9 @@ namespace CocoQR.Infrastructure.Persistence.Repositories
         FROM BankInfos
         WHERE 
             DeletedAt IS NULL
-            AND Status = 1
-            AND (
-                @SearchValue IS NULL 
-                OR BankName LIKE '%' + @SearchValue + '%'
-                OR ShortName LIKE '%' + @SearchValue + '%'
-                OR BankCode LIKE '%' + @SearchValue + '%'
-            );
+            AND Status = 1;
         ";
             }
-
 
             return await QueryPagedAsync<BankInfo>(sql, new
             {

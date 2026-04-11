@@ -88,22 +88,12 @@ namespace CocoQR.Infrastructure.Persistence.Repositories
         WHERE
             (@UserId IS NULL OR a.UserId = @UserId)
             AND (@ProviderId IS NULL OR a.ProviderId = @ProviderId)
-            AND (@IsActive IS NULL OR a.IsActive = @IsActive)
             AND (
                  @IsDeleted IS NULL
                  OR (@IsDeleted = 1 AND a.DeletedAt IS NOT NULL)
                  OR (@IsDeleted = 0 AND a.DeletedAt IS NULL)
             )
-            AND (@Status IS NULL OR a.Status = @Status)
-            AND (
-                @SearchValue IS NULL
-                OR a.AccountNumber LIKE '%' + @SearchValue + '%'
-                OR ISNULL(a.AccountHolder,'') LIKE '%' + @SearchValue + '%'
-                OR ISNULL(a.BankCode,'') LIKE '%' + @SearchValue + '%'
-                OR ISNULL(b.BankName,'') LIKE '%' + @SearchValue + '%'
-                OR ISNULL(b.ShortName,'') LIKE '%' + @SearchValue + '%'
-                OR u.Email = @SearchValue
-            );
+            AND (@Status IS NULL OR a.Status = @Status);
         ";
 
             return await QueryPagedAsync<AccountQueryDto>(sql,
@@ -227,6 +217,24 @@ namespace CocoQR.Infrastructure.Persistence.Repositories
                     ExcludeId = excludeAccountId
                 }
             );
+        }
+
+        public async Task<int> CountPinnedByUserAsync(Guid userId, bool useLock = false)
+        {
+            if (userId == Guid.Empty)
+                throw new ArgumentException("Invalid user ID", nameof(userId));
+
+            var lockHint = useLock ? "WITH (UPDLOCK, HOLDLOCK)" : string.Empty;
+            var sql = $@"
+                SELECT COUNT(1)
+                FROM Accounts {lockHint}
+                WHERE UserId = @UserId
+                    AND IsPinned = 1
+                    AND DeletedAt IS NULL
+                    AND Status = 1
+            ";
+
+            return await QuerySingleAsync<int>(sql, new { UserId = userId });
         }
     }
 }

@@ -16,6 +16,10 @@ namespace CocoQR.Application.Contracts.IUnitOfWork
         IQRStyleLibraryRepository QRStyleLibraries { get; }
         IBankInfoRepository BankInfos { get; }
         IProviderRepository Providers { get; }
+        IContactMessageRepository ContactMessages { get; }
+        IEmailLogRepository EmailLogs { get; }
+        ISmtpSettingRepository SmtpSettings { get; }
+        IEmailTemplateRepository EmailTemplates { get; }
 
         IUserTokenRepository UserTokens { get; }
         IUserRoleRepository UserRoles { get; }

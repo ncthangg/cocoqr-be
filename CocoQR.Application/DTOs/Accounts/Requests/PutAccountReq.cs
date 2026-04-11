@@ -5,9 +5,11 @@
         public string AccountNumber { get; set; } = string.Empty;
         public string? AccountHolder { get; set; }
         public string? BankCode { get; set; }
-        public string? BankName { get; set; }
         public Guid ProviderId { get; set; }
-        public bool IsPinned { get; set; }
         public bool IsActive { get; set; }
+    }
+    public class PatchAccountRequest
+    {
+        public bool isPinned { get; set; }
     }
 }

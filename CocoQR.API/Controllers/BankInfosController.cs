@@ -1,10 +1,10 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using CocoQR.Application.Contracts.IServices;
+﻿using CocoQR.Application.Contracts.IServices;
 using CocoQR.Application.DTOs.Banks.Requests;
 using CocoQR.Application.DTOs.Banks.Responses;
 using CocoQR.Application.DTOs.Base.BaseRes;
 using CocoQR.Domain.Constants;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace CocoQR.API.Controllers
 {
@@ -18,9 +18,32 @@ namespace CocoQR.API.Controllers
             _bankInfoService = bankInfoService;
         }
         [HttpGet]
-        public async Task<IActionResult> Get(int pageNumber = 1, int pageSize = 10, string? sortField = null, string? sortDirection = null, bool? isActive = null, string? searchValue = null)
+        public async Task<IActionResult> Get([FromQuery] GetBankInfoReq req)
         {
-            PagingVM<GetBankInfoRes> result = await _bankInfoService.GetsAsync(pageNumber, pageSize, sortField, sortDirection, isActive, searchValue);
+            PagingVM<GetBankInfoRes> result = await _bankInfoService.GetsAsync(
+                req.PageNumber,
+                req.PageSize,
+                req.SortField,
+                req.SortDirection,
+                req.IsActive,
+                req.SearchValue);
+
+            return Ok(new BaseResponseModel<PagingVM<GetBankInfoRes>>(
+                code: SuccessCode.Success,
+                data: result,
+                message: null));
+        }
+        [HttpGet("by-admin")]
+        [Authorize]
+        public async Task<IActionResult> GetByAdmin([FromQuery] GetBankInfoReq req)
+        {
+            PagingVM<GetBankInfoRes> result = await _bankInfoService.GetsAsync(
+                req.PageNumber,
+                req.PageSize,
+                req.SortField,
+                req.SortDirection,
+                req.IsActive,
+                req.SearchValue);
 
             return Ok(new BaseResponseModel<PagingVM<GetBankInfoRes>>(
                 code: SuccessCode.Success,

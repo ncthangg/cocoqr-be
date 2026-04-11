@@ -1,13 +1,12 @@
-﻿using Microsoft.AspNetCore.Authentication;
+﻿using CocoQR.API.Configurations;
+using CocoQR.API.Validators;
+using CocoQR.Domain.Constants;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.OAuth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using CocoQR.API.Configurations;
-using CocoQR.API.Validators;
-using CocoQR.Domain.Constants;
-using Microsoft.Extensions.DependencyInjection;
 using System.Text;
 using System.Text.Json;
 
@@ -15,7 +14,7 @@ namespace CocoQR.API.DependencyInjection
 {
     public static class DependencyInjection
     {
-        public static void AddPresentation(this IServiceCollection services, IConfiguration configuration)
+        public static IServiceCollection AddPresentation(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddHttpContextAccessor();
             services.AddHttpClient();
@@ -27,6 +26,7 @@ namespace CocoQR.API.DependencyInjection
             services.ConfigAuthorization();
             services.ConfigSwagger();
             services.ConfigController();
+            return services;
         }
         private static void JWTConfig(this IServiceCollection services, IConfiguration configuration)
         {

@@ -1,10 +1,10 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using CocoQR.Application.Contracts.IServices;
+﻿using CocoQR.Application.Contracts.IServices;
 using CocoQR.Application.DTOs.Accounts.Requests;
 using CocoQR.Application.DTOs.Accounts.Responses;
 using CocoQR.Application.DTOs.Base.BaseRes;
 using CocoQR.Domain.Constants;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace CocoQR.API.Controllers
 {
@@ -81,11 +81,21 @@ namespace CocoQR.API.Controllers
                data: null,
                message: SuccessMessages.UpdateSuccess));
         }
-        [HttpPut("{id}/status")]
+        [HttpPatch("{id}/pin")]
         [Authorize]
-        public async Task<IActionResult> PutStatus(Guid id)
+        public async Task<IActionResult> PatchStatus(Guid id, bool isPinned)
         {
-            await _accountService.PutStatusAsync(id);
+            await _accountService.PinAccountAsync(id, isPinned);
+            return Ok(new BaseResponseModel<string>(
+               code: SuccessCode.Success,
+               data: null,
+               message: SuccessMessages.UpdateSuccess));
+        }
+        [HttpPatch("{id}/status")]
+        [Authorize]
+        public async Task<IActionResult> PatchStatus(Guid id)
+        {
+            await _accountService.PatchStatusAsync(id);
             return Ok(new BaseResponseModel<string>(
                code: SuccessCode.Success,
                data: null,

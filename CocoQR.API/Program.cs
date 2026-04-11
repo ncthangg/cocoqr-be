@@ -1,5 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using CocoQR.API.DependencyInjection;
+﻿using CocoQR.API.DependencyInjection;
 using CocoQR.API.Extensions;
 using CocoQR.API.Middlewares;
 using CocoQR.Application.DependencyInjection;
@@ -7,6 +6,7 @@ using CocoQR.Infrastructure.DependencyInjection;
 using CocoQR.Infrastructure.Persistence.MyDbContext;
 using CocoQR.Infrastructure.Persistence.Seeder;
 using CocoQR.QR_Generator.DependencyInjection;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,9 +15,11 @@ builder.Services.AddForwardedHeadersConfig();
 
 // Add services to the container.
 builder.Services.AddQrGenerator();
-builder.Services.AddPresentation(builder.Configuration);
-builder.Services.AddApplication();
-builder.Services.AddInfrastructure(builder.Configuration, builder.Environment);
+
+builder.Services.AddPresentation(builder.Configuration)
+                .AddApplication()
+                .AddInfrastructure(builder.Configuration, builder.Environment);
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 
@@ -93,6 +95,7 @@ app.UseAuthorization();
 
 app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 app.UseMiddleware<SecurityStampMiddleware>();
+app.UseMiddleware<PerformanceMiddleware>();
 
 app.MapControllers();
 

@@ -1,7 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using CocoQR.Domain.Constants;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
-using CocoQR.Domain.Constants;
 
 namespace CocoQR.Infrastructure.Persistence.MyDbContext
 {
@@ -29,9 +29,9 @@ namespace CocoQR.Infrastructure.Persistence.MyDbContext
 
             if (string.IsNullOrEmpty(connectionString))
             {
-                throw new InvalidOperationException(
-                    "Connection string 'DefaultConnection' not found in appsettings.json. " +
-                    $"Searched in: {apiProjectPath}");
+                throw new ArgumentException(
+                    $"{string.Format(ErrorMessages.ConnectionStringNotFound, Database.DefaultConnection)} Searched in: {apiProjectPath}",
+                    Database.DefaultConnection);
             }
 
             var optionsBuilder = new DbContextOptionsBuilder<CocoQRDbContext>();

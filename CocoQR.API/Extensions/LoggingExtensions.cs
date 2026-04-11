@@ -1,4 +1,4 @@
-﻿using Serilog;
+using Serilog;
 using Serilog.Events;
 using System.Text;
 using static CocoQR.Domain.Constants.FileStorage;
@@ -33,11 +33,24 @@ namespace CocoQR.API.Extensions
                 .Enrich.FromLogContext()
                 .WriteTo.Console();
 
+            if (env.IsStaging())
+            {
+                loggerConfig
+                    .MinimumLevel.Information()
+                    .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+                    .MinimumLevel.Override("Microsoft.Hosting.Lifetime", LogEventLevel.Information);
+            }
+            else if (env.IsProduction())
+            {
+                loggerConfig
+                    .MinimumLevel.Warning()
+                    .MinimumLevel.Override("Microsoft", LogEventLevel.Error)
+                    .MinimumLevel.Override("Microsoft.Hosting.Lifetime", LogEventLevel.Information);
+            }
+
             if (env.IsStaging() || env.IsProduction())
             {
                 loggerConfig
-                .MinimumLevel.Information()
-
                 .WriteTo.Logger(lc => lc
                     .Filter.ByIncludingOnly(e => e.Level == LogEventLevel.Information)
                     .WriteTo.File(

@@ -1,7 +1,6 @@
-using System.Collections.Generic;
-using System.Threading;
+using CocoQR.Application.Contracts.ISubServices;
+using CocoQR.Application.DTOs.Settings;
 using System.Threading.Channels;
-using System.Threading.Tasks;
 
 namespace CocoQR.Infrastructure.SubService
 {

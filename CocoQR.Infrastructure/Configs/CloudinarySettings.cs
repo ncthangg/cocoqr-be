@@ -1,6 +1,8 @@
-namespace CocoQR.Infrastructure.SubService
+using CocoQR.Application.Contracts.IConfigs;
+
+namespace CocoQR.Infrastructure.Configs
 {
-    public class CloudinarySettings
+    public class CloudinarySettings : ICloudinaryConfiguration
     {
         public string CloudName { get; set; } = default!;
         public string ApiKey { get; set; } = default!;

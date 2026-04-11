@@ -1,9 +1,10 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using CocoQR.Application.Contracts.IServices;
+﻿using CocoQR.Application.Contracts.IServices;
 using CocoQR.Application.DTOs.Base.BaseRes;
+using CocoQR.Application.DTOs.Users.Requests;
 using CocoQR.Application.DTOs.Users.Responses;
 using CocoQR.Domain.Constants;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace CocoQR.API.Controllers
 {
@@ -18,9 +19,16 @@ namespace CocoQR.API.Controllers
         }
         [HttpGet]
         [Authorize]
-        public async Task<IActionResult> Get(int pageNumber = 1, int pageSize = 10, string? sortField = null, string? sortDirection = null, bool? status = null, string? searchValue = null, Guid? roleId = null)
+        public async Task<IActionResult> Get([FromQuery] GetUserReq req)
         {
-            PagingVM<GetUserBaseRes> result = await _userService.GetUsersAsync(pageNumber, pageSize, sortField, sortDirection, status, searchValue, roleId);
+            PagingVM<GetUserBaseRes> result = await _userService.GetUsersAsync(
+                req.PageNumber,
+                req.PageSize,
+                req.SortField,
+                req.SortDirection,
+                req.Status,
+                req.SearchValue,
+                req.RoleId);
 
             return Ok(new BaseResponseModel<PagingVM<GetUserBaseRes>>(
                 code: SuccessCode.Success,
@@ -37,11 +45,11 @@ namespace CocoQR.API.Controllers
                 data: result,
                 message: null));
         }
-        [HttpPut("{id}/status")]
+        [HttpPatch("{id}/status")]
         [Authorize]
-        public async Task<IActionResult> PutStatus(Guid id)
+        public async Task<IActionResult> PatchStatus(Guid id)
         {
-            await _userService.PutStatusAsync(id);
+            await _userService.PatchStatusAsync(id);
             return Ok(new BaseResponseModel<string>(
                code: SuccessCode.Success,
                data: null,

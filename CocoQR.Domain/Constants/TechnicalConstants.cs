@@ -31,7 +31,7 @@
 
         public const int DefaultCacheExpiryMinutes = 60;
         public const int ShortCacheExpiryMinutes = 5;
-        public const int LongCacheExpiryMinutes = 1440; // 24 hours
+        public const int LongCacheExpiryMinutes = 1440;
 
         // --- Thêm các hằng số cấu hình kết nối ---
         public const string AbortOnConnectFail = "Redis:AbortOnConnectFail";
@@ -46,6 +46,37 @@
         public const string ClientIdConfigPath = "Oauth:ClientId";
         public const string ClientSecretConfigPath = "Oauth:ClientSecret";
     }
+    public static class DigitalOceanConfig
+    {
+        public const string Section = "DigitalOcean";
+        public const string AccessKeyConfigPath = "DigitalOcean:AccessKey";
+        public const string SecretKeyConfigPath = "DigitalOcean:SecretKey";
+        public const string BucketConfigPath = "DigitalOcean:Bucket";
+        public const string RegionConfigPath = "DigitalOcean:Region";
+        public const string EndpointConfigPath = "DigitalOcean:Endpoint";
+    }
+    public static class CloudinaryConfig
+    {
+        public const string Section = "Cloudinary";
+        public const string ApiKeyConfigPath = "Cloudinary:ApiKey";
+        public const string ApiSecretConfigPath = "Cloudinary:ApiSecret";
+        public const string CloudNameConfigPath = "Cloudinary:CloudName";
+        public const string ProjectNameConfigPath = "Cloudinary:ProjectName";
+        public const string BaseUrlConfigPath = "Cloudinary:BaseUrl";
+
+        public const string DefaultBaseUrl = "https://res.cloudinary.com";
+        public const string DeliveryTypeUpload = "upload";
+        public const string ResourceTypeRaw = "raw";
+        public const string ResourceTypeImage = "image";
+        public const string ResourceTypeVideo = "video";
+    }
+
+    public static class FileUrl
+    {
+        public const string Section = "FileUrl";
+        public const string BaseUrlConfigPath = "FileUrl:BaseUrl";
+    }
+
     public static class FileStorage
     {
         public static string RootPath { get; set; } = string.Empty;
@@ -54,7 +85,12 @@
 
         public static readonly HashSet<string> AllowedImageExtensions = new(StringComparer.OrdinalIgnoreCase)
         {
-            ".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg"
+            ".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".bmp", ".tiff", ".avif"
+        };
+
+        public static readonly HashSet<string> AllowedVideoExtensions = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ".mp4", ".mov", ".avi", ".wmv", ".mkv", ".webm", ".m4v", ".flv"
         };
 
         public static readonly HashSet<string> AllowedDocumentExtensions = new(StringComparer.OrdinalIgnoreCase)
@@ -63,6 +99,9 @@
         };
         public static class Folders
         {
+            public const string Seed = "Seed";
+            public const string Data = "Data";
+
             public const string Assets = "assets";
             public const string Providers = "providers";
             public const string Banks = "banks";
@@ -77,7 +116,7 @@
         public static class EnvKeys
         {
             public const string Root = "Folder_Root";
-            
+
             public const string Assets = "Folder_Assets";
             public const string Logs = "Folder_Logs";
             public const string Backups = "Folder_Backups";

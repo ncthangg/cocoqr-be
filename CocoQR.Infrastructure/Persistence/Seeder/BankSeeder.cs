@@ -1,11 +1,13 @@
-﻿using Microsoft.AspNetCore.Hosting;
-using Microsoft.EntityFrameworkCore;
+﻿using CloudinaryDotNet.Actions;
+using CocoQR.Application.Contracts.ICache;
 using CocoQR.Application.Contracts.ISubServices;
 using CocoQR.Application.DTOs.Banks.Requests;
 using CocoQR.Application.DTOs.Seed;
 using CocoQR.Domain.Constants;
 using CocoQR.Domain.Entities;
 using CocoQR.Infrastructure.Persistence.MyDbContext;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 using DomainException = CocoQR.Domain.Exceptions.DomainException;
 
@@ -17,13 +19,15 @@ namespace CocoQR.Infrastructure.Persistence.Seeder
         private readonly CocoQRDbContext _context;
         private readonly IIdGenerator _idGenerator;
         private readonly IFileStorageService _fileStorageService;
+        private readonly ICacheService _cacheService;
 
-        public BankSeeder(IWebHostEnvironment env, CocoQRDbContext context, IIdGenerator idGenerator, IFileStorageService fileStorageService)
+        public BankSeeder(IWebHostEnvironment env, CocoQRDbContext context, IIdGenerator idGenerator, IFileStorageService fileStorageService, ICacheService cacheService)
         {
             _env = env;
             _context = context;
             _idGenerator = idGenerator;
             _fileStorageService = fileStorageService;
+            _cacheService = cacheService;
         }
 
         public async Task<BankSyncPreviewRes> PreviewAsync()
@@ -109,8 +113,8 @@ namespace CocoQR.Infrastructure.Persistence.Seeder
                 try
                 {
                     var filePath = Path.Combine(_env.ContentRootPath,
-                                            "Seed",
-                                            "Data",
+                                            FileStorage.Folders.Seed,
+                                            FileStorage.Folders.Data,
                                             "banks_v1.json");
 
                     if (!File.Exists(filePath))
@@ -186,6 +190,7 @@ namespace CocoQR.Infrastructure.Persistence.Seeder
 
                     await _context.SaveChangesAsync();
                     await transaction.CommitAsync();
+                    await _cacheService.RemoveAsync("banks:user");
                 }
                 catch
                 {
@@ -202,7 +207,10 @@ namespace CocoQR.Infrastructure.Persistence.Seeder
         // ── Helpers ────────────────────────────────────────────────
         private async Task<(string filePath, List<PostBankInfoJsonReq> banks)> ReadSeedFileAsync()
         {
-            var filePath = Path.Combine(_env.ContentRootPath, "Seed", "Data", "banks_v1.json");
+            var filePath = Path.Combine(_env.ContentRootPath,
+                                    FileStorage.Folders.Seed,
+                                    FileStorage.Folders.Data,
+                                    "banks_v1.json");
 
             if (!File.Exists(filePath))
                 throw new DomainException(ErrorCode.NotFound, $"Seed file not found: {filePath}");

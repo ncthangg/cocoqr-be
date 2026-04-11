@@ -1,6 +1,6 @@
-﻿using Microsoft.Extensions.Configuration;
-using CocoQR.Application.Contracts.IDbContext;
+﻿using CocoQR.Application.Contracts.IDbContext;
 using CocoQR.Domain.Constants;
+using Microsoft.Extensions.Configuration;
 using System.Data;
 using System.Data.SqlClient;
 

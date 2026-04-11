@@ -1,21 +1,23 @@
 using Amazon.S3;
 using Amazon.S3.Model;
 using Amazon.S3.Transfer;
+using CocoQR.Application.Contracts.IConfigs;
 using CocoQR.Application.Contracts.ISubServices;
+using CocoQR.Domain.Constants;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
+using ApplicationException = CocoQR.Application.Exceptions.ApplicationException;
 
 namespace CocoQR.Infrastructure.SubService
 {
     public class DigitalOceanStorage : ICloudStorage
     {
-        private readonly DigitalOceanSettings _settings;
+        private readonly IDigitalOceanConfiguration _settings;
         private readonly ILogger<DigitalOceanStorage> _logger;
         private readonly bool _isValid;
 
-        public DigitalOceanStorage(IOptions<DigitalOceanSettings> options, ILogger<DigitalOceanStorage> logger)
+        public DigitalOceanStorage(IDigitalOceanConfiguration settings, ILogger<DigitalOceanStorage> logger)
         {
-            _settings = options.Value;
+            _settings = settings;
             _logger = logger;
             _isValid = ValidateSettings();
         }
@@ -29,7 +31,7 @@ namespace CocoQR.Infrastructure.SubService
 
             var storagePath = BuildStoragePath(path);
             if (string.IsNullOrWhiteSpace(storagePath))
-                throw new ArgumentException("Path is required", nameof(path));
+                throw new ArgumentException(ValidationMessages.RequiredPath, nameof(path));
 
             if (stream.CanSeek)
             {
@@ -164,7 +166,7 @@ namespace CocoQR.Infrastructure.SubService
         {
             if (!_isValid)
             {
-                throw new InvalidOperationException("DigitalOcean storage is not configured correctly.");
+                throw new ApplicationException(ErrorCode.ServiceUnavailable, ErrorMessages.DigitalOceanStorageNotConfigured);
             }
         }
 

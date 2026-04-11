@@ -1,11 +1,11 @@
-﻿using Microsoft.IdentityModel.Tokens;
-using CocoQR.Application.Contracts.IConfigs;
+﻿using CocoQR.Application.Contracts.IConfigs;
 using CocoQR.Application.Contracts.IContext;
 using CocoQR.Application.Contracts.ISubServices;
 using CocoQR.Application.Contracts.IUnitOfWork;
 using CocoQR.Application.DTOs.Auths.Responses;
 using CocoQR.Domain.Constants;
 using CocoQR.Domain.Entities;
+using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;

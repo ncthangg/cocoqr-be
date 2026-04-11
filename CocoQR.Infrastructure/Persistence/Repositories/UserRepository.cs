@@ -1,9 +1,9 @@
-﻿using Dapper;
-using CocoQR.Application.Contracts.IRepositories;
+﻿using CocoQR.Application.Contracts.IRepositories;
 using CocoQR.Application.Contracts.IUnitOfWork;
 using CocoQR.Application.DTOs.Users.Responses;
 using CocoQR.Domain.Entities;
 using CocoQR.Infrastructure.Persistence.Repositories.Base;
+using Dapper;
 
 namespace CocoQR.Infrastructure.Persistence.Repositories
 {
@@ -72,11 +72,6 @@ namespace CocoQR.Infrastructure.Persistence.Repositories
         FROM Users u
         WHERE
             (@Status IS NULL OR u.Status = @Status)
-            AND (
-                @SearchValue IS NULL
-                OR u.FullName LIKE '%' + @SearchValue + '%'
-                OR u.Email LIKE @SearchValue + '%'
-            )
             AND (
                 @RoleId IS NULL
                 OR EXISTS (

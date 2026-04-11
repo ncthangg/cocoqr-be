@@ -5,7 +5,6 @@ namespace CocoQR.Infrastructure.SubService
 {
     public class SqlServerIdGenerator : IIdGenerator
     {
-        public Guid NewId()
-            => Uuid.NewDatabaseFriendly(Database.SqlServer);
+        public Guid NewId() => Uuid.NewDatabaseFriendly(Database.SqlServer);
     }
 }

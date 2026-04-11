@@ -1,6 +1,6 @@
+using CocoQR.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using CocoQR.Domain.Entities;
 
 namespace CocoQR.Infrastructure.Persistence.DbConfigurations
 {

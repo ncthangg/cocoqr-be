@@ -5,7 +5,7 @@ namespace CocoQR.Application.Exceptions
     public class ApplicationException : Exception, IBusinessException
     {
         public string Code { get; }
-        public object? Data { get; }
+        public object? Details { get; }
 
         public ApplicationException(
             string code,
@@ -15,7 +15,7 @@ namespace CocoQR.Application.Exceptions
             : base(message, innerException)
         {
             Code = code;
-            Data = data;
+            Details = data;
         }
     }
 }

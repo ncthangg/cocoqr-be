@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Hosting;
-using Microsoft.EntityFrameworkCore;
+﻿using CocoQR.Application.Contracts.ICache;
 using CocoQR.Application.Contracts.ISubServices;
 using CocoQR.Application.DTOs.Providers.Requests;
 using CocoQR.Application.DTOs.Seed;
@@ -7,6 +6,8 @@ using CocoQR.Domain.Constants;
 using CocoQR.Domain.Entities;
 using CocoQR.Domain.Exceptions;
 using CocoQR.Infrastructure.Persistence.MyDbContext;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -17,12 +18,14 @@ namespace CocoQR.Infrastructure.Persistence.Seeder
         private readonly IWebHostEnvironment _env;
         private readonly CocoQRDbContext _context;
         private readonly IIdGenerator _idGenerator;
+        private readonly ICacheService _cacheService;
 
-        public ProviderSeeder(IWebHostEnvironment env, CocoQRDbContext context, IIdGenerator idGenerator)
+        public ProviderSeeder(IWebHostEnvironment env, CocoQRDbContext context, IIdGenerator idGenerator, ICacheService cacheService)
         {
             _env = env;
             _context = context;
             _idGenerator = idGenerator;
+            _cacheService = cacheService;
         }
 
         public async Task<ProviderSyncPreviewRes> PreviewAsync()
@@ -106,8 +109,8 @@ namespace CocoQR.Infrastructure.Persistence.Seeder
                 try
                 {
                     var filePath = Path.Combine(_env.ContentRootPath,
-                                                "Seed",
-                                                "Data",
+                                            FileStorage.Folders.Seed,
+                                            FileStorage.Folders.Data,
                                                 "providers_v1.json");
 
                     if (!File.Exists(filePath))
@@ -167,6 +170,7 @@ namespace CocoQR.Infrastructure.Persistence.Seeder
 
                     await _context.SaveChangesAsync();
                     await transaction.CommitAsync();
+                    await _cacheService.RemoveAsync("providers:user");
                 }
                 catch
                 {
@@ -183,7 +187,10 @@ namespace CocoQR.Infrastructure.Persistence.Seeder
         // ── Helpers ────────────────────────────────────────────────
         private async Task<(string filePath, List<PostProviderJsonReq>)> ReadSeedFileAsync()
         {
-            var filePath = Path.Combine(_env.ContentRootPath, "Seed", "Data", "providers_v1.json");
+            var filePath = Path.Combine(_env.ContentRootPath,
+                                    FileStorage.Folders.Seed,
+                                    FileStorage.Folders.Data,
+                                        "providers_v1.json");
 
             if (!File.Exists(filePath))
                 throw new DomainException(ErrorCode.NotFound, $"Seed file not found: {filePath}");

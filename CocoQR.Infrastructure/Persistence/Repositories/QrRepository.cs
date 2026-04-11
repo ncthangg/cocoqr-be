@@ -83,15 +83,7 @@ namespace CocoQR.Infrastructure.Persistence.Repositories
                  OR (@IsDeleted = 1 AND q.DeletedAt IS NOT NULL)
                  OR (@IsDeleted = 0 AND q.DeletedAt IS NULL)
             )
-            AND (@ProviderId IS NULL OR q.ProviderId = @ProviderId)
-            AND (
-                @SearchValue IS NULL
-                OR q.AccountNumberSnapshot LIKE '%' + @SearchValue + '%'
-                OR ISNULL(q.AccountHolderSnapshot,'') LIKE '%' + @SearchValue + '%'
-                OR ISNULL(q.BankCodeSnapshot,'')  LIKE '%' + @SearchValue + '%'
-                OR ISNULL(q.NapasBinSnapshot,'')  LIKE '%' + @SearchValue + '%'
-                OR u.Email LIKE @SearchValue + '%'
-            );
+            AND (@ProviderId IS NULL OR q.ProviderId = @ProviderId);
         ";
 
             return await QueryPagedAsync<QrHistoryQueryDto>(sql,

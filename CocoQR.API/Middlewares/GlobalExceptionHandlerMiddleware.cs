@@ -30,15 +30,19 @@ namespace CocoQR.API.Middlewares
             {
                 await _next(context);
             }
-            catch (DomainException ex)  // ← Domain rule violations
+            catch (DomainException ex)
             {
                 await HandleDomainExceptionAsync(context, ex);
             }
-            catch (ApplicationException ex)  // ← Use case failures
+            catch (ApplicationException ex)
             {
                 await HandleApplicationExceptionAsync(context, ex);
             }
-            catch (Exception ex)  // ← Unexpected system errors
+            catch (ArgumentException ex)
+            {
+                await HandleArgumentExceptionAsync(context, ex);
+            }
+            catch (Exception ex)
             {
                 await HandleUnexpectedExceptionAsync(context, ex);
             }
@@ -46,60 +50,40 @@ namespace CocoQR.API.Middlewares
 
         private async Task HandleDomainExceptionAsync(HttpContext context, DomainException exception)
         {
-            // Use mapper to get status code
-            var statusCode = ExceptionStatusCodeMapper.MapToStatusCode(exception);
-
-            // Log based on severity
-            if (ExceptionStatusCodeMapper.IsServerError(statusCode))
-            {
-                // 5xx errors - Log as ERROR (nghiêm trọng)
-                _logger.LogError(exception,
-                    "Server error - Code: {Code}, Type: {Type}, Message: {Message}",
-                    exception.Code,
-                    exception.GetType().Name,  // ← Log exception type
-                    exception.Message);
-            }
-            else if (ExceptionStatusCodeMapper.IsClientError(statusCode))
-            {
-                // 4xx errors - Log as WARNING (không nghiêm trọng)
-                _logger.LogWarning(
-                    "Client error - Code: {Code}, Type: {Type}, Message: {Message}, User: {UserId}",
-                    exception.Code,
-                    exception.GetType().Name,
-                    exception.Message,
-                    context.User?.FindFirst("id")?.Value ?? "anonymous");
-            }
-
-            await WriteErrorResponseAsync(context, statusCode, exception.Code, exception.Message, exception.Data, "Domain Rule Violation");
+            await HandleBusinessExceptionAsync(context, exception, ErrorCategory.DomainRuleViolation);
         }
+
         private async Task HandleApplicationExceptionAsync(HttpContext context, ApplicationException exception)
         {
-            // Application exceptions have varied status codes
-            var statusCode = ExceptionStatusCodeMapper.MapToStatusCode(exception);
-
-            if (ExceptionStatusCodeMapper.IsServerError(statusCode))
-            {
-                _logger.LogError(exception,
-                    "Server error - Code: {Code}, Type: {Type}, Message: {Message}",
-                    exception.Code,
-                    exception.GetType().Name,  // ← Log exception type
-                    exception.Message);
-            }
-            else if (ExceptionStatusCodeMapper.IsClientError(statusCode))
-            {
-                _logger.LogWarning(
-                    "Client error - Code: {Code}, Type: {Type}, Message: {Message}, User: {UserId}",
-                    exception.Code,
-                    exception.GetType().Name,
-                    exception.Message,
-                    context.User?.FindFirst("id")?.Value ?? "anonymous");
-            }
-
-            await WriteErrorResponseAsync(context, statusCode, exception.Code, exception.Message, exception.Data, "Application Use Case Failure");
+            await HandleBusinessExceptionAsync(context, exception, ErrorCategory.ApplicationUseCaseFailure);
         }
+
+        private async Task HandleArgumentExceptionAsync(HttpContext context, ArgumentException exception)
+        {
+            const int statusCode = StatusCodes.Status400BadRequest;
+
+            _logger.LogWarning(exception,
+                "Client error - Code: {Code}, Type: {Type}, Message: {Message}, User: {UserId}",
+                ErrorCode.BadRequest,
+                exception.GetType().Name,
+                exception.Message,
+                context.User?.FindFirst("id")?.Value ?? "anonymous");
+
+            var data = _env.IsDevelopment() && !string.IsNullOrWhiteSpace(exception.ParamName)
+                ? new { Parameter = exception.ParamName }
+                : null;
+
+            await WriteErrorResponseAsync(
+                context,
+                statusCode,
+                ErrorCode.BadRequest,
+                exception.Message,
+                data,
+                ErrorCategory.InvalidArgument);
+        }
+
         private async Task HandleUnexpectedExceptionAsync(HttpContext context, Exception exception)
         {
-            // Log UNEXPECTED errors as ERROR
             _logger.LogError(exception,
                 "UNEXPECTED ERROR - Type: {Type}, Message: {Message}, Path: {Path}",
                 exception.GetType().Name,
@@ -108,7 +92,7 @@ namespace CocoQR.API.Middlewares
 
             var message = _env.IsDevelopment()
                 ? exception.Message
-                : "An unexpected error occurred. Please try again later.";
+                : ErrorMessages.UnexpectedError;
 
             var data = _env.IsDevelopment()
                 ? new
@@ -125,7 +109,53 @@ namespace CocoQR.API.Middlewares
                 ErrorCode.InternalError,
                 message,
                 data,
-                "System Error");
+                ErrorCategory.SystemError);
+        }
+
+        private async Task HandleBusinessExceptionAsync<TException>(
+            HttpContext context,
+            TException exception,
+            string category)
+            where TException : Exception, IBusinessException
+        {
+            var statusCode = ExceptionStatusCodeMapper.MapToStatusCode(exception);
+            LogByStatusCode(context, exception, statusCode, exception.Code, exception.Message);
+
+            await WriteErrorResponseAsync(
+                context,
+                statusCode,
+                exception.Code,
+                exception.Message,
+                exception.Data,
+                category);
+        }
+
+        private void LogByStatusCode(
+            HttpContext context,
+            Exception exception,
+            int statusCode,
+            string code,
+            string message)
+        {
+            if (ExceptionStatusCodeMapper.IsServerError(statusCode))
+            {
+                _logger.LogError(exception,
+                    "Server error - Code: {Code}, Type: {Type}, Message: {Message}",
+                    code,
+                    exception.GetType().Name,
+                    message);
+                return;
+            }
+
+            if (ExceptionStatusCodeMapper.IsClientError(statusCode))
+            {
+                _logger.LogWarning(exception,
+                    "Client error - Code: {Code}, Type: {Type}, Message: {Message}, User: {UserId}",
+                    code,
+                    exception.GetType().Name,
+                    message,
+                    context.User?.FindFirst("id")?.Value ?? "anonymous");
+            }
         }
 
         private static async Task WriteErrorResponseAsync(

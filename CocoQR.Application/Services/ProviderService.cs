@@ -1,4 +1,5 @@
 ﻿using CocoQR.Application.Common.Mapper;
+using CocoQR.Application.Contracts.ICache;
 using CocoQR.Application.Contracts.IContext;
 using CocoQR.Application.Contracts.IServices;
 using CocoQR.Application.Contracts.ISubServices;
@@ -7,35 +8,67 @@ using CocoQR.Application.DTOs.Providers.Requests;
 using CocoQR.Application.DTOs.Providers.Responses;
 using CocoQR.Domain.Constants;
 using CocoQR.Domain.Constants.Enum;
+using Microsoft.Extensions.Logging;
 using ApplicationException = CocoQR.Application.Exceptions.ApplicationException;
+using DomainException = CocoQR.Domain.Exceptions.DomainException;
 
 namespace CocoQR.Application.Services
 {
     public class ProviderService : IProviderService
     {
+        private static readonly TimeSpan ProvidersCacheExpiry = TimeSpan.FromMinutes(5);
+        private const string ProvidersCacheKey = "providers:system";
         private readonly IUnitOfWork _unitOfWork;
         private readonly IUserContext _userContext;
-        private readonly IIdGenerator _idGenerator;
         private readonly IFileStorageService _fileStorageService;
+        private readonly ICacheService _cacheService;
 
-        public ProviderService(IUnitOfWork unitOfWork, IUserContext userContext, IIdGenerator idGenerator, IFileStorageService fileStorageService)
+        public ProviderService(IUnitOfWork unitOfWork, IUserContext userContext, IFileStorageService fileStorageService, ICacheService cacheService, ILogger<ProviderService> logger)
         {
             _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
             _userContext = userContext;
-            _idGenerator = idGenerator;
             _fileStorageService = fileStorageService;
+            _cacheService = cacheService;
         }
         public async Task<IEnumerable<GetProviderRes>> GetAllAsync()
         {
-            var providers = await _unitOfWork.Providers.GetAllAsync(_userContext.IsAdmin())
-            ?? throw new ApplicationException(ErrorCode.NotFound, $"ProviderCode not found");
+            var isAdmin = _userContext.IsAdmin();
+            if (isAdmin)
+            {
+                var providers = await _unitOfWork.Providers.GetAllAsync(true)
+                    ?? throw new ApplicationException(ErrorCode.NotFound, $"ProviderCode not found");
 
-            return providers.Select(p => ProviderMapper.ToGetProviderRes(p, _fileStorageService)).ToList();
+                return providers
+                    .Select(p => ProviderMapper.ToGetProviderRes(p, _fileStorageService))
+                    .ToList();
+            }
+            else
+            {
+                var cached = await _cacheService.GetAsync<IEnumerable<GetProviderRes>>(ProvidersCacheKey);
+
+                if (cached != null)
+                    return cached;
+
+                var data = await _unitOfWork.Providers.GetAllAsync(false)
+                    ?? throw new ApplicationException(ErrorCode.NotFound, $"ProviderCode not found");
+
+                var result = data
+                    .Select(p => ProviderMapper.ToGetProviderRes(p, _fileStorageService))
+                    .ToList();
+
+                await _cacheService.SetAsync(
+                    ProvidersCacheKey,
+                    result,
+                    ProvidersCacheExpiry
+                );
+
+                return result;
+            }
         }
         public async Task<GetProviderRes> GetByIdAsync(Guid id)
         {
             if (id == Guid.Empty)
-                throw new ApplicationException(ErrorCode.ValidationError, "Invalid userId ID");
+                throw new ArgumentException("Invalid provider ID", nameof(id));
 
             var role = await _unitOfWork.Providers.GetByIdAsync(id)
                 ?? throw new ApplicationException(ErrorCode.NotFound, $"ProviderCode {id} not found");
@@ -44,6 +77,8 @@ namespace CocoQR.Application.Services
         }
         public async Task PutAsync(Guid id, PutProviderReq req)
         {
+            ArgumentNullException.ThrowIfNull(req);
+
             var isAdmin = _userContext.IsAdmin();
 
             if (!isAdmin)
@@ -52,17 +87,17 @@ namespace CocoQR.Application.Services
             }
 
             if (id == Guid.Empty)
-                throw new ApplicationException(ErrorCode.ValidationError, "Invalid provider ID");
+                throw new ArgumentException("Invalid provider ID", nameof(id));
 
             Guid userId = _userContext.UserId
-                ?? throw new ApplicationException(ErrorCode.Unauthorized, "User ID not found in context!");
+                ?? throw new ApplicationException(ErrorCode.Unauthorized, ErrorMessages.UserIDNotFoundInTheContext);
 
             var provider = await _unitOfWork.Providers.GetByIdAsync(id)
                 ?? throw new ApplicationException(ErrorCode.NotFound, $"ProviderCode {id} not found");
 
             if (!Enum.TryParse<ProviderCode>(req.Code, true, out var providerCode))
             {
-                throw new ApplicationException(ErrorCode.ValidationError, "Invalid provider code");
+                throw new ArgumentException("Invalid provider code", nameof(req.Code));
             }
 
             var previousImageUrl = provider.LogoUrl;
@@ -91,9 +126,11 @@ namespace CocoQR.Application.Services
                 provider.SetUpdated(userId);
 
                 if (!provider.IsValidProvider())
-                    throw new ApplicationException(ErrorCode.ValidationError, "Invalid provider");
+                    throw new DomainException(ErrorCode.BusinessRuleViolation, "Invalid provider");
 
                 await _unitOfWork.Providers.UpdateAsync(provider);
+
+                await _cacheService.RemoveAsync(ProvidersCacheKey);
             }
             catch
             {

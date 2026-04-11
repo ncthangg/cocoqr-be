@@ -1,13 +1,13 @@
 ﻿using CocoQR.Application.Common.Mapper;
 using CocoQR.Application.Contracts.IContext;
 using CocoQR.Application.Contracts.IServices;
-using CocoQR.Application.Contracts.ISubServices;
 using CocoQR.Application.Contracts.IUnitOfWork;
 using CocoQR.Application.DTOs.Roles.Requests;
 using CocoQR.Application.DTOs.Roles.Responses;
 using CocoQR.Domain.Constants;
 using CocoQR.Domain.Constants.Enum;
 using ApplicationException = CocoQR.Application.Exceptions.ApplicationException;
+using DomainException = CocoQR.Domain.Exceptions.DomainException;
 
 namespace CocoQR.Application.Services
 {
@@ -38,16 +38,16 @@ namespace CocoQR.Application.Services
             }
 
             if (id == Guid.Empty)
-                throw new ApplicationException(ErrorCode.ValidationError, "Invalid role ID");
+                throw new ArgumentException("Invalid role ID", nameof(id));
 
             Guid userId = _userContext.UserId
-                ?? throw new ApplicationException(ErrorCode.Unauthorized, "User ID not found in context!");
+                ?? throw new ApplicationException(ErrorCode.Unauthorized, ErrorMessages.UserIDNotFoundInTheContext);
 
             var role = await _unitOfWork.Roles.GetByIdAsync(id)
                 ?? throw new ApplicationException(ErrorCode.NotFound, $"Role {id} not found");
 
             if (role.Name.Trim().ToLower() == RoleCategory.ADMIN.ToString().ToLower() && req.Status == false)
-                throw new ApplicationException(ErrorCode.ValidationError, "Admin role cannot be deactivated");
+                throw new DomainException(ErrorCode.BusinessRuleViolation, "Admin role cannot be deactivated");
 
             role.Status = req.Status;
             role.SetUpdated(userId);

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace CocoQR.Application.Contracts.ISubServices
+﻿namespace CocoQR.Application.Contracts.ISubServices
 {
     public interface ICloudStorage
     {

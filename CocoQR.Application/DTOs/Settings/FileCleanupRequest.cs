@@ -1,4 +1,4 @@
-namespace CocoQR.Infrastructure.SubService
+namespace CocoQR.Application.DTOs.Settings
 {
     public sealed class FileCleanupRequest
     {

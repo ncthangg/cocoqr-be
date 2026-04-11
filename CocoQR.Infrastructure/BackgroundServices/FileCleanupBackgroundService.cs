@@ -1,3 +1,5 @@
+using CocoQR.Application.Contracts.ISubServices;
+using CocoQR.Application.DTOs.Settings;
 using CocoQR.Infrastructure.SubService;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
