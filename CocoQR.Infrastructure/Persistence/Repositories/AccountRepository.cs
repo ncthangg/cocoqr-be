@@ -218,5 +218,23 @@ namespace CocoQR.Infrastructure.Persistence.Repositories
                 }
             );
         }
+
+        public async Task<int> CountPinnedByUserAsync(Guid userId, bool useLock = false)
+        {
+            if (userId == Guid.Empty)
+                throw new ArgumentException("Invalid user ID", nameof(userId));
+
+            var lockHint = useLock ? "WITH (UPDLOCK, HOLDLOCK)" : string.Empty;
+            var sql = $@"
+                SELECT COUNT(1)
+                FROM Accounts {lockHint}
+                WHERE UserId = @UserId
+                    AND IsPinned = 1
+                    AND DeletedAt IS NULL
+                    AND Status = 1
+            ";
+
+            return await QuerySingleAsync<int>(sql, new { UserId = userId });
+        }
     }
 }

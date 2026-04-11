@@ -19,6 +19,11 @@
         {
             return !string.IsNullOrWhiteSpace(AccountNumber);
         }
+        public void Pin(bool isPinned, Guid userId)
+        {
+            IsPinned = isPinned;
+            SetUpdated(userId);
+        }
         public void Activate()
         {
             IsActive = true;

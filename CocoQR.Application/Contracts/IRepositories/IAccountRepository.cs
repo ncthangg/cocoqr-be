@@ -16,5 +16,6 @@ namespace CocoQR.Application.Contracts.IRepositories
                                                                          bool? status);
         Task<AccountQueryDto?> GetByIdAsync(Guid id, Guid? userId, bool isAdmin);
         Task<bool> AccountNumberExistsAsync(Guid userId, string accountNumber, Guid providerId, string? bankCode, Guid? excludeAccountId = null);
+        Task<int> CountPinnedByUserAsync(Guid userId, bool useLock = false);
     }
 }

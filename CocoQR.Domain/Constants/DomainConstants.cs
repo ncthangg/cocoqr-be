@@ -96,7 +96,7 @@
         public const string CreateSuccess = "Tạo thành công";
         public const string UpdateSuccess = "Cập nhật thành công";
         public const string DeleteSuccess = "Xóa thành công";
-        public const string DeleteForeverSuccess = "Xóa vĩnh viễn thành công";
+        public const string DeleteForeverSuccess = "Xóa thành công";
         public const string SaveSuccess = "Lưu thành công";
 
         // User operations

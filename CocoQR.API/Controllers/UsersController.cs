@@ -45,11 +45,11 @@ namespace CocoQR.API.Controllers
                 data: result,
                 message: null));
         }
-        [HttpPut("{id}/status")]
+        [HttpPatch("{id}/status")]
         [Authorize]
-        public async Task<IActionResult> PutStatus(Guid id)
+        public async Task<IActionResult> PatchStatus(Guid id)
         {
-            await _userService.PutStatusAsync(id);
+            await _userService.PatchStatusAsync(id);
             return Ok(new BaseResponseModel<string>(
                code: SuccessCode.Success,
                data: null,

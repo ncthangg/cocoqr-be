@@ -15,6 +15,8 @@ namespace CocoQR.Application.Services
 {
     public class AccountService : IAccountService
     {
+        private const int MaxPinnedAccounts = 5;
+
         private readonly IUnitOfWork _unitOfWork;
         private readonly IUserContext _userContext;
         private readonly IIdGenerator _idGenerator;
@@ -200,7 +202,6 @@ namespace CocoQR.Application.Services
             account.AccountHolder = request.AccountHolder?.Trim();
             account.BankCode = request.BankCode?.Trim();
             account.ProviderId = request.ProviderId;
-            account.IsPinned = request.IsPinned;
             account.IsActive = request.IsActive;
             account.SetUpdated(userId);
 
@@ -209,8 +210,47 @@ namespace CocoQR.Application.Services
 
             await _unitOfWork.Accounts.UpdateAsync(account);
         }
+        public async Task PinAccountAsync(Guid id, bool isPinned)
+        {
+            Guid userId = _userContext.UserId
+                ?? throw new ApplicationException(ErrorCode.Unauthorized, ErrorMessages.UserIDNotFoundInTheContext);
 
-        public async Task PutStatusAsync(Guid id)
+            if (id == Guid.Empty)
+                throw new ArgumentException("Invalid account ID", nameof(id));
+
+            await _unitOfWork.BeginTransactionAsync();
+
+            try
+            {
+                var account = await _unitOfWork.Accounts.GetByIdAsync(id)
+                    ?? throw new ApplicationException(ErrorCode.NotFound, $"Account {id} not found");
+
+                if (account.UserId != userId)
+                    throw new ApplicationException(ErrorCode.Unauthorized, "Không thuộc quyền sở hữu của user");
+
+                if (isPinned && !account.IsPinned)
+                {
+                    var pinnedCount = await _unitOfWork.Accounts.CountPinnedByUserAsync(userId, useLock: true);
+                    if (pinnedCount >= MaxPinnedAccounts)
+                        throw new DomainException(ErrorCode.BusinessRuleViolation, $"Mỗi user chỉ được ghim tối đa {MaxPinnedAccounts} tài khoản.");
+                }
+
+                account.Pin(isPinned, userId);
+
+                if (!account.IsValidAccount())
+                    throw new DomainException(ErrorCode.BusinessRuleViolation, "Invalid account");
+
+                await _unitOfWork.Accounts.UpdateAsync(account);
+                await _unitOfWork.CommitAsync();
+            }
+            catch
+            {
+                await _unitOfWork.RollbackAsync();
+                throw;
+            }
+        }
+
+        public async Task PatchStatusAsync(Guid id)
         {
             if (_userContext.IsAdmin())
             {

@@ -1,6 +1,7 @@
 ﻿using CocoQR.Application.DTOs.Accounts.Requests;
 using CocoQR.Application.DTOs.Accounts.Responses;
 using CocoQR.Application.DTOs.Base.BaseRes;
+using System.Runtime.CompilerServices;
 
 namespace CocoQR.Application.Contracts.IServices
 {
@@ -17,7 +18,10 @@ namespace CocoQR.Application.Contracts.IServices
         Task<GetAccountRes> GetByIdAsync(Guid id);
         Task<Guid> PostAccountAsync(PostAccountReq request);
         Task PutAccountAsync(Guid id, PutAccountReq request);
-        Task PutStatusAsync(Guid id);
+
+        Task PinAccountAsync(Guid id, bool isPinned);
+        Task PatchStatusAsync(Guid id);
+
         Task DeleteAccountAsync(Guid id);
     }
 }

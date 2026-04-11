@@ -53,7 +53,7 @@ namespace CocoQR.Application.Services
             return UserMapper.ToGetUsersRes(user);
         }
 
-        public async Task PutStatusAsync(Guid id)
+        public async Task PatchStatusAsync(Guid id)
         {
             if (_userContext.IsAdmin())
             {
