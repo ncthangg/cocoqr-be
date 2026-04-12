@@ -50,7 +50,9 @@ namespace CocoQR.Infrastructure.BackgroundServices.LogUploadJob
                 {
                     if (DateTime.UtcNow >= nextScanAt)
                     {
+                        _logger.LogInformation("[LogFlow:Scan] Start scanning logs at {UtcNow}", DateTime.UtcNow);
                         await ScanLogsAndEnqueue(stoppingToken);
+                        _logger.LogInformation("[LogFlow:Scan] Finish scanning logs at {UtcNow}", DateTime.UtcNow);
                         nextScanAt = DateTime.UtcNow.Add(ScanInterval);
                     }
 
@@ -58,6 +60,7 @@ namespace CocoQR.Infrastructure.BackgroundServices.LogUploadJob
 
                     if (job != null)
                     {
+                        _logger.LogInformation("[LogFlow:Dequeue] Received job for file {FilePath}", job.FilePath);
                         await ProcessUploadJobAsync(job, stoppingToken);
                     }
                     else
@@ -76,6 +79,13 @@ namespace CocoQR.Infrastructure.BackgroundServices.LogUploadJob
         {
             if (string.IsNullOrWhiteSpace(job.FilePath))
             {
+                _logger.LogWarning("[LogFlow:Worker] Job has empty file path, skipped");
+                return;
+            }
+
+            if (cancellationToken.IsCancellationRequested)
+            {
+                _logger.LogInformation("[LogFlow:Worker] Cancellation requested, stop processing file {FilePath}", job.FilePath);
                 return;
             }
 
@@ -85,18 +95,33 @@ namespace CocoQR.Infrastructure.BackgroundServices.LogUploadJob
             {
                 if (!File.Exists(job.FilePath))
                 {
+                    _logger.LogWarning("[LogFlow:Worker] File not found, remove queue marker: {FilePath}", job.FilePath);
                     await _cacheService.RemoveAsync(cacheKey);
                     return;
                 }
 
-                if (cancellationToken.IsCancellationRequested)
+                try
+                {
+                    _logger.LogInformation("[LogFlow:Upload] Start upload file {FilePath}", job.FilePath);
+                    await _fileStorageService.UploadLogFileToCloudAsync(job.FilePath);
+                    _logger.LogInformation("[LogFlow:Upload] Upload success for file {FilePath}", job.FilePath);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to upload log file: {File}", job.FilePath);
+                    _logger.LogWarning("[LogFlow:Retry] Re-enqueue file {FilePath}", job.FilePath);
+
+                    await _queueService.EnqueueAsync(LogUploadQueue, job);
+
                     return;
+                }
 
-                await _fileStorageService.UploadLogFileToCloudAsync(job.FilePath);
-
+                _logger.LogInformation("[LogFlow:Delete] Deleting local file {FilePath}", job.FilePath);
                 File.Delete(job.FilePath);
+                _logger.LogInformation("[LogFlow:Delete] Deleted local file {FilePath}", job.FilePath);
 
                 await _cacheService.RemoveAsync(cacheKey);
+                _logger.LogDebug("[LogFlow:Marker] Removed queued marker {CacheKey}", cacheKey);
 
                 _logger.LogInformation("Uploaded and deleted log file: {File}", job.FilePath);
             }
@@ -117,6 +142,9 @@ namespace CocoQR.Infrastructure.BackgroundServices.LogUploadJob
             }
 
             var thresholdDate = DateTime.UtcNow.Date;
+            var totalFound = 0;
+            var totalEnqueued = 0;
+            var totalSkippedQueued = 0;
 
             foreach (var levelFolder in LogLevelFolders)
             {
@@ -130,13 +158,19 @@ namespace CocoQR.Infrastructure.BackgroundServices.LogUploadJob
 
                 foreach (var file in files)
                 {
+                    totalFound++;
+
                     if (cancellationToken.IsCancellationRequested)
                         return;
 
                     var cacheKey = GetEnqueuedCacheKey(file);
                     var alreadyQueued = await _cacheService.GetAsync<bool>(cacheKey);
                     if (alreadyQueued)
+                    {
+                        totalSkippedQueued++;
+                        _logger.LogDebug("[LogFlow:Enqueue] Skip already queued file {FilePath}", file);
                         continue;
+                    }
 
                     await _queueService.EnqueueAsync(
                         LogUploadQueue,
@@ -146,8 +180,17 @@ namespace CocoQR.Infrastructure.BackgroundServices.LogUploadJob
                         });
 
                     await _cacheService.SetAsync(cacheKey, true, EnqueuedCacheTtl);
+                    totalEnqueued++;
+                    _logger.LogInformation("[LogFlow:Enqueue] Enqueued file {FilePath} with marker {CacheKey}", file, cacheKey);
                 }
             }
+
+            _logger.LogInformation(
+                "[LogFlow:ScanSummary] Found={Found}, Enqueued={Enqueued}, SkippedQueued={Skipped}, ThresholdDate={ThresholdDate}",
+                totalFound,
+                totalEnqueued,
+                totalSkippedQueued,
+                thresholdDate);
         }
         private string GetLogFolder()
         {
