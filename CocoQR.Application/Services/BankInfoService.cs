@@ -1,6 +1,7 @@
 ﻿using CocoQR.Application.Common.Mapper;
 using CocoQR.Application.Contracts.ICache;
 using CocoQR.Application.Contracts.IContext;
+using CocoQR.Application.Contracts.IQueue;
 using CocoQR.Application.Contracts.IServices;
 using CocoQR.Application.Contracts.ISubServices;
 using CocoQR.Application.Contracts.IUnitOfWork;
@@ -9,6 +10,7 @@ using CocoQR.Application.DTOs.Banks.Responses;
 using CocoQR.Application.DTOs.Base.BaseRes;
 using CocoQR.Application.DTOs.Providers.Responses;
 using CocoQR.Domain.Constants;
+using CocoQR.Domain.Entities;
 using Microsoft.Extensions.Logging;
 using ApplicationException = CocoQR.Application.Exceptions.ApplicationException;
 
@@ -22,13 +24,15 @@ namespace CocoQR.Application.Services
         private readonly IUserContext _userContext;
         private readonly IFileStorageService _fileStorageService;
         private readonly ICacheService _cacheService;
+        private readonly IBackgroundJobProducer _backgroundJobProducer;
 
-        public BankInfoService(IUnitOfWork unitOfWork, IUserContext userContext, IIdGenerator idGenerator, IFileStorageService fileStorageService, ICacheService cacheService)
+        public BankInfoService(IUnitOfWork unitOfWork, IUserContext userContext, IFileStorageService fileStorageService, ICacheService cacheService, IBackgroundJobProducer backgroundJobProducer, ILogger<BankInfoService> logger)
         {
             _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
             _userContext = userContext;
             _fileStorageService = fileStorageService;
             _cacheService = cacheService;
+            _backgroundJobProducer = backgroundJobProducer;
         }
 
         public async Task<PagingVM<GetBankInfoRes>> GetsAsync(int pageNumber, int pageSize, string? sortField, string? sortDirection, bool? isActive, string? searchValue)
@@ -190,7 +194,7 @@ namespace CocoQR.Application.Services
 
             if (shouldDeletePreviousAfterDbSuccess && !string.IsNullOrWhiteSpace(previousImageUrl))
             {
-                await _fileStorageService.DeleteFileAsync(previousImageUrl);
+                await _backgroundJobProducer.EnqueueUploadAssetAsync(oldItem.Id, imageUrl, previousImageUrl);
             }
         }
     }

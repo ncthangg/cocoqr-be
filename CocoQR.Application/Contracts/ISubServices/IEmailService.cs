@@ -12,5 +12,13 @@ namespace CocoQR.Application.Contracts.ISubServices
             SmtpSetting smtpSetting,
             EmailDirection direction = EmailDirection.OUTGOING,
             string? templateKey = null);
+
+        Task SendWithoutLogAsync(
+            string to,
+            string subject,
+            string body,
+            SmtpSetting smtpSetting,
+            EmailDirection direction = EmailDirection.OUTGOING,
+            string? templateKey = null);
     }
 }

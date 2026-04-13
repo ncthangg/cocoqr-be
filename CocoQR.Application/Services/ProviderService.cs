@@ -1,6 +1,7 @@
 ﻿using CocoQR.Application.Common.Mapper;
 using CocoQR.Application.Contracts.ICache;
 using CocoQR.Application.Contracts.IContext;
+using CocoQR.Application.Contracts.IQueue;
 using CocoQR.Application.Contracts.IServices;
 using CocoQR.Application.Contracts.ISubServices;
 using CocoQR.Application.Contracts.IUnitOfWork;
@@ -22,13 +23,15 @@ namespace CocoQR.Application.Services
         private readonly IUserContext _userContext;
         private readonly IFileStorageService _fileStorageService;
         private readonly ICacheService _cacheService;
+        private readonly IBackgroundJobProducer _backgroundJobProducer;
 
-        public ProviderService(IUnitOfWork unitOfWork, IUserContext userContext, IFileStorageService fileStorageService, ICacheService cacheService, ILogger<ProviderService> logger)
+        public ProviderService(IUnitOfWork unitOfWork, IUserContext userContext, IFileStorageService fileStorageService, ICacheService cacheService, IBackgroundJobProducer backgroundJobProducer, ILogger<ProviderService> logger)
         {
             _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
             _userContext = userContext;
             _fileStorageService = fileStorageService;
             _cacheService = cacheService;
+            _backgroundJobProducer = backgroundJobProducer;
         }
         public async Task<IEnumerable<GetProviderRes>> GetAllAsync()
         {
@@ -144,7 +147,7 @@ namespace CocoQR.Application.Services
 
             if (shouldDeletePreviousAfterDbSuccess && !string.IsNullOrWhiteSpace(previousImageUrl))
             {
-                await _fileStorageService.DeleteFileAsync(previousImageUrl);
+                await _backgroundJobProducer.EnqueueUploadAssetAsync(provider.Id, imageUrl, previousImageUrl);
             }
         }
     }

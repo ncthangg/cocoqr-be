@@ -1,4 +1,5 @@
 using CocoQR.Application.Contracts.IContext;
+using CocoQR.Application.Contracts.IQueue;
 using CocoQR.Application.Contracts.IServices;
 using CocoQR.Application.Contracts.ISubServices;
 using CocoQR.Application.Contracts.IUnitOfWork;
@@ -22,6 +23,7 @@ namespace CocoQR.Application.Services
         private readonly IUnitOfWork _unitOfWork;
         private readonly IUserContext _userContext;
         private readonly IIdGenerator _idGenerator;
+        private readonly IBackgroundJobProducer _backgroundJobProducer;
         private readonly IEmailService _emailService;
         private readonly IEmailTemplateService _emailTemplateService;
         private readonly ILogger<ContactService> _logger;
@@ -30,6 +32,7 @@ namespace CocoQR.Application.Services
             IUnitOfWork unitOfWork,
             IUserContext userContext,
             IIdGenerator idGenerator,
+            IBackgroundJobProducer backgroundJobProducer,
             IEmailService emailService,
             IEmailTemplateService emailTemplateService,
             ILogger<ContactService> logger)
@@ -37,6 +40,7 @@ namespace CocoQR.Application.Services
             _unitOfWork = unitOfWork;
             _userContext = userContext;
             _idGenerator = idGenerator;
+            _backgroundJobProducer = backgroundJobProducer;
             _emailService = emailService;
             _emailTemplateService = emailTemplateService;
             _logger = logger;
@@ -63,52 +67,9 @@ namespace CocoQR.Application.Services
 
             try
             {
-                var adminSmtpType = EmailTemplateSmtpResolver.Resolve(EmailTemplateKeys.AdminNotify);
-                var adminSmtpSetting = await _unitOfWork.SmtpSettings.GetActiveAsync(adminSmtpType);
-                if (adminSmtpSetting == null)
-                {
-                    await SaveFailedEmailLogAsync(
-                        smtpType: adminSmtpType,
-                        toEmail: "admin-contact@system.local",
-                        subject: "Liên hệ mới từ người dùng",
-                        body: request.Content.Trim(),
-                        direction: EmailDirection.INCOMING,
-                        templateKey: EmailTemplateKeys.AdminNotify,
-                        errorMessage: $"Không tìm thấy SMTP active cho {adminSmtpType}.");
-
-                    _logger.LogWarning("No active SMTP setting found for template {TemplateKey} resolved type {SmtpType}.",
-                        EmailTemplateKeys.AdminNotify,
-                        adminSmtpType);
-                }
-
-                var adminMail = await ResolveTemplateOrDefaultAsync(
-                    EmailTemplateKeys.AdminNotify,
-                    request,
-                    "Liên hệ mới từ người dùng",
-                    $"<p><strong>Người gửi:</strong> {WebUtility.HtmlEncode(request.FullName.Trim())} ({WebUtility.HtmlEncode(request.Email.Trim())})</p><p><strong>Nội dung:</strong></p><p>{WebUtility.HtmlEncode(request.Content.Trim()).Replace("\r\n", "<br/>").Replace("\n", "<br/>")}</p>");
-
-                if (adminSmtpSetting != null)
-                {
-                    await _emailService.SendAsync(
-                        adminSmtpSetting.FromEmail,
-                        adminMail.Subject,
-                        adminMail.Body,
-                        adminSmtpSetting,
-                        EmailDirection.INCOMING,
-                        EmailTemplateKeys.AdminNotify);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex,
-                    "Failed to send contact notification to admin for contact message {ContactMessageId}.",
-                    message.Id);
-            }
-
-            try
-            {
                 var thankYouSmtpType = EmailTemplateSmtpResolver.Resolve(EmailTemplateKeys.ContactThankYou);
                 var thankYouSmtpSetting = await _unitOfWork.SmtpSettings.GetActiveAsync(thankYouSmtpType);
+
                 if (thankYouSmtpSetting == null)
                 {
                     await SaveFailedEmailLogAsync(
@@ -133,19 +94,82 @@ namespace CocoQR.Application.Services
 
                 if (thankYouSmtpSetting != null)
                 {
-                    await _emailService.SendAsync(
+                    var thankYouLogId = await CreatePendingEmailLogAsync(
+                        request.Email.Trim(),
+                        thankYouMail.Subject,
+                        thankYouMail.Body,
+                        thankYouSmtpSetting.Type,
+                        EmailDirection.OUTGOING,
+                        EmailTemplateKeys.ContactThankYou);
+
+                    await QueueEmailWithFallbackAsync(
                         request.Email.Trim(),
                         thankYouMail.Subject,
                         thankYouMail.Body,
                         thankYouSmtpSetting,
                         EmailDirection.OUTGOING,
-                        EmailTemplateKeys.ContactThankYou);
+                        EmailTemplateKeys.ContactThankYou,
+                        thankYouLogId);
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogWarning(ex,
                     "Failed to send thank-you email to user for contact message {ContactMessageId}.",
+                    message.Id);
+            }
+
+            try
+            {
+                var adminSmtpType = EmailTemplateSmtpResolver.Resolve(EmailTemplateKeys.AdminNotify);
+                var adminSmtpSetting = await _unitOfWork.SmtpSettings.GetActiveAsync(adminSmtpType);
+
+                if (adminSmtpSetting == null)
+                {
+                    await SaveFailedEmailLogAsync(
+                        smtpType: adminSmtpType,
+                        toEmail: "admin-contact@system.local",
+                        subject: "Liên hệ mới từ người dùng",
+                        body: request.Content.Trim(),
+                        direction: EmailDirection.INCOMING,
+                        templateKey: EmailTemplateKeys.AdminNotify,
+                        errorMessage: $"Không tìm thấy SMTP active cho {adminSmtpType}.");
+
+                    _logger.LogWarning("No active SMTP setting found for template {TemplateKey} resolved type {SmtpType}.",
+                        EmailTemplateKeys.AdminNotify,
+                        adminSmtpType);
+                }
+
+                var adminMail = await ResolveTemplateOrDefaultAsync(
+                    EmailTemplateKeys.AdminNotify,
+                    request,
+                    "Liên hệ mới từ người dùng",
+                    $"<p><strong>Người gửi:</strong> {WebUtility.HtmlEncode(request.FullName.Trim())} ({WebUtility.HtmlEncode(request.Email.Trim())})</p><p><strong>Nội dung:</strong></p><p>{WebUtility.HtmlEncode(request.Content.Trim()).Replace("\r\n", "<br/>").Replace("\n", "<br/>")}</p>");
+
+                if (adminSmtpSetting != null)
+                {
+                    var adminLogId = await CreatePendingEmailLogAsync(
+                        adminSmtpSetting.FromEmail,
+                        adminMail.Subject,
+                        adminMail.Body,
+                        adminSmtpSetting.Type,
+                        EmailDirection.INCOMING,
+                        EmailTemplateKeys.AdminNotify);
+
+                    await QueueEmailWithFallbackAsync(
+                        adminSmtpSetting.FromEmail,
+                        adminMail.Subject,
+                        adminMail.Body,
+                        adminSmtpSetting,
+                        EmailDirection.INCOMING,
+                        EmailTemplateKeys.AdminNotify,
+                        adminLogId);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex,
+                    "Failed to send contact notification to admin for contact message {ContactMessageId}.",
                     message.Id);
             }
         }
@@ -224,24 +248,29 @@ namespace CocoQR.Application.Services
             EnsureAdmin();
             ValidateAdminRequest(request);
 
-            var selectedSmtpType = EmailTemplateSmtpResolver.Resolve(request.TemplateKey);
-            var smtpSetting = await _unitOfWork.SmtpSettings.GetActiveAsync(selectedSmtpType)
-                ?? throw new ApplicationException(
-                    ErrorCode.NotFound,
-                    string.Format(ErrorMessages.SmtpSettingByTypeNotFound, selectedSmtpType));
+            var smtpSetting = await GetActiveSmtpOrThrowAsync(request.TemplateKey, request.SmtpType);
 
             var subject = request.Subject.Trim();
             var body = string.IsNullOrWhiteSpace(request.HtmlBody)
                 ? request.Content.Trim()
                 : request.HtmlBody;
 
-            await _emailService.SendAsync(
+            var emailLogId = await CreatePendingEmailLogAsync(
+                request.Email.Trim(),
+                subject,
+                body,
+                smtpSetting.Type,
+                EmailDirection.OUTGOING,
+                request.TemplateKey);
+
+            await QueueEmailWithFallbackAsync(
                 request.Email.Trim(),
                 subject,
                 body,
                 smtpSetting,
                 EmailDirection.OUTGOING,
-                request.TemplateKey);
+                request.TemplateKey,
+                emailLogId);
 
             if (request.ContactMessageId.HasValue && request.ContactMessageId.Value != Guid.Empty)
             {
@@ -371,10 +400,6 @@ namespace CocoQR.Application.Services
                 throw new ArgumentException("Content là bắt buộc.", nameof(request.Content));
             }
 
-            if (string.IsNullOrWhiteSpace(request.TemplateKey))
-            {
-                throw new ArgumentException("Template key là bắt buộc.", nameof(request.TemplateKey));
-            }
         }
 
         private static bool IsValidEmail(string email)
@@ -412,6 +437,119 @@ namespace CocoQR.Application.Services
                 TemplateKey = templateKey,
                 CreatedAt = DateTime.UtcNow
             });
+        }
+
+        private async Task<SmtpSetting> GetActiveSmtpOrThrowAsync(string? templateKey, SmtpSettingType? smtpType = null)
+        {
+            var resolvedSmtpType = smtpType
+                ?? (!string.IsNullOrWhiteSpace(templateKey)
+                    ? EmailTemplateSmtpResolver.Resolve(templateKey)
+                    : SmtpSettingType.System);
+
+            var smtpSetting = await _unitOfWork.SmtpSettings.GetActiveAsync(resolvedSmtpType);
+
+            if (smtpSetting != null)
+                return smtpSetting;
+
+            _logger.LogError(
+                "Missing active SMTP setting. TemplateKey={TemplateKey}, RequestedSmtpType={RequestedSmtpType}, ResolvedSmtpType={ResolvedSmtpType}",
+                templateKey,
+                smtpType,
+                resolvedSmtpType);
+
+            throw new ApplicationException(
+                ErrorCode.NotFound,
+                string.Format(ErrorMessages.SmtpSettingByTypeNotFound, resolvedSmtpType));
+        }
+
+        private async Task QueueEmailWithFallbackAsync(
+            string to,
+            string subject,
+            string body,
+            SmtpSetting smtpSetting,
+            EmailDirection direction,
+            string? templateKey,
+            Guid? emailLogId)
+        {
+            try
+            {
+                await _backgroundJobProducer.EnqueueSendEmailAsync(
+                    to,
+                    subject,
+                    body,
+                    direction,
+                    templateKey,
+                    smtpSetting.Type,
+                    emailLogId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex,
+                    "Queue unavailable, fallback to direct email sending. To={To}, TemplateKey={TemplateKey}",
+                    to,
+                    templateKey);
+
+                try
+                {
+                    await _emailService.SendAsync(
+                        to,
+                        subject,
+                        body,
+                        smtpSetting,
+                        direction,
+                        templateKey);
+
+                    await UpdateEmailLogStatusAsync(emailLogId, EmailLogStatus.SUCCESS, null);
+                }
+                catch (Exception fallbackEx)
+                {
+                    await UpdateEmailLogStatusAsync(emailLogId, EmailLogStatus.FAIL, fallbackEx.GetBaseException().Message);
+                    throw;
+                }
+            }
+        }
+
+        private async Task<Guid> CreatePendingEmailLogAsync(
+            string toEmail,
+            string subject,
+            string body,
+            SmtpSettingType smtpType,
+            EmailDirection direction,
+            string? templateKey)
+        {
+            var emailLog = new EmailLog
+            {
+                Id = _idGenerator.NewId(),
+                ToEmail = toEmail,
+                Subject = subject,
+                Body = body,
+                Status = EmailLogStatus.PENDING,
+                ErrorMessage = null,
+                SmtpType = smtpType,
+                EmailDirection = direction,
+                TemplateKey = templateKey,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await _unitOfWork.EmailLogs.AddAsync(emailLog);
+            return emailLog.Id;
+        }
+
+        private async Task UpdateEmailLogStatusAsync(Guid? emailLogId, EmailLogStatus status, string? errorMessage)
+        {
+            if (!emailLogId.HasValue)
+                return;
+
+            var emailLog = await _unitOfWork.EmailLogs.GetByIdAsync(emailLogId.Value);
+            if (emailLog == null)
+                return;
+
+            emailLog.Status = status;
+            emailLog.ErrorMessage = string.IsNullOrWhiteSpace(errorMessage)
+                ? null
+                : (errorMessage.Length <= 2000 ? errorMessage : errorMessage[..2000]);
+
+            await _unitOfWork.EmailLogs.UpdateAsync(emailLog);
         }
 
     }
