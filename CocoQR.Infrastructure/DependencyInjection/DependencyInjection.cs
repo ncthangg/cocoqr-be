@@ -160,6 +160,7 @@ namespace CocoQR.Infrastructure.DependencyInjection
 
                     var options = ConfigurationOptions.Parse(connectionString);
 
+                    options.Password = configuration.GetValue<string>(RedisConfig.Password);
                     options.AbortOnConnectFail = configuration.GetValue<bool>(RedisConfig.AbortOnConnectFail);
                     options.ConnectRetry = configuration.GetValue<int>(RedisConfig.ConnectRetry);
                     options.ConnectTimeout = configuration.GetValue<int>(RedisConfig.ConnectTimeoutMs);

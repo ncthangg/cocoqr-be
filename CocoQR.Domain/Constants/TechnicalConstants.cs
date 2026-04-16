@@ -34,6 +34,7 @@
         public const int LongCacheExpiryMinutes = 1440;
 
         // --- Thêm các hằng số cấu hình kết nối ---
+        public const string Password = "Redis:Password";
         public const string AbortOnConnectFail = "Redis:AbortOnConnectFail";
         public const string ConnectRetry = "Redis:ConnectRetry";
         public const string ConnectTimeoutMs = "Redis:ConnectTimeoutMs";
