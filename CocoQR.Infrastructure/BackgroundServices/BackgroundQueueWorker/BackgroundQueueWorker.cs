@@ -106,11 +106,16 @@ namespace CocoQR.Infrastructure.BackgroundServices.BackgroundQueueWorker
                 return;
 
             var idempotencyKey = $"{GetDoneKeyPrefix(job.JobType)}:{job.JobId}";
-            var done = await _cacheService.GetAsync<bool>(idempotencyKey);
-            if (done)
+            var shouldCheckIdempotency = ShouldCheckIdempotency(job);
+
+            if (shouldCheckIdempotency)
             {
-                _logger.LogDebug("Skipped already processed job {JobId} ({JobType})", job.JobId, job.JobType);
-                return;
+                var done = await _cacheService.GetAsync<bool>(idempotencyKey);
+                if (done)
+                {
+                    _logger.LogDebug("Skipped already processed job {JobId} ({JobType})", job.JobId, job.JobType);
+                    return;
+                }
             }
 
             try
@@ -122,7 +127,10 @@ namespace CocoQR.Infrastructure.BackgroundServices.BackgroundQueueWorker
 
                 await execute(handler, job, cancellationToken);
 
-                await _cacheService.SetAsync(idempotencyKey, true, TimeSpan.FromDays(1));
+                if (shouldCheckIdempotency)
+                {
+                    await _cacheService.SetAsync(idempotencyKey, true, TimeSpan.FromDays(1));
+                }
                 _logger.LogInformation("Background job {JobId} ({JobType}) completed", job.JobId, job.JobType);
             }
             catch (Exception ex)
@@ -172,6 +180,11 @@ namespace CocoQR.Infrastructure.BackgroundServices.BackgroundQueueWorker
                 BackgroundJobTypes.Cleanup => "bg:done:cleanup",
                 _ => "bg:done:other"
             };
+        }
+
+        private static bool ShouldCheckIdempotency(BackgroundJob job)
+        {
+            return job.JobType != BackgroundJobTypes.SendEmail;
         }
 
         private async Task TryMarkEmailLogFailedAsync<TJob>(TJob job, string errorMessage)

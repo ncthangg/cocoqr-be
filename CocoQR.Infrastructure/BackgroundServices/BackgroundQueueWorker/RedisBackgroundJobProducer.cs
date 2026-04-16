@@ -60,7 +60,8 @@ namespace CocoQR.Infrastructure.BackgroundServices.BackgroundQueueWorker
                 Direction = direction,
                 TemplateKey = templateKey,
                 SmtpType = smtpType,
-                EmailLogId = emailLogId
+                EmailLogId = emailLogId,
+                IsPrepared = false,
             });
         }
     }
