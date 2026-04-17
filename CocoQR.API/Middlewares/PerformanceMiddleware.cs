@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Security.Claims;
 
 namespace CocoQR.API.Middlewares
 {

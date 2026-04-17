@@ -30,7 +30,7 @@ namespace CocoQR.Infrastructure.Security
             _userContext = userContext;
         }
 
-        public async Task<TokenRes> GenerateTokens(Guid userId, IEnumerable<Role> roles, DateTime? expiredTime)
+        public async Task<TokenRes> GenerateTokens(Guid userId, IEnumerable<Role> roles, DateTime? expiredTime, int? accessTokenLifetimeMinutes = null)
         {
             var now = DateTime.UtcNow;
 
@@ -56,7 +56,7 @@ namespace CocoQR.Infrastructure.Security
                 audience: _tokenConfig.Audience,
                 claims: claims,
                 notBefore: now,
-                expires: now.AddMinutes(_tokenConfig.AccessTokenExpirationMinutes),
+                expires: now.AddMinutes(accessTokenLifetimeMinutes ?? _tokenConfig.AccessTokenExpirationMinutes),
                 signingCredentials: creds
             );
 
@@ -94,7 +94,7 @@ namespace CocoQR.Infrastructure.Security
             }
 
             var userToken = await _unitOfWork.UserTokens.GetByIdAsync(userId);
-            TokenRes tokensVM = await GenerateTokens(userId, roles, expiredTime);
+            TokenRes tokensVM = await GenerateTokens(userId, roles, expiredTime, null);
             if (userToken != null)
             {
                 userToken.RefreshToken = tokensVM.RefreshToken;

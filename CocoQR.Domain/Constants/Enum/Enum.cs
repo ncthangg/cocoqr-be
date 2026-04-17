@@ -59,6 +59,7 @@
 
     public enum EmailLogStatus
     {
+        PENDING,
         SUCCESS,
         FAIL
     }

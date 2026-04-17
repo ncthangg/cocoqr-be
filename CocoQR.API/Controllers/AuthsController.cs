@@ -114,7 +114,7 @@ namespace CocoQR.API.Controllers
         }
 
         [HttpPost("switch-role")]
-        [AllowAnonymous]
+        [Authorize]
         public async Task<IActionResult> SwitchRole([FromBody] SwitchRoleReq request)
         {
             var result = await _authService.SwitchRoleAsync(request);

@@ -9,7 +9,7 @@ namespace CocoQR.Application.DTOs.Contacts.Requests
         public string Email { get; set; } = string.Empty;
         public string Subject { get; set; } = string.Empty;
         public string Content { get; set; } = string.Empty;
-        public string TemplateKey { get; set; } = string.Empty;
+        public string? TemplateKey { get; set; }
         public string? HtmlBody { get; set; }
         public SmtpSettingType? SmtpType { get; set; }
     }

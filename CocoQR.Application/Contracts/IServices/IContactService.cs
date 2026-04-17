@@ -23,5 +23,6 @@ namespace CocoQR.Application.Contracts.IServices
         Task ContactToSystemAsync(ContactRequest request);
         Task ContactFromSystemAsync(AdminContactRequest request);
         Task IgnoreContactMessageAsync(Guid contactMessageId);
+        Task UpdateEmailLogStatusAsync(Guid emailLogId, EmailLogStatus status, string? errorMessage);
     }
 }

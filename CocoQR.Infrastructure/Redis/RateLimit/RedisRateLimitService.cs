@@ -1,4 +1,7 @@
-﻿using CocoQR.Application.Contracts.IRateLimit;
+﻿using Amazon.Runtime.Internal.Util;
+using CocoQR.Application.Contracts.IRateLimit;
+using CocoQR.Domain.Constants;
+using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
@@ -10,23 +13,37 @@ namespace CocoQR.Infrastructure.Redis.RateLimit
 {
     public class RedisRateLimitService : IRateLimitService
     {
-        private readonly IDatabase _db;
+        private readonly IConnectionMultiplexer _redis;
+        private readonly ILogger<RedisRateLimitService> _logger; 
 
-        public RedisRateLimitService(IConnectionMultiplexer redis)
+        public RedisRateLimitService(IConnectionMultiplexer redis, ILogger<RedisRateLimitService> logger)
         {
-            _db = redis.GetDatabase();
+            _redis = redis;
+            _logger = logger;
         }
 
         public async Task<bool> IsAllowedAsync(string key, int limit, TimeSpan window)
         {
-            var count = await _db.StringIncrementAsync(key);
-
-            if (count == 1)
+            try
             {
-                await _db.KeyExpireAsync(key, window);
-            }
+                if (!_redis.IsConnected)
+                {
+                    _logger.LogWarning("Redis not connected, bypass cache");
+                    return true;
+                }
+                var db = _redis.GetDatabase();
 
-            return count <= limit;
+                var count = await db.StringIncrementAsync(key);
+                if (count == 1)
+                    await db.KeyExpireAsync(key, window);
+
+                return count <= limit;
+            }
+            catch (RedisConnectionException ex)
+            {
+                _logger.LogWarning(ex, "Redis unavailable, bypass rate limit");
+                return true;
+            }
         }
     }
 }

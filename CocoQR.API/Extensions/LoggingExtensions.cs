@@ -11,45 +11,39 @@ namespace CocoQR.API.Extensions
         {
             var env = builder.Environment;
 
+            var loggerConfig = new LoggerConfiguration()
+                .ReadFrom.Configuration(builder.Configuration)
+                .Enrich.FromLogContext()
+                .Enrich.WithMachineName()
+                .Enrich.WithProcessId()
+                .Enrich.WithProcessName()
+                .Enrich.WithThreadId()
+                .Enrich.WithEnvironmentName();
+
+            var outputTemplate = "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} {Level:u3}] " +
+                                 "[{SourceContext}] " + 
+                                 "[MachineName:{MachineName}] " +
+                                 "[ThreadId:{ThreadId}] " +
+                                 "[EnvironmentName:{EnvironmentName}] " +
+                                 "{Message:lj} " +
+                                 "{NewLine}{Exception}";
+
+            Console.OutputEncoding = Encoding.UTF8;
+
             if (env.IsDevelopment())
             {
-                builder.Logging.ClearProviders();
-                builder.Logging.AddSimpleConsole(options =>
-                {
-                    options.TimestampFormat = "HH:mm:ss ";
-                    options.SingleLine = true;
-                });
-
-                Console.OutputEncoding = Encoding.UTF8;
-                return builder;
+                loggerConfig.WriteTo.Console(outputTemplate: outputTemplate);
             }
-
-            var logFolder = ResolveLogFolder();
-            Directory.CreateDirectory(Path.Combine(logFolder, Folders.Info));
-            Directory.CreateDirectory(Path.Combine(logFolder, Folders.Warning));
-            Directory.CreateDirectory(Path.Combine(logFolder, Folders.Error));
-
-            var loggerConfig = new LoggerConfiguration()
-                .Enrich.FromLogContext()
-                .WriteTo.Console();
-
-            if (env.IsStaging())
+            else
             {
-                loggerConfig
-                    .MinimumLevel.Information()
-                    .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
-                    .MinimumLevel.Override("Microsoft.Hosting.Lifetime", LogEventLevel.Information);
-            }
-            else if (env.IsProduction())
-            {
-                loggerConfig
-                    .MinimumLevel.Warning()
-                    .MinimumLevel.Override("Microsoft", LogEventLevel.Error)
-                    .MinimumLevel.Override("Microsoft.Hosting.Lifetime", LogEventLevel.Information);
-            }
+                var logFolder = ResolveLogFolder();
 
-            if (env.IsStaging() || env.IsProduction())
-            {
+                Directory.CreateDirectory(Path.Combine(logFolder, Folders.Info));
+                Directory.CreateDirectory(Path.Combine(logFolder, Folders.Warning));
+                Directory.CreateDirectory(Path.Combine(logFolder, Folders.Error));
+
+                loggerConfig.WriteTo.Console(outputTemplate: outputTemplate);
+
                 loggerConfig
                 .WriteTo.Logger(lc => lc
                     .Filter.ByIncludingOnly(e => e.Level == LogEventLevel.Information)
@@ -74,10 +68,12 @@ namespace CocoQR.API.Extensions
                         rollingInterval: RollingInterval.Day,
                         retainedFileCountLimit: 7,
                         encoding: Encoding.UTF8));
+
             }
 
             Log.Logger = loggerConfig.CreateLogger();
             builder.Host.UseSerilog(Log.Logger, dispose: true);
+
             return builder;
         }
 

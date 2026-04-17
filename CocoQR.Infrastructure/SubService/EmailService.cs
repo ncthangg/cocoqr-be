@@ -31,6 +31,29 @@ namespace CocoQR.Infrastructure.SubService
             EmailDirection direction = EmailDirection.OUTGOING,
             string? templateKey = null)
         {
+            await SendCoreAsync(to, subject, body, smtpSetting, direction, templateKey, writeLog: true);
+        }
+
+        public async Task SendWithoutLogAsync(
+            string to,
+            string subject,
+            string body,
+            SmtpSetting smtpSetting,
+            EmailDirection direction = EmailDirection.OUTGOING,
+            string? templateKey = null)
+        {
+            await SendCoreAsync(to, subject, body, smtpSetting, direction, templateKey, writeLog: false);
+        }
+
+        private async Task SendCoreAsync(
+            string to,
+            string subject,
+            string body,
+            SmtpSetting smtpSetting,
+            EmailDirection direction,
+            string? templateKey,
+            bool writeLog)
+        {
             if (string.IsNullOrWhiteSpace(to))
                 throw new ArgumentException(ValidationMessages.RequiredEmail, nameof(to));
 
@@ -42,18 +65,22 @@ namespace CocoQR.Infrastructure.SubService
 
             ArgumentNullException.ThrowIfNull(smtpSetting);
 
-            var emailLog = new EmailLog
+            EmailLog? emailLog = null;
+            if (writeLog)
             {
-                Id = Guid.NewGuid(),
-                ToEmail = to,
-                Subject = subject,
-                Body = body,
-                Status = EmailLogStatus.FAIL,
-                SmtpType = smtpSetting.Type,
-                EmailDirection = direction,
-                TemplateKey = templateKey,
-                CreatedAt = DateTime.UtcNow
-            };
+                emailLog = new EmailLog
+                {
+                    Id = Guid.NewGuid(),
+                    ToEmail = to,
+                    Subject = subject,
+                    Body = body,
+                    Status = EmailLogStatus.FAIL,
+                    SmtpType = smtpSetting.Type,
+                    EmailDirection = direction,
+                    TemplateKey = templateKey,
+                    CreatedAt = DateTime.UtcNow
+                };
+            }
 
             try
             {
@@ -92,11 +119,17 @@ namespace CocoQR.Infrastructure.SubService
                 await smtpClient.AuthenticateAsync(smtpSetting.Username, smtpSetting.Password);
                 await smtpClient.SendAsync(message);
                 await smtpClient.DisconnectAsync(true);
-                emailLog.Status = EmailLogStatus.SUCCESS;
+                if (emailLog != null)
+                {
+                    emailLog.Status = EmailLogStatus.SUCCESS;
+                }
             }
             catch (Exception ex)
             {
-                emailLog.ErrorMessage = BuildErrorMessage(ex);
+                if (emailLog != null)
+                {
+                    emailLog.ErrorMessage = BuildErrorMessage(ex);
+                }
                 _logger.LogError(ex,
                     "Failed to send email to {ToEmail} via SMTP {Host}:{Port} (SSL={EnableSsl})",
                     to,
@@ -107,8 +140,11 @@ namespace CocoQR.Infrastructure.SubService
             }
             finally
             {
-                _dbContext.EmailLogs.Add(emailLog);
-                await _dbContext.SaveChangesAsync();
+                if (emailLog != null)
+                {
+                    _dbContext.EmailLogs.Add(emailLog);
+                    await _dbContext.SaveChangesAsync();
+                }
             }
         }
 

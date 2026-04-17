@@ -1,4 +1,7 @@
 ﻿using CocoQR.Application.Contracts.ICache;
+using CocoQR.Domain.Constants;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Linq;
 using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
@@ -11,30 +14,75 @@ namespace CocoQR.Infrastructure.Redis.Cache
 {
     public class RedisCacheService : ICacheService
     {
-        private readonly IDatabase _db;
+        private readonly IConnectionMultiplexer _redis;
+        private readonly ILogger<RedisCacheService> _logger;
 
-        public RedisCacheService(IConnectionMultiplexer redis)
+        public RedisCacheService(IConnectionMultiplexer redis, ILogger<RedisCacheService> logger)
         {
-            _db = redis.GetDatabase();
+            _redis = redis;
+            _logger = logger;
         }
 
         public async Task<T?> GetAsync<T>(string key)
         {
-            var value = await _db.StringGetAsync(key);
-            if (value.IsNullOrEmpty) return default;
+            try
+            {
+                if (!_redis.IsConnected)
+                {
+                    _logger.LogWarning("Redis not connected, bypass cache");
+                    return default;
+                }
+                var db = _redis.GetDatabase();
 
-            return JsonSerializer.Deserialize<T>(value);
+                var value = await db.StringGetAsync(key);
+                if (value.IsNullOrEmpty) return default;
+
+                return JsonSerializer.Deserialize<T>(value);
+            }
+            catch (RedisConnectionException ex)
+            {
+                _logger.LogWarning(ex, "Redis unavailable, bypass cache");
+                return default;
+            }
         }
 
         public async Task SetAsync<T>(string key, T value, TimeSpan? expiry = null)
         {
-            var json = JsonSerializer.Serialize(value);
-            await _db.StringSetAsync(key, json, (Expiration)expiry);
-        }
+            try
+            {
+                if (!_redis.IsConnected)
+                {
+                    _logger.LogWarning("Redis not connected, bypass cache");
+                    return;
+                }
+                var db = _redis.GetDatabase();
 
+                var json = JsonSerializer.Serialize(value);
+                await db.StringSetAsync(key, json, (Expiration)expiry);
+            }
+            catch (RedisConnectionException ex)
+            {
+                _logger.LogWarning(ex, "Redis unavailable, bypass cache");
+            }
+        }
+         
         public async Task RemoveAsync(string key)
         {
-            await _db.KeyDeleteAsync(key);
+            try
+            {
+                if (!_redis.IsConnected)
+                {
+                    _logger.LogWarning("Redis not connected, bypass cache");
+                    return;
+                }
+                var db = _redis.GetDatabase();
+
+                await db.KeyDeleteAsync(key);
+            }
+            catch (RedisConnectionException ex)
+            {
+                _logger.LogWarning(ex, "Redis unavailable, bypass cache");
+            }
         }
     }
 }

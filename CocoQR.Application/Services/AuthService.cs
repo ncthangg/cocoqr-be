@@ -1,6 +1,7 @@
 ﻿using CocoQR.Application.Common.Mapper;
 using CocoQR.Application.Contracts.IConfigs;
 using CocoQR.Application.Contracts.IContext;
+using CocoQR.Application.Contracts.IQueue;
 using CocoQR.Application.Contracts.IServices;
 using CocoQR.Application.Contracts.ISubServices;
 using CocoQR.Application.Contracts.IUnitOfWork;
@@ -21,11 +22,14 @@ namespace CocoQR.Application.Services
 {
     public class AuthService : IAuthService
     {
+        private const int TemporarySignInAccessTokenMinutes = 3;
+
         private readonly IUnitOfWork _unitOfWork;
         private readonly IUserContext _userContext;
         private readonly IIdGenerator _idGenerator;
 
         private readonly ITokenService _tokenService;
+        private readonly IBackgroundJobProducer _backgroundJobProducer;
         private readonly IEmailService _emailService;
         private readonly IEmailTemplateService _emailTemplateService;
         private readonly ILogger<AuthService> _logger;
@@ -35,6 +39,7 @@ namespace CocoQR.Application.Services
             IUserContext userContext,
             IIdGenerator idGenerator,
             ITokenService tokenService,
+            IBackgroundJobProducer backgroundJobProducer,
             IEmailService emailService,
             IEmailTemplateService emailTemplateService,
             ILogger<AuthService> logger)
@@ -43,6 +48,7 @@ namespace CocoQR.Application.Services
             _userContext = userContext;
             _idGenerator = idGenerator;
             _tokenService = tokenService;
+            _backgroundJobProducer = backgroundJobProducer;
             _emailService = emailService;
             _emailTemplateService = emailTemplateService;
             _logger = logger;
@@ -124,14 +130,18 @@ namespace CocoQR.Application.Services
 
             var roles = (await _unitOfWork.UserRoles.GetRolesByUserIdAsync(user.Id)).ToList();
 
-            if (!roles.Any())
-                throw new ApplicationException(ErrorCode.BadRequest, "Đăng nhập thất bại, Role of user not found");
+            // Always return a very short-lived access token for FE flow.
+            // If user has more than 2 roles, issue temporary token without role claims,
+            // FE should call SwitchRoleAsync to get role-specific token.
+            var rolesForTemporaryToken = roles.Count > 2
+                ? Enumerable.Empty<Role>()
+                : roles;
 
-            TokenRes? jwt = null;
-            if (roles.Count == 1)
-            {
-                jwt = await _tokenService.GenerateTokens(user.Id, roles, null);
-            }
+            var jwt = await _tokenService.GenerateTokens(
+                user.Id,
+                rolesForTemporaryToken,
+                null,
+                TemporarySignInAccessTokenMinutes);
 
             return new SignInGoogleRes
             {
@@ -151,16 +161,19 @@ namespace CocoQR.Application.Services
         {
             ArgumentNullException.ThrowIfNull(request);
 
-            if (request.UserId == Guid.Empty || request.RoleId == Guid.Empty)
-                throw new ArgumentException("Invalid userId/roleId", nameof(request));
+            var userId = _userContext.UserId
+                ?? throw new ApplicationException(ErrorCode.Unauthorized, ErrorMessages.UserIDNotFoundInTheContext);
 
-            var user = await _unitOfWork.Users.GetByIdAsync(request.UserId)
+            if (request.RoleId == Guid.Empty)
+                throw new ArgumentException("Invalid roleId", nameof(request));
+
+            var user = await _unitOfWork.Users.GetByIdAsync(userId)
                 ?? throw new ApplicationException(ErrorCode.NotFound, ErrorMessages.UserNotFound);
 
             if (user.Status == false)
                 throw new ApplicationException(ErrorCode.Unauthorized, "Tài khoản đang bị tạm khóa. Vui lòng liên hệ Admin để biết thêm chi tiết.");
 
-            var roles = (await _unitOfWork.UserRoles.GetRolesByUserIdAsync(request.UserId)).ToList();
+            var roles = (await _unitOfWork.UserRoles.GetRolesByUserIdAsync(userId)).ToList();
             var selectedRole = roles.FirstOrDefault(x => x.Id == request.RoleId)
                 ?? throw new ApplicationException(ErrorCode.Forbidden, "Role không thuộc về user.");
 
@@ -209,13 +222,31 @@ namespace CocoQR.Application.Services
                         $"<p>Xin chao {System.Net.WebUtility.HtmlEncode(user.FullName)},</p><p>Tai khoan cua ban da dang nhap thanh cong lan dau. Chuc ban co trai nghiem tot voi CocoQR.</p>");
                 }
 
-                await _emailService.SendAsync(
-                    user.Email,
-                    rendered.Subject,
-                    rendered.Body,
-                    smtpSetting,
-                    EmailDirection.OUTGOING,
-                    templateKey);
+                try
+                {
+                    await _backgroundJobProducer.EnqueueSendEmailAsync(
+                        user.Email,
+                        rendered.Subject,
+                        rendered.Body,
+                        EmailDirection.OUTGOING,
+                        templateKey,
+                        smtpSetting.Type);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex,
+                        "Queue unavailable, fallback to direct welcome email sending for user {UserId} ({Email}).",
+                        user.Id,
+                        user.Email);
+
+                    await _emailService.SendAsync(
+                        user.Email,
+                        rendered.Subject,
+                        rendered.Body,
+                        smtpSetting,
+                        EmailDirection.OUTGOING,
+                        templateKey);
+                }
             }
             catch (Exception ex)
             {

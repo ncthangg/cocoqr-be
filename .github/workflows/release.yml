@@ -137,6 +137,8 @@ jobs:
               migrator || exit 1
 
             export ConnectionStrings__DefaultConnection="${{ secrets.DB_CONNECTION_STRINGS }}"
+            export Redis__Password="${{ secrets.REDIS_PASSWORD }}"
+
             export JWT__SecretKey="${{ secrets.JWT_SECRET_KEY }}"
             export Oauth__ClientId="${{ secrets.OAUTH_CLIENT_ID }}"
             export Oauth__ClientSecret="${{ secrets.OAUTH_CLIENT_SECRET }}"
@@ -203,6 +205,8 @@ jobs:
               
             export JWT__SecretKey="${{ secrets.JWT_SECRET_KEY }}"
             export ConnectionStrings__DefaultConnection="${{ secrets.DB_CONNECTION_STRINGS }}"
+            export Redis__Password="${{ secrets.REDIS_PASSWORD }}"
+
             export Oauth__ClientId="${{ secrets.OAUTH_CLIENT_ID }}"
             export Oauth__ClientSecret="${{ secrets.OAUTH_CLIENT_SECRET }}"
 

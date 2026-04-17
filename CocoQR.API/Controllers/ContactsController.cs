@@ -27,7 +27,7 @@ namespace CocoQR.API.Controllers
             return Ok(new BaseResponseModel<string>(
                 code: SuccessCode.Success,
                 data: null,
-                message: "Gửi liên hệ thành công"));
+                message: "Đã gửi lên hệ"));
         }
     }
 }
