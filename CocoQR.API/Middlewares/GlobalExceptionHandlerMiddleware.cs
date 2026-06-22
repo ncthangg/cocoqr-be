@@ -1,4 +1,4 @@
-﻿using CocoQR.API.Seed.Mapper;
+﻿using CocoQR.API.Mapper;
 using CocoQR.Domain.Constants;
 using CocoQR.Domain.Exceptions;
 using System.Text.Json;
