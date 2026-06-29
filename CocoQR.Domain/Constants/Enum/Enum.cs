@@ -57,25 +57,4 @@
         IGNORED
     }
 
-    public enum EmailLogStatus
-    {
-        PENDING,
-        SUCCESS,
-        FAIL
-    }
-
-    public enum EmailDirection
-    {
-        INCOMING,
-        OUTGOING
-    }
-
-    public enum SmtpSettingType
-    {
-        Unknown,
-        System,
-        Contact,
-        Admin,
-        Support
-    }
 }

@@ -139,12 +139,6 @@
         public const string ContactNotFound = "Không tìm thấy thông tin liên lạc";
         public const string ProjectNotFound = "Không tìm thấy dự án";
         public const string SkillNotFound = "Không tìm thấy kỹ năng";
-        public const string SmtpSettingInactive = "Cấu hình SMTP đang tắt (IsActive = false), không thể gửi email.";
-        public const string SmtpSettingByTypeNotFound = "Không tìm thấy cấu hình SMTP cho type {0}.";
-        public const string SmtpConnectionFailed = "Không thể kết nối SMTP server {0}:{1}. Vui lòng kiểm tra Host/Port/SSL hoặc firewall mạng.";
-        public const string SmtpSendFailed = "Gửi mail test thất bại trên SMTP server {0}:{1}. Vui lòng kiểm tra tài khoản SMTP và cấu hình bảo mật.";
-        public const string SmtpProtocolFailed = "Gửi mail test thất bại trên SMTP server {0}:{1}. Vui lòng kiểm tra phản hồi của server SMTP.";
-        public const string SmtpAuthenticationFailed = "Xác thực SMTP thất bại với server {0}:{1}. Vui lòng kiểm tra Username/Password.";
         public const string CloudinaryStorageNotConfigured = "Cloudinary storage chưa được cấu hình đúng.";
         public const string CloudinaryUploadFailed = "Upload file lên Cloudinary thất bại.";
         public const string CloudinaryDeleteFailed = "Xóa file trên Cloudinary thất bại.";

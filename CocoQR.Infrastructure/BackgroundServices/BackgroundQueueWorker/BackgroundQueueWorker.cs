@@ -1,6 +1,5 @@
 ﻿using CocoQR.Application.Contracts.ICache;
 using CocoQR.Application.Contracts.IQueue;
-using CocoQR.Domain.Constants.Enum;
 using CocoQR.Infrastructure.BackgroundServices.BackgroundQueueWorker.Handlers;
 using CocoQR.Infrastructure.BackgroundServices.BackgroundQueueWorker.Jobs;
 using Microsoft.Extensions.DependencyInjection;
@@ -84,10 +83,6 @@ namespace CocoQR.Infrastructure.BackgroundServices.BackgroundQueueWorker
                     await ProcessAsync<UploadAssetJob, UploadAssetHandler>(payload, (handler, job, ct) => handler.HandleAsync(job, ct), cancellationToken);
                     break;
 
-                case BackgroundJobTypes.SendEmail:
-                    await ProcessAsync<SendEmailJob, EmailHandler>(payload, (handler, job, ct) => handler.HandleAsync(job, ct), cancellationToken);
-                    break;
-
                 default:
                     _logger.LogWarning("Unsupported background job type: {JobType}", jobType);
                     break;
@@ -137,7 +132,6 @@ namespace CocoQR.Infrastructure.BackgroundServices.BackgroundQueueWorker
             {
                 if (ex is NonRetryableJobException)
                 {
-                    await TryMarkEmailLogFailedAsync(job, ex.Message);
                     _logger.LogWarning(
                         "Background job {JobId} ({JobType}) marked as non-retryable: {Message}",
                         job.JobId,
@@ -150,7 +144,6 @@ namespace CocoQR.Infrastructure.BackgroundServices.BackgroundQueueWorker
 
                 if (job.Attempt + 1 >= job.MaxRetry)
                 {
-                    await TryMarkEmailLogFailedAsync(job, ex.GetBaseException().Message);
                     _logger.LogError("Background job {JobId} exceeded max retry {MaxRetry}", job.JobId, job.MaxRetry);
                     return;
                 }
@@ -176,7 +169,6 @@ namespace CocoQR.Infrastructure.BackgroundServices.BackgroundQueueWorker
             {
                 BackgroundJobTypes.UploadAsset => "bg:done:asset",
                 BackgroundJobTypes.UploadLog => "bg:done:log",
-                BackgroundJobTypes.SendEmail => "bg:done:sendmail",
                 BackgroundJobTypes.Cleanup => "bg:done:cleanup",
                 _ => "bg:done:other"
             };
@@ -184,31 +176,7 @@ namespace CocoQR.Infrastructure.BackgroundServices.BackgroundQueueWorker
 
         private static bool ShouldCheckIdempotency(BackgroundJob job)
         {
-            return job.JobType != BackgroundJobTypes.SendEmail;
-        }
-
-        private async Task TryMarkEmailLogFailedAsync<TJob>(TJob job, string errorMessage)
-            where TJob : BackgroundJob
-        {
-            if (job is not SendEmailJob emailJob || !emailJob.EmailLogId.HasValue)
-                return;
-
-            try
-            {
-                using var scope = _scopeFactory.CreateScope();
-                var unitOfWork = scope.ServiceProvider.GetRequiredService<CocoQR.Application.Contracts.IUnitOfWork.IUnitOfWork>();
-                var emailLog = await unitOfWork.EmailLogs.GetByIdAsync(emailJob.EmailLogId.Value);
-                if (emailLog == null)
-                    return;
-
-                emailLog.Status = EmailLogStatus.FAIL;
-                emailLog.ErrorMessage = errorMessage.Length <= 2000 ? errorMessage : errorMessage[..2000];
-                await unitOfWork.EmailLogs.UpdateAsync(emailLog);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to mark EmailLog as FAIL for job {JobId}", job.JobId);
-            }
+            return true;
         }
     }
 }

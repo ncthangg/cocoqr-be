@@ -1,58 +1,41 @@
-﻿using CocoQR.Application.Contracts.ISubServices;
+using CocoQR.Application.Contracts.ISubServices;
 using CocoQR.Domain.Constants;
-using CocoQR.Domain.Constants.Enum;
-using CocoQR.Domain.Entities;
-using CocoQR.Domain.Exceptions;
-using CocoQR.Infrastructure.Persistence.MyDbContext;
-using MailKit.Security;
+using CocoQR.Infrastructure.Configs;
 using Microsoft.Extensions.Logging;
-using MimeKit;
+using Microsoft.Extensions.Options;
+using System.Net.Http.Json;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
 
 namespace CocoQR.Infrastructure.SubService
 {
     public class EmailService : IEmailService
     {
-        private const int SmtpTimeoutMs = 15000;
+        private static readonly JsonSerializerOptions JsonOptions = new()
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        };
 
-        private readonly CocoQRDbContext _dbContext;
+        private readonly HttpClient _httpClient;
+        private readonly MailGatewaySettings _settings;
         private readonly ILogger<EmailService> _logger;
 
-        public EmailService(CocoQRDbContext dbContext, ILogger<EmailService> logger)
+        public EmailService(
+            HttpClient httpClient,
+            IOptions<MailGatewaySettings> settings,
+            ILogger<EmailService> logger)
         {
-            _dbContext = dbContext;
+            _httpClient = httpClient;
+            _settings = settings.Value;
             _logger = logger;
         }
 
-        public async Task SendAsync(
+        public async Task<MailGatewaySendResponse?> SendAsync(
             string to,
             string subject,
             string body,
-            SmtpSetting smtpSetting,
-            EmailDirection direction = EmailDirection.OUTGOING,
-            string? templateKey = null)
-        {
-            await SendCoreAsync(to, subject, body, smtpSetting, direction, templateKey, writeLog: true);
-        }
-
-        public async Task SendWithoutLogAsync(
-            string to,
-            string subject,
-            string body,
-            SmtpSetting smtpSetting,
-            EmailDirection direction = EmailDirection.OUTGOING,
-            string? templateKey = null)
-        {
-            await SendCoreAsync(to, subject, body, smtpSetting, direction, templateKey, writeLog: false);
-        }
-
-        private async Task SendCoreAsync(
-            string to,
-            string subject,
-            string body,
-            SmtpSetting smtpSetting,
-            EmailDirection direction,
-            string? templateKey,
-            bool writeLog)
+            CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(to))
                 throw new ArgumentException(ValidationMessages.RequiredEmail, nameof(to));
@@ -63,101 +46,109 @@ namespace CocoQR.Infrastructure.SubService
             if (string.IsNullOrWhiteSpace(body))
                 throw new ArgumentException(ValidationMessages.RequiredBody, nameof(body));
 
-            ArgumentNullException.ThrowIfNull(smtpSetting);
+            EnsureConfigured();
 
-            EmailLog? emailLog = null;
-            if (writeLog)
+            var email = new MailGatewayEmailRequest
             {
-                emailLog = new EmailLog
+                CorrelationId = Guid.NewGuid().ToString("N"),
+                To = to.Trim(),
+                Subject = subject.Trim(),
+                HtmlBody = body,
+                Priority = _settings.DefaultPriority,
+                Attachments = []
+            };
+
+            var emailJson = JsonSerializer.Serialize(email, JsonOptions);
+            var timestamp = DateTimeOffset.UtcNow.ToString("O");
+            var nonce = Guid.NewGuid().ToString("N");
+            var signedPayload = $"{timestamp}.{nonce}.{emailJson}";
+            var signature = SignRsaSha256(_settings.PrivateKeyPem!, signedPayload);
+
+            var request = new MailGatewaySendRequest
+            {
+                Authentication = new MailGatewayAuthentication
                 {
-                    Id = Guid.NewGuid(),
-                    ToEmail = to,
-                    Subject = subject,
-                    Body = body,
-                    Status = EmailLogStatus.FAIL,
-                    SmtpType = smtpSetting.Type,
-                    EmailDirection = direction,
-                    TemplateKey = templateKey,
-                    CreatedAt = DateTime.UtcNow
-                };
+                    SystemCode = _settings.SystemCode!,
+                    KeyId = _settings.KeyId!,
+                    Timestamp = timestamp,
+                    Nonce = nonce,
+                    Signature = signature
+                },
+                Email = email
+            };
+
+            var response = await _httpClient.PostAsJsonAsync("/api/mail/send", request, JsonOptions, cancellationToken);
+            var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogError(
+                    "Mail gateway returned {StatusCode}. To={To}, CorrelationId={CorrelationId}, Body={Body}",
+                    response.StatusCode,
+                    email.To,
+                    email.CorrelationId,
+                    responseBody);
+
+                response.EnsureSuccessStatusCode();
             }
 
-            try
-            {
-                if (!smtpSetting.IsActive)
-                {
-                    throw new DomainException(
-                        ErrorCode.BusinessRuleViolation,
-                        ErrorMessages.SmtpSettingInactive,
-                        data: new
-                        {
-                            smtpSetting.Type
-                        });
-                }
-
-                var message = new MimeMessage();
-                message.From.Add(new MailboxAddress(smtpSetting.FromName, smtpSetting.FromEmail));
-                message.To.Add(MailboxAddress.Parse(to));
-                message.Subject = subject;
-
-                message.Body = new BodyBuilder
-                {
-                    HtmlBody = body
-                }.ToMessageBody();
-
-                using var smtpClient = new MailKit.Net.Smtp.SmtpClient();
-                smtpClient.Timeout = SmtpTimeoutMs;
-
-                var socketOptions = smtpSetting.Port switch
-                {
-                    465 => SecureSocketOptions.SslOnConnect,
-                    587 => smtpSetting.EnableSSL ? SecureSocketOptions.StartTls : SecureSocketOptions.Auto,
-                    _ => smtpSetting.EnableSSL ? SecureSocketOptions.StartTlsWhenAvailable : SecureSocketOptions.Auto
-                };
-
-                await smtpClient.ConnectAsync(smtpSetting.Host, smtpSetting.Port, socketOptions);
-                await smtpClient.AuthenticateAsync(smtpSetting.Username, smtpSetting.Password);
-                await smtpClient.SendAsync(message);
-                await smtpClient.DisconnectAsync(true);
-                if (emailLog != null)
-                {
-                    emailLog.Status = EmailLogStatus.SUCCESS;
-                }
-            }
-            catch (Exception ex)
-            {
-                if (emailLog != null)
-                {
-                    emailLog.ErrorMessage = BuildErrorMessage(ex);
-                }
-                _logger.LogError(ex,
-                    "Failed to send email to {ToEmail} via SMTP {Host}:{Port} (SSL={EnableSsl})",
-                    to,
-                    smtpSetting.Host,
-                    smtpSetting.Port,
-                    smtpSetting.EnableSSL);
-                throw;
-            }
-            finally
-            {
-                if (emailLog != null)
-                {
-                    _dbContext.EmailLogs.Add(emailLog);
-                    await _dbContext.SaveChangesAsync();
-                }
-            }
+            return JsonSerializer.Deserialize<MailGatewaySendResponse>(responseBody, JsonOptions);
         }
 
-        private static string BuildErrorMessage(Exception exception)
+        private void EnsureConfigured()
         {
-            var baseMessage = exception.GetBaseException().Message;
-            var message = string.Equals(baseMessage, exception.Message, StringComparison.Ordinal)
-                ? exception.Message
-                : $"{exception.Message} | Root cause: {baseMessage}";
+            if (string.IsNullOrWhiteSpace(_settings.BaseUrl))
+                throw new InvalidOperationException("MailGateway:BaseUrl is required.");
 
-            return message.Length <= 2000
-                ? message
-                : message[..2000];
+            if (string.IsNullOrWhiteSpace(_settings.SystemCode))
+                throw new InvalidOperationException("MailGateway:SystemCode is required.");
+
+            if (string.IsNullOrWhiteSpace(_settings.KeyId))
+                throw new InvalidOperationException("MailGateway:KeyId is required.");
+
+            if (string.IsNullOrWhiteSpace(_settings.PrivateKeyPem))
+                throw new InvalidOperationException("MailGateway:PrivateKeyPem is required.");
+        }
+
+        private static string SignRsaSha256(string privateKeyPem, string payload)
+        {
+            using var rsa = RSA.Create();
+            rsa.ImportFromPem(privateKeyPem);
+
+            var payloadBytes = Encoding.UTF8.GetBytes(payload);
+            var signatureBytes = rsa.SignData(
+                payloadBytes,
+                HashAlgorithmName.SHA256,
+                RSASignaturePadding.Pkcs1);
+
+            return Convert.ToBase64String(signatureBytes);
+        }
+
+        private sealed class MailGatewaySendRequest
+        {
+            public MailGatewayAuthentication Authentication { get; set; } = new();
+            public MailGatewayEmailRequest Email { get; set; } = new();
+        }
+
+        private sealed class MailGatewayAuthentication
+        {
+            public string SystemCode { get; set; } = string.Empty;
+            public string KeyId { get; set; } = string.Empty;
+            public string Timestamp { get; set; } = string.Empty;
+            public string Nonce { get; set; } = string.Empty;
+            public string Signature { get; set; } = string.Empty;
+        }
+
+        private sealed class MailGatewayEmailRequest
+        {
+            public string CorrelationId { get; set; } = string.Empty;
+            public string To { get; set; } = string.Empty;
+            public string Cc { get; set; } = string.Empty;
+            public string Bcc { get; set; } = string.Empty;
+            public string Subject { get; set; } = string.Empty;
+            public string HtmlBody { get; set; } = string.Empty;
+            public int Priority { get; set; }
+            public object[] Attachments { get; set; } = [];
         }
     }
 }

@@ -1,5 +1,3 @@
-using CocoQR.Domain.Constants.Enum;
-
 namespace CocoQR.Application.DTOs.Contacts.Requests
 {
     public class AdminContactRequest
@@ -11,6 +9,5 @@ namespace CocoQR.Application.DTOs.Contacts.Requests
         public string Content { get; set; } = string.Empty;
         public string? TemplateKey { get; set; }
         public string? HtmlBody { get; set; }
-        public SmtpSettingType? SmtpType { get; set; }
     }
 }

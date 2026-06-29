@@ -25,9 +25,7 @@ namespace CocoQR.Infrastructure.Persistence.UnitOfWork
         private IBankInfoRepository? _bankInfoRepository;
         private IProviderRepository? _providerRepository;
         private IContactMessageRepository? _contactMessageRepository;
-        private IEmailLogRepository? _emailLogRepository;
         private IQRStyleLibraryRepository? _qrStyleLibraryRepository;
-        private ISmtpSettingRepository? _smtpSettingRepository;
         private IEmailTemplateRepository? _emailTemplateRepository;
 
         public IDbConnection Connection
@@ -65,12 +63,8 @@ namespace CocoQR.Infrastructure.Persistence.UnitOfWork
             => _providerRepository ??= new ProviderRepository(this);
         public IContactMessageRepository ContactMessages
             => _contactMessageRepository ??= new ContactMessageRepository(this);
-        public IEmailLogRepository EmailLogs
-            => _emailLogRepository ??= new EmailLogRepository(this);
         public IQRStyleLibraryRepository QRStyleLibraries
             => _qrStyleLibraryRepository ??= new QRStyleLibraryRepository(this, _dbContext);
-        public ISmtpSettingRepository SmtpSettings
-            => _smtpSettingRepository ??= new SmtpSettingRepository(this);
         public IEmailTemplateRepository EmailTemplates
             => _emailTemplateRepository ??= new EmailTemplateRepository(this);
 

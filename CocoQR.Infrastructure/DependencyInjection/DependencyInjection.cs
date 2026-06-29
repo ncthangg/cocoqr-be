@@ -41,7 +41,7 @@ namespace CocoQR.Infrastructure.DependencyInjection
             services.AddDbConnectionFactory();
             services.AddRepo();
             services.AddDatabaseConfig(configuration);
-            services.AddSubServices();
+            services.AddSubServices(configuration);
             services.AddBackgroundServices(env);
             services.AddSeeder();
             services.AddJWTConfig(configuration);
@@ -70,8 +70,6 @@ namespace CocoQR.Infrastructure.DependencyInjection
             services.AddScoped<IBankInfoRepository, BankInfoRepository>();
             services.AddScoped<IProviderRepository, ProviderRepository>();
             services.AddScoped<IContactMessageRepository, ContactMessageRepository>();
-            services.AddScoped<IEmailLogRepository, EmailLogRepository>();
-            services.AddScoped<ISmtpSettingRepository, SmtpSettingRepository>();
             services.AddScoped<IEmailTemplateRepository, EmailTemplateRepository>();
 
             services.AddScoped<IUserRoleRepository, UserRoleRepository>();
@@ -91,20 +89,28 @@ namespace CocoQR.Infrastructure.DependencyInjection
                     });
             });
         }
-        private static void AddSubServices(this IServiceCollection services)
+        private static void AddSubServices(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddScoped<IUserContext, UserContext>();
 
             services.AddScoped<IGoogleService, GoogleService>();
             services.AddScoped<ITokenService, TokenService>();
-            services.AddScoped<IEmailService, EmailService>();
+            services.Configure<MailGatewaySettings>(configuration.GetSection("MailGateway"));
+            services.AddScoped<IEmailConfiguration>(sp => sp.GetRequiredService<IOptions<MailGatewaySettings>>().Value);
+            services.AddHttpClient<IEmailService, EmailService>((sp, client) =>
+            {
+                var settings = sp.GetRequiredService<IOptions<MailGatewaySettings>>().Value;
+                if (!string.IsNullOrWhiteSpace(settings.BaseUrl))
+                {
+                    client.BaseAddress = new Uri(settings.BaseUrl);
+                }
+            });
             services.AddSingleton<IFileCleanupQueue, FileCleanupQueue>();
             services.AddScoped<IBackgroundJobProducer, RedisBackgroundJobProducer>();
 
             services.AddScoped<UploadLogHandler>();
             services.AddScoped<CleanupHandler>();
             services.AddScoped<UploadAssetHandler>();
-            services.AddScoped<EmailHandler>();
 
             // Default cloud provider: DigitalOcean Spaces.
             // Switch to Cloudinary by replacing this registration with:

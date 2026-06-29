@@ -1,7 +1,6 @@
 ﻿using CocoQR.Application.Common.Mapper;
 using CocoQR.Application.Contracts.IConfigs;
 using CocoQR.Application.Contracts.IContext;
-using CocoQR.Application.Contracts.IQueue;
 using CocoQR.Application.Contracts.IServices;
 using CocoQR.Application.Contracts.ISubServices;
 using CocoQR.Application.Contracts.IUnitOfWork;
@@ -11,7 +10,6 @@ using CocoQR.Application.DTOs.Users.Responses;
 using CocoQR.Domain.Constants;
 using CocoQR.Domain.Constants.Enum;
 using CocoQR.Domain.Entities;
-using CocoQR.Domain.Helper;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -29,7 +27,6 @@ namespace CocoQR.Application.Services
         private readonly IIdGenerator _idGenerator;
 
         private readonly ITokenService _tokenService;
-        private readonly IBackgroundJobProducer _backgroundJobProducer;
         private readonly IEmailService _emailService;
         private readonly IEmailTemplateService _emailTemplateService;
         private readonly ILogger<AuthService> _logger;
@@ -39,7 +36,6 @@ namespace CocoQR.Application.Services
             IUserContext userContext,
             IIdGenerator idGenerator,
             ITokenService tokenService,
-            IBackgroundJobProducer backgroundJobProducer,
             IEmailService emailService,
             IEmailTemplateService emailTemplateService,
             ILogger<AuthService> logger)
@@ -48,7 +44,6 @@ namespace CocoQR.Application.Services
             _userContext = userContext;
             _idGenerator = idGenerator;
             _tokenService = tokenService;
-            _backgroundJobProducer = backgroundJobProducer;
             _emailService = emailService;
             _emailTemplateService = emailTemplateService;
             _logger = logger;
@@ -191,15 +186,6 @@ namespace CocoQR.Application.Services
             try
             {
                 var templateKey = EmailTemplateKeys.SystemWelcome;
-                var smtpType = EmailTemplateSmtpResolver.Resolve(templateKey);
-                var smtpSetting = await _unitOfWork.SmtpSettings.GetActiveAsync(smtpType);
-
-                if (smtpSetting == null)
-                {
-                    _logger.LogWarning("No active SMTP setting found for welcome email. Resolved type: {SmtpType}", smtpType);
-                    return;
-                }
-
                 var variables = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
                 {
                     ["FullName"] = user.FullName,
@@ -222,31 +208,7 @@ namespace CocoQR.Application.Services
                         $"<p>Xin chao {System.Net.WebUtility.HtmlEncode(user.FullName)},</p><p>Tai khoan cua ban da dang nhap thanh cong lan dau. Chuc ban co trai nghiem tot voi CocoQR.</p>");
                 }
 
-                try
-                {
-                    await _backgroundJobProducer.EnqueueSendEmailAsync(
-                        user.Email,
-                        rendered.Subject,
-                        rendered.Body,
-                        EmailDirection.OUTGOING,
-                        templateKey,
-                        smtpSetting.Type);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex,
-                        "Queue unavailable, fallback to direct welcome email sending for user {UserId} ({Email}).",
-                        user.Id,
-                        user.Email);
-
-                    await _emailService.SendAsync(
-                        user.Email,
-                        rendered.Subject,
-                        rendered.Body,
-                        smtpSetting,
-                        EmailDirection.OUTGOING,
-                        templateKey);
-                }
+                await _emailService.SendAsync(user.Email, rendered.Subject, rendered.Body);
             }
             catch (Exception ex)
             {

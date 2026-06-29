@@ -20,8 +20,6 @@ namespace CocoQR.Infrastructure.Persistence.MyDbContext
         public DbSet<UserToken> UserTokens { get; set; }
         public DbSet<UserRole> UserRoles { get; set; }
         public DbSet<ContactMessage> ContactMessages { get; set; }
-        public DbSet<EmailLog> EmailLogs { get; set; }
-        public DbSet<SmtpSetting> SmtpSettings { get; set; }
         public DbSet<EmailTemplate> EmailTemplates { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

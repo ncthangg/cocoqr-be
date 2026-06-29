@@ -1,24 +1,26 @@
-﻿using CocoQR.Domain.Entities;
-using CocoQR.Domain.Constants.Enum;
-
 namespace CocoQR.Application.Contracts.ISubServices
 {
     public interface IEmailService
     {
-        Task SendAsync(
+        Task<MailGatewaySendResponse?> SendAsync(
             string to,
             string subject,
             string body,
-            SmtpSetting smtpSetting,
-            EmailDirection direction = EmailDirection.OUTGOING,
-            string? templateKey = null);
+            CancellationToken cancellationToken = default);
+    }
 
-        Task SendWithoutLogAsync(
-            string to,
-            string subject,
-            string body,
-            SmtpSetting smtpSetting,
-            EmailDirection direction = EmailDirection.OUTGOING,
-            string? templateKey = null);
+    public sealed class MailGatewaySendResponse
+    {
+        public string Code { get; set; } = string.Empty;
+        public string? Message { get; set; }
+        public MailGatewaySendData? Data { get; set; }
+    }
+
+    public sealed class MailGatewaySendData
+    {
+        public Guid EmailMessageId { get; set; }
+        public string CorrelationId { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
+        public string? Message { get; set; }
     }
 }
