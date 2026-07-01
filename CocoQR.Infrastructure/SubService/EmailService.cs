@@ -12,23 +12,15 @@ namespace CocoQR.Infrastructure.SubService
 {
     public class EmailService : IEmailService
     {
-        private static readonly JsonSerializerOptions JsonOptions = new()
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        };
-
-        private readonly HttpClient _httpClient;
-        private readonly MailGatewaySettings _settings;
-        private readonly ILogger<EmailService> _logger;
+        private readonly ICocoMailClient _cocoMailClient;
+        private readonly CocoMailOptions _options;
 
         public EmailService(
-            HttpClient httpClient,
-            IOptions<MailGatewaySettings> settings,
-            ILogger<EmailService> logger)
+            ICocoMailClient cocoMailClient,
+            IOptions<CocoMailOptions> options)
         {
-            _httpClient = httpClient;
-            _settings = settings.Value;
-            _logger = logger;
+            _cocoMailClient = cocoMailClient;
+            _options = options.Value;
         }
 
         public async Task<MailGatewaySendResponse?> SendAsync(
@@ -48,28 +40,72 @@ namespace CocoQR.Infrastructure.SubService
 
             EnsureConfigured();
 
-            var email = new MailGatewayEmailRequest
+            var email = new CocoMailEmailRequest
             {
                 CorrelationId = Guid.NewGuid().ToString("N"),
                 To = to.Trim(),
                 Subject = subject.Trim(),
                 HtmlBody = body,
-                Priority = _settings.DefaultPriority,
+                Priority = _options.DefaultPriority,
                 Attachments = []
             };
 
+            return await _cocoMailClient.SendAsync(email, cancellationToken);
+        }
+
+        private void EnsureConfigured()
+        {
+            if (string.IsNullOrWhiteSpace(_options.BaseUrl))
+                throw new InvalidOperationException("CocoMail:BaseUrl is required.");
+
+            if (string.IsNullOrWhiteSpace(_options.SystemCode))
+                throw new InvalidOperationException("CocoMail:SystemCode is required.");
+
+            if (string.IsNullOrWhiteSpace(_options.KeyId))
+                throw new InvalidOperationException("CocoMail:KeyId is required.");
+
+            if (string.IsNullOrWhiteSpace(_options.PrivateKeyPem))
+                throw new InvalidOperationException("CocoMail:PrivateKeyPem is required.");
+        }
+    }
+
+    public sealed class CocoMailClient : ICocoMailClient
+    {
+        private static readonly JsonSerializerOptions JsonOptions = new()
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        };
+
+        private readonly HttpClient _httpClient;
+        private readonly CocoMailOptions _options;
+        private readonly ILogger<CocoMailClient> _logger;
+
+        public CocoMailClient(
+            HttpClient httpClient,
+            IOptions<CocoMailOptions> options,
+            ILogger<CocoMailClient> logger)
+        {
+            _httpClient = httpClient;
+            _options = options.Value;
+            _logger = logger;
+        }
+
+        public async Task<MailGatewaySendResponse?> SendAsync(
+            CocoMailEmailRequest email,
+            CancellationToken cancellationToken = default)
+        {
             var emailJson = JsonSerializer.Serialize(email, JsonOptions);
             var timestamp = DateTimeOffset.UtcNow.ToString("O");
             var nonce = Guid.NewGuid().ToString("N");
             var signedPayload = $"{timestamp}.{nonce}.{emailJson}";
-            var signature = SignRsaSha256(_settings.PrivateKeyPem!, signedPayload);
+            var signature = SignRsaSha256(_options.PrivateKeyPem!, signedPayload);
 
-            var request = new MailGatewaySendRequest
+            var request = new CocoMailGatewayRequest
             {
-                Authentication = new MailGatewayAuthentication
+                Authentication = new CocoMailAuthentication
                 {
-                    SystemCode = _settings.SystemCode!,
-                    KeyId = _settings.KeyId!,
+                    SystemCode = _options.SystemCode!,
+                    KeyId = _options.KeyId!,
                     Timestamp = timestamp,
                     Nonce = nonce,
                     Signature = signature
@@ -83,7 +119,7 @@ namespace CocoQR.Infrastructure.SubService
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogError(
-                    "Mail gateway returned {StatusCode}. To={To}, CorrelationId={CorrelationId}, Body={Body}",
+                    "CocoMail returned {StatusCode}. To={To}, CorrelationId={CorrelationId}, Body={Body}",
                     response.StatusCode,
                     email.To,
                     email.CorrelationId,
@@ -93,21 +129,6 @@ namespace CocoQR.Infrastructure.SubService
             }
 
             return JsonSerializer.Deserialize<MailGatewaySendResponse>(responseBody, JsonOptions);
-        }
-
-        private void EnsureConfigured()
-        {
-            if (string.IsNullOrWhiteSpace(_settings.BaseUrl))
-                throw new InvalidOperationException("MailGateway:BaseUrl is required.");
-
-            if (string.IsNullOrWhiteSpace(_settings.SystemCode))
-                throw new InvalidOperationException("MailGateway:SystemCode is required.");
-
-            if (string.IsNullOrWhiteSpace(_settings.KeyId))
-                throw new InvalidOperationException("MailGateway:KeyId is required.");
-
-            if (string.IsNullOrWhiteSpace(_settings.PrivateKeyPem))
-                throw new InvalidOperationException("MailGateway:PrivateKeyPem is required.");
         }
 
         private static string SignRsaSha256(string privateKeyPem, string payload)
@@ -122,33 +143,6 @@ namespace CocoQR.Infrastructure.SubService
                 RSASignaturePadding.Pkcs1);
 
             return Convert.ToBase64String(signatureBytes);
-        }
-
-        private sealed class MailGatewaySendRequest
-        {
-            public MailGatewayAuthentication Authentication { get; set; } = new();
-            public MailGatewayEmailRequest Email { get; set; } = new();
-        }
-
-        private sealed class MailGatewayAuthentication
-        {
-            public string SystemCode { get; set; } = string.Empty;
-            public string KeyId { get; set; } = string.Empty;
-            public string Timestamp { get; set; } = string.Empty;
-            public string Nonce { get; set; } = string.Empty;
-            public string Signature { get; set; } = string.Empty;
-        }
-
-        private sealed class MailGatewayEmailRequest
-        {
-            public string CorrelationId { get; set; } = string.Empty;
-            public string To { get; set; } = string.Empty;
-            public string Cc { get; set; } = string.Empty;
-            public string Bcc { get; set; } = string.Empty;
-            public string Subject { get; set; } = string.Empty;
-            public string HtmlBody { get; set; } = string.Empty;
-            public int Priority { get; set; }
-            public object[] Attachments { get; set; } = [];
         }
     }
 }

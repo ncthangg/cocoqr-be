@@ -95,16 +95,17 @@ namespace CocoQR.Infrastructure.DependencyInjection
 
             services.AddScoped<IGoogleService, GoogleService>();
             services.AddScoped<ITokenService, TokenService>();
-            services.Configure<MailGatewaySettings>(configuration.GetSection("MailGateway"));
-            services.AddScoped<IEmailConfiguration>(sp => sp.GetRequiredService<IOptions<MailGatewaySettings>>().Value);
-            services.AddHttpClient<IEmailService, EmailService>((sp, client) =>
+            services.Configure<CocoMailOptions>(configuration.GetSection("CocoMail"));
+            services.AddScoped<IEmailConfiguration>(sp => sp.GetRequiredService<IOptions<CocoMailOptions>>().Value);
+            services.AddHttpClient<ICocoMailClient, CocoMailClient>((sp, client) =>
             {
-                var settings = sp.GetRequiredService<IOptions<MailGatewaySettings>>().Value;
+                var settings = sp.GetRequiredService<IOptions<CocoMailOptions>>().Value;
                 if (!string.IsNullOrWhiteSpace(settings.BaseUrl))
                 {
                     client.BaseAddress = new Uri(settings.BaseUrl);
                 }
             });
+            services.AddScoped<IEmailService, EmailService>();
             services.AddSingleton<IFileCleanupQueue, FileCleanupQueue>();
             services.AddScoped<IBackgroundJobProducer, RedisBackgroundJobProducer>();
 

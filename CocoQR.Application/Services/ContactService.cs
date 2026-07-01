@@ -94,7 +94,7 @@ namespace CocoQR.Application.Services
             else
             {
                 _logger.LogWarning(
-                    "MailGateway:AdminNotificationEmail is not configured. Skip admin notification for contact message {ContactMessageId}.",
+                    "CocoMail:AdminNotificationEmail is not configured. Skip admin notification for contact message {ContactMessageId}.",
                     message.Id);
             }
         }

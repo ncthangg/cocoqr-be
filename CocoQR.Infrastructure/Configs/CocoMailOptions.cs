@@ -2,7 +2,7 @@ using CocoQR.Application.Contracts.IConfigs;
 
 namespace CocoQR.Infrastructure.Configs
 {
-    public sealed class MailGatewaySettings : IEmailConfiguration
+    public sealed class CocoMailOptions : IEmailConfiguration
     {
         public string? BaseUrl { get; set; }
         public string? SystemCode { get; set; }
