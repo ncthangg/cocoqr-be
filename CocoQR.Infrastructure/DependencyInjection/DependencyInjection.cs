@@ -104,6 +104,10 @@ namespace CocoQR.Infrastructure.DependencyInjection
                 {
                     client.BaseAddress = new Uri(settings.BaseUrl);
                 }
+
+                client.Timeout = TimeSpan.FromSeconds(settings.TimeoutSeconds > 0
+                    ? settings.TimeoutSeconds
+                    : 30);
             });
             services.AddScoped<IEmailService, EmailService>();
             services.AddSingleton<IFileCleanupQueue, FileCleanupQueue>();

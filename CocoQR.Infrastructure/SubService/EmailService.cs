@@ -58,14 +58,17 @@ namespace CocoQR.Infrastructure.SubService
             if (string.IsNullOrWhiteSpace(_options.BaseUrl))
                 throw new InvalidOperationException("CocoMail:BaseUrl is required.");
 
+            if (string.IsNullOrWhiteSpace(_options.SendEndpoint))
+                throw new InvalidOperationException("CocoMail:SendEndpoint is required.");
+
             if (string.IsNullOrWhiteSpace(_options.SystemCode))
                 throw new InvalidOperationException("CocoMail:SystemCode is required.");
 
             if (string.IsNullOrWhiteSpace(_options.KeyId))
                 throw new InvalidOperationException("CocoMail:KeyId is required.");
 
-            if (string.IsNullOrWhiteSpace(_options.PrivateKeyPem))
-                throw new InvalidOperationException("CocoMail:PrivateKeyPem is required.");
+            if (string.IsNullOrWhiteSpace(_options.PrivateKeyBase64))
+                throw new InvalidOperationException("CocoMail:PrivateKeyBase64 is required.");
         }
     }
 
@@ -98,7 +101,7 @@ namespace CocoQR.Infrastructure.SubService
             var timestamp = DateTimeOffset.UtcNow.ToString("O");
             var nonce = Guid.NewGuid().ToString("N");
             var signedPayload = $"{timestamp}.{nonce}.{emailJson}";
-            var signature = SignRsaSha256(_options.PrivateKeyPem!, signedPayload);
+            var signature = SignRsaSha256(_options.PrivateKeyBase64!, signedPayload);
 
             var request = new CocoMailGatewayRequest
             {
@@ -113,7 +116,11 @@ namespace CocoQR.Infrastructure.SubService
                 Email = email
             };
 
-            var response = await _httpClient.PostAsJsonAsync("/api/mail/send", request, JsonOptions, cancellationToken);
+            var response = await _httpClient.PostAsJsonAsync(
+                _options.SendEndpoint,
+                request,
+                JsonOptions,
+                cancellationToken);
             var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
 
             if (!response.IsSuccessStatusCode)
@@ -131,10 +138,10 @@ namespace CocoQR.Infrastructure.SubService
             return JsonSerializer.Deserialize<MailGatewaySendResponse>(responseBody, JsonOptions);
         }
 
-        private static string SignRsaSha256(string privateKeyPem, string payload)
+        private static string SignRsaSha256(string privateKeyBase64, string payload)
         {
             using var rsa = RSA.Create();
-            rsa.ImportFromPem(privateKeyPem);
+            ImportPrivateKey(rsa, privateKeyBase64);
 
             var payloadBytes = Encoding.UTF8.GetBytes(payload);
             var signatureBytes = rsa.SignData(
@@ -143,6 +150,27 @@ namespace CocoQR.Infrastructure.SubService
                 RSASignaturePadding.Pkcs1);
 
             return Convert.ToBase64String(signatureBytes);
+        }
+
+        private static void ImportPrivateKey(RSA rsa, string privateKeyBase64)
+        {
+            var privateKeyBytes = Convert.FromBase64String(privateKeyBase64);
+            var privateKeyText = Encoding.UTF8.GetString(privateKeyBytes);
+
+            if (privateKeyText.Contains("BEGIN", StringComparison.OrdinalIgnoreCase))
+            {
+                rsa.ImportFromPem(privateKeyText);
+                return;
+            }
+
+            try
+            {
+                rsa.ImportPkcs8PrivateKey(privateKeyBytes, out _);
+            }
+            catch (CryptographicException)
+            {
+                rsa.ImportRSAPrivateKey(privateKeyBytes, out _);
+            }
         }
     }
 }
