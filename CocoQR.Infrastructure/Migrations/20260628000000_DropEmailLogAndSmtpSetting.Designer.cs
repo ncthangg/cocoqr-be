@@ -252,48 +252,6 @@ namespace CocoQR.Infrastructure.Migrations
                     b.ToTable("ContactMessages", (string)null);
                 });
 
-            modelBuilder.Entity("CocoQR.Domain.Entities.EmailTemplate", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Body")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsActive")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
-
-                    b.Property<string>("Subject")
-                        .IsRequired()
-                        .HasMaxLength(300)
-                        .HasColumnType("nvarchar(300)");
-
-                    b.Property<string>("TemplateKey")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    SqlServerKeyBuilderExtensions.IsClustered(b.HasKey("Id"));
-
-                    b.HasIndex("IsActive")
-                        .HasDatabaseName("IX_EmailTemplates_IsActive");
-
-                    b.HasIndex("TemplateKey")
-                        .IsUnique()
-                        .HasDatabaseName("IX_EmailTemplates_TemplateKey");
-
-                    b.ToTable("EmailTemplates", (string)null);
-                });
-
             modelBuilder.Entity("CocoQR.Domain.Entities.Provider", b =>
                 {
                     b.Property<Guid>("Id")

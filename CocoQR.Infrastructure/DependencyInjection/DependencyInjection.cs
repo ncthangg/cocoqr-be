@@ -70,8 +70,8 @@ namespace CocoQR.Infrastructure.DependencyInjection
             services.AddScoped<IBankInfoRepository, BankInfoRepository>();
             services.AddScoped<IProviderRepository, ProviderRepository>();
             services.AddScoped<IContactMessageRepository, ContactMessageRepository>();
-            services.AddScoped<IEmailTemplateRepository, EmailTemplateRepository>();
-
+            services.AddScoped<IEmailConversationRepository, EmailConversationRepository>();
+            services.AddScoped<IEmailConversationMessageRepository, EmailConversationMessageRepository>();
             services.AddScoped<IUserRoleRepository, UserRoleRepository>();
             services.AddScoped<IUserTokenRepository, UserTokenRepository>();
         }

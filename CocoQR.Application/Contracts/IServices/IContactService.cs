@@ -20,8 +20,10 @@ namespace CocoQR.Application.Contracts.IServices
             DateTime? fromDate,
             DateTime? toDate);
         Task<GetContactMessageRes> GetByIdAsync(Guid id);
+        Task<IEnumerable<EmailConversationMessageRes>> GetConversationAsync(Guid contactMessageId);
+        Task<IEnumerable<EmailConversationMessageRes>> GetConversationByIdAsync(Guid conversationId);
         Task ContactToSystemAsync(ContactRequest request);
-        Task ContactFromSystemAsync(AdminContactRequest request);
+        Task<SendEmailConversationMessageRes> ContactFromSystemAsync(AdminContactRequest request);
         Task IgnoreContactMessageAsync(Guid contactMessageId);
     }
 }

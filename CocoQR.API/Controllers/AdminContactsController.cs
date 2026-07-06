@@ -1,4 +1,4 @@
-using CocoQR.Application.Contracts.IServices;
+    using CocoQR.Application.Contracts.IServices;
 using CocoQR.Application.DTOs.Base.BaseRes;
 using CocoQR.Application.DTOs.Contacts.Requests;
 using CocoQR.Application.DTOs.Contacts.Responses;
@@ -56,12 +56,34 @@ namespace CocoQR.API.Controllers
         [HttpPost]
         public async Task<IActionResult> Contact([FromBody] AdminContactRequest request)
         {
-            await _contactService.ContactFromSystemAsync(request);
+            var result = await _contactService.ContactFromSystemAsync(request);
 
-            return Ok(new BaseResponseModel<string>(
+            return Ok(new BaseResponseModel<SendEmailConversationMessageRes>(
                 code: SuccessCode.Success,
-                data: null,
+                data: result,
                 message: "Đã gửi liên hệ"));
+        }
+
+        [HttpGet("{id:guid}/conversation")]
+        public async Task<IActionResult> GetConversation([FromRoute] Guid id)
+        {
+            var result = await _contactService.GetConversationAsync(id);
+
+            return Ok(new BaseResponseModel<IEnumerable<EmailConversationMessageRes>>(
+                code: SuccessCode.Success,
+                data: result,
+                message: null));
+        }
+
+        [HttpGet("conversations/{conversationId:guid}")]
+        public async Task<IActionResult> GetConversationById([FromRoute] Guid conversationId)
+        {
+            var result = await _contactService.GetConversationByIdAsync(conversationId);
+
+            return Ok(new BaseResponseModel<IEnumerable<EmailConversationMessageRes>>(
+                code: SuccessCode.Success,
+                data: result,
+                message: null));
         }
 
         [HttpPatch("{id:guid}/ignore")]

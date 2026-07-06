@@ -17,8 +17,8 @@ namespace CocoQR.Application.Contracts.IUnitOfWork
         IBankInfoRepository BankInfos { get; }
         IProviderRepository Providers { get; }
         IContactMessageRepository ContactMessages { get; }
-        IEmailTemplateRepository EmailTemplates { get; }
-
+        IEmailConversationRepository EmailConversations { get; }
+        IEmailConversationMessageRepository EmailConversationMessages { get; }
         IUserTokenRepository UserTokens { get; }
         IUserRoleRepository UserRoles { get; }
 

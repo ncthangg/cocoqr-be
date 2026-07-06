@@ -14,6 +14,9 @@ namespace CocoQR.Application.Contracts.ISubServices
         Task<MailGatewaySendResponse?> SendAsync(
             CocoMailEmailRequest email,
             CancellationToken cancellationToken = default);
+
+        Task<IReadOnlyList<CocoMailTemplateResponse>> GetTemplatesAsync(
+            CancellationToken cancellationToken = default);
     }
 
     public sealed class CocoMailGatewayRequest
@@ -65,5 +68,16 @@ namespace CocoQR.Application.Contracts.ISubServices
         public string CorrelationId { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;
         public string? Message { get; set; }
+    }
+
+    public sealed class CocoMailTemplateResponse
+    {
+        public Guid Id { get; set; }
+        public string TemplateKey { get; set; } = string.Empty;
+        public string Subject { get; set; } = string.Empty;
+        public string Html { get; set; } = string.Empty;
+        public int Version { get; set; } = 1;
+        public bool IsActive { get; set; } = true;
+        public List<string> Placeholders { get; set; } = [];
     }
 }

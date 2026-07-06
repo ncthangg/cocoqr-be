@@ -20,58 +20,15 @@ namespace CocoQR.API.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Get()
+        public async Task<IActionResult> Get(CancellationToken cancellationToken)
         {
-            var result = await _emailTemplateService.GetAllAsync();
+            var result = await _emailTemplateService.GetAllAsync(cancellationToken);
 
-            return Ok(new BaseResponseModel<IEnumerable<GetEmailTemplateRes>>(
+            return Ok(new BaseResponseModel<IReadOnlyList<GetEmailTemplateRes>>(
                 code: SuccessCode.Success,
                 data: result,
                 message: null));
         }
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(Guid id)
-        {
-            var result = await _emailTemplateService.GetByIdAsync(id);
-
-            return Ok(new BaseResponseModel<GetEmailTemplateRes>(
-                code: SuccessCode.Success,
-                data: result,
-                message: null));
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> Post([FromBody] PostEmailTemplateReq request)
-        {
-            var result = await _emailTemplateService.PostAsync(request);
-
-            return Ok(new BaseResponseModel<Guid>(
-                code: SuccessCode.Success,
-                data: result,
-                message: SuccessMessages.CreateSuccess));
-        }
-
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Put(Guid id, [FromBody] PutEmailTemplateReq request)
-        {
-            await _emailTemplateService.PutAsync(id, request);
-
-            return Ok(new BaseResponseModel<string>(
-                code: SuccessCode.Success,
-                data: null,
-                message: SuccessMessages.UpdateSuccess));
-        }
-
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(Guid id)
-        {
-            await _emailTemplateService.DeleteAsync(id);
-
-            return Ok(new BaseResponseModel<string>(
-                code: SuccessCode.Success,
-                data: null,
-                message: SuccessMessages.DeleteSuccess));
-        }
     }
 }

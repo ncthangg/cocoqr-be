@@ -61,6 +61,9 @@ namespace CocoQR.Infrastructure.SubService
             if (string.IsNullOrWhiteSpace(_options.SendEndpoint))
                 throw new InvalidOperationException("CocoMail:SendEndpoint is required.");
 
+            if (string.IsNullOrWhiteSpace(_options.TemplateEndpoint))
+                throw new InvalidOperationException("CocoMail:TemplateEndpoint is required.");
+
             if (string.IsNullOrWhiteSpace(_options.SystemCode))
                 throw new InvalidOperationException("CocoMail:SystemCode is required.");
 
@@ -136,6 +139,70 @@ namespace CocoQR.Infrastructure.SubService
             }
 
             return JsonSerializer.Deserialize<MailGatewaySendResponse>(responseBody, JsonOptions);
+        }
+
+        public async Task<IReadOnlyList<CocoMailTemplateResponse>> GetTemplatesAsync(
+            CancellationToken cancellationToken = default)
+        {
+            using var response = await _httpClient.GetAsync(
+                _options.TemplateEndpoint,
+                cancellationToken);
+            var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogError(
+                    "CocoMail template endpoint returned {StatusCode}. Body={Body}",
+                    response.StatusCode,
+                    responseBody);
+                response.EnsureSuccessStatusCode();
+            }
+
+            using var document = JsonDocument.Parse(responseBody);
+            var root = document.RootElement;
+            var templatesElement = ResolveTemplatesElement(root);
+
+            if (templatesElement.ValueKind != JsonValueKind.Array)
+            {
+                return [];
+            }
+
+            return JsonSerializer.Deserialize<List<CocoMailTemplateResponse>>(
+                templatesElement.GetRawText(),
+                JsonOptions) ?? [];
+        }
+
+        private static JsonElement ResolveTemplatesElement(JsonElement root)
+        {
+            if (root.ValueKind == JsonValueKind.Array)
+            {
+                return root;
+            }
+
+            if (!root.TryGetProperty("data", out var data))
+            {
+                return default;
+            }
+
+            if (data.ValueKind == JsonValueKind.Array)
+            {
+                return data;
+            }
+
+            if (data.ValueKind == JsonValueKind.Object)
+            {
+                if (data.TryGetProperty("items", out var items))
+                {
+                    return items;
+                }
+
+                if (data.TryGetProperty("list", out var list))
+                {
+                    return list;
+                }
+            }
+
+            return default;
         }
 
         private static string SignRsaSha256(string privateKeyBase64, string payload)

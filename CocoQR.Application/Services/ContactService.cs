@@ -63,18 +63,64 @@ namespace CocoQR.Application.Services
 
             await _unitOfWork.ContactMessages.AddAsync(message);
 
+            var senderUser = await _unitOfWork.Users.GetByEmailAsync(message.Email);
+            var recipientUser = string.IsNullOrWhiteSpace(_emailConfiguration.AdminNotificationEmail)
+                ? null
+                : await _unitOfWork.Users.GetByEmailAsync(_emailConfiguration.AdminNotificationEmail);
+            var conversation = new EmailConversation
+            {
+                Id = _idGenerator.NewId(),
+                ContactMessageId = message.Id,
+                InitiatorUserId = senderUser?.Id,
+                RecipientUserId = recipientUser?.Id,
+                InitiatorEmail = message.Email,
+                RecipientEmail = _emailConfiguration.AdminNotificationEmail ?? "cocoqr",
+                Subject = "Lien he moi tu nguoi dung",
+                CreatedAt = message.CreatedAt,
+                LastMessageAt = message.CreatedAt
+            };
+            await _unitOfWork.EmailConversations.AddAsync(conversation);
+
+            await AddConversationMessageAsync(new EmailConversationMessage
+            {
+                ConversationId = conversation.Id,
+                SenderUserId = senderUser?.Id,
+                FromEmail = message.Email,
+                ToEmail = _emailConfiguration.AdminNotificationEmail ?? "cocoqr",
+                Subject = "Lien he moi tu nguoi dung",
+                Body = message.Content,
+                Direction = EmailConversationDirection.INBOUND,
+                Status = EmailConversationMessageStatus.RECEIVED
+            });
+
             var thankYouMail = await ResolveTemplateOrDefaultAsync(
                 EmailTemplateKeys.ContactThankYou,
                 request,
                 "Cam on ban da lien he",
                 $"<p>Xin chao {WebUtility.HtmlEncode(request.FullName.Trim())},</p><p>Cam on ban da lien he voi he thong. Chung toi da nhan duoc thong tin va se phan hoi som nhat co the.</p>");
 
-            await SendEmailBestEffortAsync(
+            var thankYouResult = await SendEmailBestEffortAsync(
                 request.Email.Trim(),
                 thankYouMail.Subject,
                 thankYouMail.Body,
                 "Failed to send thank-you email for contact message {ContactMessageId}.",
                 message.Id);
+
+            await AddConversationMessageAsync(new EmailConversationMessage
+            {
+                ConversationId = conversation.Id,
+                RecipientUserId = senderUser?.Id,
+                FromEmail = _emailConfiguration.AdminNotificationEmail ?? "cocoqr",
+                ToEmail = request.Email.Trim(),
+                Subject = thankYouMail.Subject,
+                Body = thankYouMail.Body,
+                Direction = EmailConversationDirection.OUTBOUND,
+                Status = thankYouResult.Error == null
+                    ? EmailConversationMessageStatus.SENT
+                    : EmailConversationMessageStatus.FAILED,
+                GatewayMessageId = thankYouResult.Response?.Data?.EmailMessageId,
+                ErrorMessage = thankYouResult.Error?.Message
+            });
 
             var adminMail = await ResolveTemplateOrDefaultAsync(
                 EmailTemplateKeys.AdminNotify,
@@ -167,7 +213,88 @@ namespace CocoQR.Application.Services
             return ContactMapper.ToResponse(message);
         }
 
-        public async Task ContactFromSystemAsync(AdminContactRequest request)
+        public async Task<IEnumerable<EmailConversationMessageRes>> GetConversationAsync(
+            Guid contactMessageId)
+        {
+            EnsureAdmin();
+
+            if (contactMessageId == Guid.Empty)
+            {
+                throw new ArgumentException("Id lien he khong hop le.", nameof(contactMessageId));
+            }
+
+            _ = await _unitOfWork.ContactMessages.GetByIdForAdminAsync(contactMessageId)
+                ?? throw new ApplicationException(ErrorCode.NotFound, ErrorMessages.ContactNotFound);
+
+            var conversation = await _unitOfWork.EmailConversations
+                .GetByContactMessageIdAsync(contactMessageId)
+                ?? throw new ApplicationException(
+                    ErrorCode.NotFound,
+                    "Khong tim thay conversation cua lien he.");
+
+            var messages = await _unitOfWork.EmailConversationMessages
+                .GetByConversationIdAsync(conversation.Id);
+
+            return messages.Select(x => new EmailConversationMessageRes
+            {
+                Id = x.Id,
+                ConversationId = x.ConversationId,
+                SequenceNumber = x.SequenceNumber,
+                SenderUserId = x.SenderUserId,
+                RecipientUserId = x.RecipientUserId,
+                FromEmail = x.FromEmail,
+                ToEmail = x.ToEmail,
+                Subject = x.Subject,
+                Body = x.Body,
+                Direction = x.Direction,
+                Status = x.Status,
+                GatewayMessageId = x.GatewayMessageId,
+                ErrorMessage = x.ErrorMessage,
+                CreatedAt = x.CreatedAt
+            });
+        }
+
+        public async Task<IEnumerable<EmailConversationMessageRes>> GetConversationByIdAsync(
+            Guid conversationId)
+        {
+            EnsureAdmin();
+
+            if (conversationId == Guid.Empty)
+            {
+                throw new ArgumentException(
+                    "Id conversation khong hop le.",
+                    nameof(conversationId));
+            }
+
+            _ = await _unitOfWork.EmailConversations.GetByIdAsync(conversationId)
+                ?? throw new ApplicationException(
+                    ErrorCode.NotFound,
+                    "Khong tim thay conversation.");
+
+            var messages = await _unitOfWork.EmailConversationMessages
+                .GetByConversationIdAsync(conversationId);
+
+            return messages.Select(x => new EmailConversationMessageRes
+            {
+                Id = x.Id,
+                ConversationId = x.ConversationId,
+                SequenceNumber = x.SequenceNumber,
+                SenderUserId = x.SenderUserId,
+                RecipientUserId = x.RecipientUserId,
+                FromEmail = x.FromEmail,
+                ToEmail = x.ToEmail,
+                Subject = x.Subject,
+                Body = x.Body,
+                Direction = x.Direction,
+                Status = x.Status,
+                GatewayMessageId = x.GatewayMessageId,
+                ErrorMessage = x.ErrorMessage,
+                CreatedAt = x.CreatedAt
+            });
+        }
+
+        public async Task<SendEmailConversationMessageRes> ContactFromSystemAsync(
+            AdminContactRequest request)
         {
             ArgumentNullException.ThrowIfNull(request);
             EnsureAdmin();
@@ -178,24 +305,65 @@ namespace CocoQR.Application.Services
                 ? request.Content.Trim()
                 : request.HtmlBody;
 
-            await _emailService.SendAsync(request.Email.Trim(), subject, body);
+            var senderUserId = _userContext.UserId
+                ?? throw new ApplicationException(ErrorCode.Unauthorized, ErrorMessages.Unauthorized);
+            var senderUser = await _unitOfWork.Users.GetByIdAsync(senderUserId)
+                ?? throw new ApplicationException(ErrorCode.NotFound, ErrorMessages.UserNotFound);
+            var recipientUser = await _unitOfWork.Users.GetByEmailAsync(request.Email.Trim());
 
-            if (request.ContactMessageId.HasValue && request.ContactMessageId.Value != Guid.Empty)
+            var (conversation, contactMessage) = await ResolveConversationAsync(
+                request,
+                senderUser,
+                recipientUser,
+                subject);
+
+            MailGatewaySendResponse? sendResponse = null;
+            Exception? sendError = null;
+            try
             {
-                var message = await _unitOfWork.ContactMessages.GetByIdForAdminAsync(request.ContactMessageId.Value)
-                    ?? throw new ApplicationException(ErrorCode.NotFound, ErrorMessages.ContactNotFound);
-
-                if (message.Status != ContactMessageStatus.NEW)
-                {
-                    throw new ApplicationException(
-                        ErrorCode.BadRequest,
-                        "Chi co the phan hoi lien he dang o trang thai NEW.");
-                }
-
-                message.Status = ContactMessageStatus.REPLIED;
-                message.RepliedAt = DateTime.UtcNow;
-                await _unitOfWork.ContactMessages.UpdateAsync(message);
+                sendResponse = await _emailService.SendAsync(request.Email.Trim(), subject, body);
             }
+            catch (Exception ex)
+            {
+                sendError = ex;
+            }
+
+            var conversationMessage = new EmailConversationMessage
+            {
+                ConversationId = conversation.Id,
+                SenderUserId = senderUser.Id,
+                RecipientUserId = recipientUser?.Id,
+                FromEmail = senderUser.Email,
+                ToEmail = request.Email.Trim(),
+                Subject = subject,
+                Body = body,
+                Direction = EmailConversationDirection.OUTBOUND,
+                Status = sendError == null
+                    ? EmailConversationMessageStatus.SENT
+                    : EmailConversationMessageStatus.FAILED,
+                GatewayMessageId = sendResponse?.Data?.EmailMessageId,
+                ErrorMessage = sendError?.Message
+            };
+            var sequenceNumber = await AddConversationMessageAsync(conversationMessage);
+
+            if (sendError != null)
+            {
+                throw sendError;
+            }
+
+            if (contactMessage != null)
+            {
+                contactMessage.Status = ContactMessageStatus.REPLIED;
+                contactMessage.RepliedAt = DateTime.UtcNow;
+                await _unitOfWork.ContactMessages.UpdateAsync(contactMessage);
+            }
+
+            return new SendEmailConversationMessageRes
+            {
+                ConversationId = conversation.Id,
+                MessageId = conversationMessage.Id,
+                SequenceNumber = sequenceNumber
+            };
         }
 
         public async Task IgnoreContactMessageAsync(Guid contactMessageId)
@@ -258,7 +426,7 @@ namespace CocoQR.Application.Services
             }
         }
 
-        private async Task SendEmailBestEffortAsync(
+        private async Task<(MailGatewaySendResponse? Response, Exception? Error)> SendEmailBestEffortAsync(
             string to,
             string subject,
             string body,
@@ -267,12 +435,127 @@ namespace CocoQR.Application.Services
         {
             try
             {
-                await _emailService.SendAsync(to, subject, body);
+                var response = await _emailService.SendAsync(to, subject, body);
+                return (response, null);
             }
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, logMessage, contactMessageId);
+                return (null, ex);
             }
+        }
+
+        private async Task<(EmailConversation Conversation, ContactMessage? ContactMessage)>
+            ResolveConversationAsync(
+                AdminContactRequest request,
+                User senderUser,
+                User? recipientUser,
+                string subject)
+        {
+            ContactMessage? contactMessage = null;
+            EmailConversation? conversation = null;
+
+            if (request.ConversationId.HasValue && request.ConversationId.Value != Guid.Empty)
+            {
+                conversation = await _unitOfWork.EmailConversations
+                    .GetByIdAsync(request.ConversationId.Value)
+                    ?? throw new ApplicationException(
+                        ErrorCode.NotFound,
+                        "Khong tim thay conversation.");
+            }
+            else if (request.ContactMessageId.HasValue &&
+                     request.ContactMessageId.Value != Guid.Empty)
+            {
+                contactMessage = await GetReplyableContactMessageAsync(request.ContactMessageId.Value);
+                conversation = await _unitOfWork.EmailConversations
+                    .GetByContactMessageIdAsync(contactMessage.Id)
+                    ?? throw new ApplicationException(
+                        ErrorCode.NotFound,
+                        "Khong tim thay conversation cua lien he.");
+            }
+
+            if (conversation != null)
+            {
+                var expectedRecipientEmail =
+                    conversation.InitiatorUserId == senderUser.Id
+                        ? conversation.RecipientEmail
+                        : conversation.RecipientUserId == senderUser.Id ||
+                          conversation.ContactMessageId.HasValue
+                            ? conversation.InitiatorEmail
+                            : conversation.RecipientEmail;
+
+                if (!string.Equals(
+                        expectedRecipientEmail,
+                        request.Email.Trim(),
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new ApplicationException(
+                        ErrorCode.BadRequest,
+                        "Nguoi nhan khong dung voi conversation nay.");
+                }
+
+                if (conversation.ContactMessageId.HasValue && contactMessage == null)
+                {
+                    contactMessage = await GetReplyableContactMessageAsync(
+                        conversation.ContactMessageId.Value);
+                }
+
+                return (conversation, contactMessage);
+            }
+
+            if (recipientUser == null)
+            {
+                throw new ApplicationException(
+                    ErrorCode.NotFound,
+                    "Nguoi nhan chua ton tai trong he thong.");
+            }
+
+            var now = DateTime.UtcNow;
+            conversation = new EmailConversation
+            {
+                Id = _idGenerator.NewId(),
+                InitiatorUserId = senderUser.Id,
+                RecipientUserId = recipientUser.Id,
+                InitiatorEmail = senderUser.Email,
+                RecipientEmail = recipientUser.Email,
+                Subject = subject,
+                CreatedAt = now,
+                LastMessageAt = now
+            };
+            await _unitOfWork.EmailConversations.AddAsync(conversation);
+            return (conversation, null);
+        }
+
+        private async Task<ContactMessage> GetReplyableContactMessageAsync(Guid contactMessageId)
+        {
+            var contactMessage = await _unitOfWork.ContactMessages
+                .GetByIdForAdminAsync(contactMessageId)
+                ?? throw new ApplicationException(ErrorCode.NotFound, ErrorMessages.ContactNotFound);
+
+            if (contactMessage.Status == ContactMessageStatus.IGNORED)
+            {
+                throw new ApplicationException(
+                    ErrorCode.BadRequest,
+                    "Khong the phan hoi lien he da bi bo qua.");
+            }
+
+            return contactMessage;
+        }
+
+        private async Task<int> AddConversationMessageAsync(EmailConversationMessage message)
+        {
+            message.Id = _idGenerator.NewId();
+            message.CreatedAt = DateTime.UtcNow;
+            if (message.ErrorMessage?.Length > 2000)
+            {
+                message.ErrorMessage = message.ErrorMessage[..2000];
+            }
+
+            var sequenceNumber = await _unitOfWork.EmailConversationMessages
+                .AddToConversationAsync(message);
+            await _unitOfWork.EmailConversations
+                .UpdateLastMessageAtAsync(message.ConversationId, message.CreatedAt);
+            return sequenceNumber;
         }
 
         private static void ValidatePublicRequest(ContactRequest request)

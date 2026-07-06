@@ -1,12 +1,13 @@
 namespace CocoQR.Application.DTOs.Settings
 {
-    public class GetEmailTemplateRes
+    public sealed class GetEmailTemplateRes
     {
         public Guid Id { get; set; }
         public string TemplateKey { get; set; } = string.Empty;
         public string Subject { get; set; } = string.Empty;
-        public string Body { get; set; } = string.Empty;
-        public bool IsActive { get; set; }
-        public DateTime? UpdatedAt { get; set; }
+        public string Html { get; set; } = string.Empty;
+        public int Version { get; set; } = 1;
+        public bool IsActive { get; set; } = true;
+        public List<string> Placeholders { get; set; } = [];
     }
 }

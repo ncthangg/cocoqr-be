@@ -3,6 +3,7 @@ namespace CocoQR.Application.DTOs.Contacts.Requests
     public class AdminContactRequest
     {
         public Guid? ContactMessageId { get; set; }
+        public Guid? ConversationId { get; set; }
         public string FullName { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public string Subject { get; set; } = string.Empty;

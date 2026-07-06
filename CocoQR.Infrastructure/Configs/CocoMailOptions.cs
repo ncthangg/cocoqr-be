@@ -6,6 +6,7 @@ namespace CocoQR.Infrastructure.Configs
     {
         public string? BaseUrl { get; set; }
         public string? SendEndpoint { get; set; }
+        public string? TemplateEndpoint { get; set; }
         public string? SystemCode { get; set; }
         public string? KeyId { get; set; }
         public string? PrivateKeyBase64 { get; set; }
