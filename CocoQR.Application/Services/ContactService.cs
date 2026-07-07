@@ -175,15 +175,13 @@ namespace CocoQR.Application.Services
                 pageSize = 10;
             }
 
-            var (items, totalCount) = await _unitOfWork.ContactMessages.GetPagedForAdminAsync(
+            var (items, totalCount) = await _unitOfWork.EmailConversations.GetPagedForAdminAsync(
                 pageNumber,
                 pageSize,
                 sortField,
                 sortDirection,
                 userId,
-                providerId,
                 searchValue,
-                isActive,
                 contactStatus,
                 fromDate,
                 toDate);
@@ -214,47 +212,6 @@ namespace CocoQR.Application.Services
         }
 
         public async Task<IEnumerable<EmailConversationMessageRes>> GetConversationAsync(
-            Guid contactMessageId)
-        {
-            EnsureAdmin();
-
-            if (contactMessageId == Guid.Empty)
-            {
-                throw new ArgumentException("Id lien he khong hop le.", nameof(contactMessageId));
-            }
-
-            _ = await _unitOfWork.ContactMessages.GetByIdForAdminAsync(contactMessageId)
-                ?? throw new ApplicationException(ErrorCode.NotFound, ErrorMessages.ContactNotFound);
-
-            var conversation = await _unitOfWork.EmailConversations
-                .GetByContactMessageIdAsync(contactMessageId)
-                ?? throw new ApplicationException(
-                    ErrorCode.NotFound,
-                    "Khong tim thay conversation cua lien he.");
-
-            var messages = await _unitOfWork.EmailConversationMessages
-                .GetByConversationIdAsync(conversation.Id);
-
-            return messages.Select(x => new EmailConversationMessageRes
-            {
-                Id = x.Id,
-                ConversationId = x.ConversationId,
-                SequenceNumber = x.SequenceNumber,
-                SenderUserId = x.SenderUserId,
-                RecipientUserId = x.RecipientUserId,
-                FromEmail = x.FromEmail,
-                ToEmail = x.ToEmail,
-                Subject = x.Subject,
-                Body = x.Body,
-                Direction = x.Direction,
-                Status = x.Status,
-                GatewayMessageId = x.GatewayMessageId,
-                ErrorMessage = x.ErrorMessage,
-                CreatedAt = x.CreatedAt
-            });
-        }
-
-        public async Task<IEnumerable<EmailConversationMessageRes>> GetConversationByIdAsync(
             Guid conversationId)
         {
             EnsureAdmin();
@@ -364,6 +321,70 @@ namespace CocoQR.Application.Services
                 MessageId = conversationMessage.Id,
                 SequenceNumber = sequenceNumber
             };
+        }
+
+        public async Task DeleteConversationAsync(Guid conversationId)
+        {
+            EnsureAdmin();
+
+            if (conversationId == Guid.Empty)
+            {
+                throw new ArgumentException(
+                    "Id conversation khong hop le.",
+                    nameof(conversationId));
+            }
+
+            _ = await _unitOfWork.EmailConversations.GetByIdAsync(conversationId)
+                ?? throw new ApplicationException(
+                    ErrorCode.NotFound,
+                    "Khong tim thay conversation.");
+
+            await _unitOfWork.EmailConversations.DeleteAsync(conversationId);
+        }
+
+        public async Task DeleteConversationMessageAsync(Guid conversationId, Guid messageId)
+        {
+            EnsureAdmin();
+
+            if (conversationId == Guid.Empty)
+            {
+                throw new ArgumentException(
+                    "Id conversation khong hop le.",
+                    nameof(conversationId));
+            }
+
+            if (messageId == Guid.Empty)
+            {
+                throw new ArgumentException(
+                    "Id message khong hop le.",
+                    nameof(messageId));
+            }
+
+            var conversation = await _unitOfWork.EmailConversations.GetByIdAsync(conversationId)
+                ?? throw new ApplicationException(
+                    ErrorCode.NotFound,
+                    "Khong tim thay conversation.");
+
+            var message = await _unitOfWork.EmailConversationMessages.GetByIdAsync(messageId)
+                ?? throw new ApplicationException(
+                    ErrorCode.NotFound,
+                    "Khong tim thay message trong conversation.");
+
+            if (message.ConversationId != conversationId)
+            {
+                throw new ApplicationException(
+                    ErrorCode.BadRequest,
+                    "Message khong thuoc conversation nay.");
+            }
+
+            await _unitOfWork.EmailConversationMessages.DeleteAsync(messageId);
+
+            var remainingMessages = await _unitOfWork.EmailConversationMessages
+                .GetByConversationIdAsync(conversationId);
+            var lastMessageAt = remainingMessages.LastOrDefault()?.CreatedAt ?? conversation.CreatedAt;
+
+            await _unitOfWork.EmailConversations
+                .UpdateLastMessageAtAsync(conversationId, lastMessageAt);
         }
 
         public async Task IgnoreContactMessageAsync(Guid contactMessageId)

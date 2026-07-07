@@ -64,10 +64,10 @@ namespace CocoQR.API.Controllers
                 message: "Đã gửi liên hệ"));
         }
 
-        [HttpGet("{id:guid}/conversation")]
-        public async Task<IActionResult> GetConversation([FromRoute] Guid id)
+        [HttpGet("conversations/{conversationId:guid}")]
+        public async Task<IActionResult> GetConversation([FromRoute] Guid conversationId)
         {
-            var result = await _contactService.GetConversationAsync(id);
+            var result = await _contactService.GetConversationAsync(conversationId);
 
             return Ok(new BaseResponseModel<IEnumerable<EmailConversationMessageRes>>(
                 code: SuccessCode.Success,
@@ -75,15 +75,28 @@ namespace CocoQR.API.Controllers
                 message: null));
         }
 
-        [HttpGet("conversations/{conversationId:guid}")]
-        public async Task<IActionResult> GetConversationById([FromRoute] Guid conversationId)
+        [HttpDelete("conversations/{conversationId:guid}")]
+        public async Task<IActionResult> DeleteConversation([FromRoute] Guid conversationId)
         {
-            var result = await _contactService.GetConversationByIdAsync(conversationId);
+            await _contactService.DeleteConversationAsync(conversationId);
 
-            return Ok(new BaseResponseModel<IEnumerable<EmailConversationMessageRes>>(
+            return Ok(new BaseResponseModel<string>(
                 code: SuccessCode.Success,
-                data: result,
-                message: null));
+                data: null,
+                message: "Da xoa conversation"));
+        }
+
+        [HttpDelete("conversations/{conversationId:guid}/messages/{messageId:guid}")]
+        public async Task<IActionResult> DeleteConversationMessage(
+            [FromRoute] Guid conversationId,
+            [FromRoute] Guid messageId)
+        {
+            await _contactService.DeleteConversationMessageAsync(conversationId, messageId);
+
+            return Ok(new BaseResponseModel<string>(
+                code: SuccessCode.Success,
+                data: null,
+                message: "Da xoa message trong conversation"));
         }
 
         [HttpPatch("{id:guid}/ignore")]

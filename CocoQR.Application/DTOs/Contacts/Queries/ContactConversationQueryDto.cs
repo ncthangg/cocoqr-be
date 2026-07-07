@@ -1,8 +1,8 @@
 using CocoQR.Domain.Constants.Enum;
 
-namespace CocoQR.Application.DTOs.Contacts.Responses
+namespace CocoQR.Application.DTOs.Contacts.Queries
 {
-    public class GetContactMessageRes
+    public class ContactConversationQueryDto
     {
         public Guid Id { get; set; }
         public Guid ConversationId { get; set; }
