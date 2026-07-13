@@ -43,8 +43,15 @@ namespace CocoQR.Application.Contracts.ISubServices
         public string? BCC { get; set; }
         public required string Subject { get; set; }
         public required string HtmlBody { get; set; }
+        public CocoMailCallbackRequest? Callback { get; set; }
         public int Priority { get; set; } = 5;
         public List<CocoMailAttachmentRequest> Attachments { get; set; } = [];
+    }
+
+    public sealed class CocoMailCallbackRequest
+    {
+        public required string Url { get; set; }
+        public List<string> Events { get; set; } = ["Sent", "Failed"];
     }
 
     public sealed class CocoMailAttachmentRequest

@@ -72,6 +72,7 @@ namespace CocoQR.Infrastructure.DependencyInjection
             services.AddScoped<IContactMessageRepository, ContactMessageRepository>();
             services.AddScoped<IEmailConversationRepository, EmailConversationRepository>();
             services.AddScoped<IEmailConversationMessageRepository, EmailConversationMessageRepository>();
+            services.AddScoped<ICocoMailCallbackEventRepository, CocoMailCallbackEventRepository>();
             services.AddScoped<IUserRoleRepository, UserRoleRepository>();
             services.AddScoped<IUserTokenRepository, UserTokenRepository>();
         }

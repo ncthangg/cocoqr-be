@@ -30,6 +30,12 @@ namespace CocoQR.Infrastructure.Persistence.Repositories
                     Direction,
                     Status,
                     GatewayMessageId,
+                    CorrelationId,
+                    LastCallbackEventId,
+                    LastCallbackAt,
+                    LastCallbackPayload,
+                    FailureCode,
+                    ProviderMessageId,
                     ErrorMessage,
                     CreatedAt
                 )
@@ -47,6 +53,12 @@ namespace CocoQR.Infrastructure.Persistence.Repositories
                     @Direction,
                     @Status,
                     @GatewayMessageId,
+                    @CorrelationId,
+                    @LastCallbackEventId,
+                    @LastCallbackAt,
+                    @LastCallbackPayload,
+                    @FailureCode,
+                    @ProviderMessageId,
                     @ErrorMessage,
                     @CreatedAt
                 FROM EmailConversationMessages WITH (UPDLOCK, HOLDLOCK)
@@ -66,6 +78,12 @@ namespace CocoQR.Infrastructure.Persistence.Repositories
                 Direction = message.Direction.ToString(),
                 Status = message.Status.ToString(),
                 message.GatewayMessageId,
+                message.CorrelationId,
+                message.LastCallbackEventId,
+                message.LastCallbackAt,
+                message.LastCallbackPayload,
+                message.FailureCode,
+                message.ProviderMessageId,
                 message.ErrorMessage,
                 message.CreatedAt
             });
@@ -88,6 +106,12 @@ namespace CocoQR.Infrastructure.Persistence.Repositories
                     Direction,
                     Status,
                     GatewayMessageId,
+                    CorrelationId,
+                    LastCallbackEventId,
+                    LastCallbackAt,
+                    LastCallbackPayload,
+                    FailureCode,
+                    ProviderMessageId,
                     ErrorMessage,
                     CreatedAt
                 FROM EmailConversationMessages
@@ -96,6 +120,68 @@ namespace CocoQR.Infrastructure.Persistence.Repositories
                 """;
 
             return QueryAsync<EmailConversationMessage>(sql, new { ConversationId = conversationId });
+        }
+
+        public async Task<EmailConversationMessage?> GetByGatewayMessageIdAsync(Guid gatewayMessageId)
+        {
+            const string sql = """
+                SELECT TOP 1
+                    Id,
+                    ConversationId,
+                    SequenceNumber,
+                    SenderUserId,
+                    RecipientUserId,
+                    FromEmail,
+                    ToEmail,
+                    Subject,
+                    Body,
+                    Direction,
+                    Status,
+                    GatewayMessageId,
+                    CorrelationId,
+                    LastCallbackEventId,
+                    LastCallbackAt,
+                    LastCallbackPayload,
+                    FailureCode,
+                    ProviderMessageId,
+                    ErrorMessage,
+                    CreatedAt
+                FROM EmailConversationMessages
+                WHERE GatewayMessageId = @GatewayMessageId;
+                """;
+
+            var message = await QueryFirstOrDefaultAsync<EmailConversationMessage>(
+                sql,
+                new { GatewayMessageId = gatewayMessageId });
+            return message;
+        }
+
+        public async Task UpdateDeliveryStatusAsync(EmailConversationMessage message)
+        {
+            const string sql = """
+                UPDATE EmailConversationMessages
+                SET
+                    Status = @Status,
+                    LastCallbackEventId = @LastCallbackEventId,
+                    LastCallbackAt = @LastCallbackAt,
+                    LastCallbackPayload = @LastCallbackPayload,
+                    FailureCode = @FailureCode,
+                    ProviderMessageId = @ProviderMessageId,
+                    ErrorMessage = @ErrorMessage
+                WHERE Id = @Id;
+                """;
+
+            await ExecuteAsync(sql, new
+            {
+                message.Id,
+                Status = message.Status.ToString(),
+                message.LastCallbackEventId,
+                message.LastCallbackAt,
+                message.LastCallbackPayload,
+                message.FailureCode,
+                message.ProviderMessageId,
+                message.ErrorMessage
+            });
         }
     }
 }

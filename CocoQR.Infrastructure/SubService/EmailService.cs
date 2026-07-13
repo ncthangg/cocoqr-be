@@ -46,11 +46,26 @@ namespace CocoQR.Infrastructure.SubService
                 To = to.Trim(),
                 Subject = subject.Trim(),
                 HtmlBody = body,
+                Callback = CreateCallback(),
                 Priority = _options.DefaultPriority,
                 Attachments = []
             };
 
             return await _cocoMailClient.SendAsync(email, cancellationToken);
+        }
+
+        private CocoMailCallbackRequest? CreateCallback()
+        {
+            if (string.IsNullOrWhiteSpace(_options.CallbackUrl))
+            {
+                return null;
+            }
+
+            return new CocoMailCallbackRequest
+            {
+                Url = _options.CallbackUrl,
+                Events = ["Sent", "Failed"]
+            };
         }
 
         private void EnsureConfigured()

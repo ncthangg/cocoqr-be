@@ -25,6 +25,7 @@ namespace CocoQR.Application.DependencyInjection
             services.AddScoped<IBankInfoService, BankInfoService>();
             services.AddScoped<IProviderService, ProviderService>();
             services.AddScoped<IContactService, ContactService>();
+            services.AddScoped<ICocoMailCallbackService, CocoMailCallbackService>();
 
             services.AddScoped<IUserRoleService, UserRoleService>();
             services.AddScoped<IEmailTemplateService, EmailTemplateService>();

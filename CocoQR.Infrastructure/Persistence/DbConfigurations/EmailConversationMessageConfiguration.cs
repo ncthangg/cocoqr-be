@@ -18,6 +18,11 @@ namespace CocoQR.Infrastructure.Persistence.DbConfigurations
             builder.Property(x => x.Body).IsRequired().HasColumnType("nvarchar(max)");
             builder.Property(x => x.Direction).IsRequired().HasConversion<string>().HasMaxLength(20);
             builder.Property(x => x.Status).IsRequired().HasConversion<string>().HasMaxLength(20);
+            builder.Property(x => x.CorrelationId).HasMaxLength(100);
+            builder.Property(x => x.LastCallbackEventId).HasMaxLength(100);
+            builder.Property(x => x.LastCallbackPayload).HasColumnType("nvarchar(max)");
+            builder.Property(x => x.FailureCode).HasMaxLength(100);
+            builder.Property(x => x.ProviderMessageId).HasMaxLength(200);
             builder.Property(x => x.ErrorMessage).HasMaxLength(2000);
             builder.Property(x => x.CreatedAt).IsRequired().HasDefaultValueSql("GETUTCDATE()");
 
@@ -30,6 +35,12 @@ namespace CocoQR.Infrastructure.Persistence.DbConfigurations
 
             builder.HasIndex(x => new { x.RecipientUserId, x.CreatedAt })
                 .HasDatabaseName("IX_EmailConversationMessages_Recipient_CreatedAt");
+
+            builder.HasIndex(x => x.GatewayMessageId)
+                .HasDatabaseName("IX_EmailConversationMessages_GatewayMessageId");
+
+            builder.HasIndex(x => x.CorrelationId)
+                .HasDatabaseName("IX_EmailConversationMessages_CorrelationId");
 
             builder.HasOne(x => x.Conversation)
                 .WithMany()

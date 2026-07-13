@@ -22,6 +22,7 @@ namespace CocoQR.Infrastructure.Persistence.MyDbContext
         public DbSet<ContactMessage> ContactMessages { get; set; }
         public DbSet<EmailConversation> EmailConversations { get; set; }
         public DbSet<EmailConversationMessage> EmailConversationMessages { get; set; }
+        public DbSet<CocoMailCallbackEvent> CocoMailCallbackEvents { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

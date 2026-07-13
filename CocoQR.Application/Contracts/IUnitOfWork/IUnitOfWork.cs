@@ -19,6 +19,7 @@ namespace CocoQR.Application.Contracts.IUnitOfWork
         IContactMessageRepository ContactMessages { get; }
         IEmailConversationRepository EmailConversations { get; }
         IEmailConversationMessageRepository EmailConversationMessages { get; }
+        ICocoMailCallbackEventRepository CocoMailCallbackEvents { get; }
         IUserTokenRepository UserTokens { get; }
         IUserRoleRepository UserRoles { get; }
 

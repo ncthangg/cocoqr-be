@@ -13,9 +13,14 @@ namespace CocoQR.Application.DTOs.Contacts.Responses
         public string ToEmail { get; set; } = string.Empty;
         public string Subject { get; set; } = string.Empty;
         public string Body { get; set; } = string.Empty;
-        public EmailConversationDirection Direction { get; set; }
-        public EmailConversationMessageStatus Status { get; set; }
+        public EmailDirection Direction { get; set; }
+        public EmailDeliveryStatus Status { get; set; }
         public Guid? GatewayMessageId { get; set; }
+        public string? CorrelationId { get; set; }
+        public string? LastCallbackEventId { get; set; }
+        public DateTime? LastCallbackAt { get; set; }
+        public string? FailureCode { get; set; }
+        public string? ProviderMessageId { get; set; }
         public string? ErrorMessage { get; set; }
         public DateTime CreatedAt { get; set; }
     }

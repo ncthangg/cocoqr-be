@@ -7,5 +7,7 @@ namespace CocoQR.Application.Contracts.IRepositories
     {
         Task<int> AddToConversationAsync(EmailConversationMessage message);
         Task<IEnumerable<EmailConversationMessage>> GetByConversationIdAsync(Guid conversationId);
+        Task<EmailConversationMessage?> GetByGatewayMessageIdAsync(Guid gatewayMessageId);
+        Task UpdateDeliveryStatusAsync(EmailConversationMessage message);
     }
 }

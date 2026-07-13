@@ -27,6 +27,7 @@ namespace CocoQR.Infrastructure.Persistence.UnitOfWork
         private IContactMessageRepository? _contactMessageRepository;
         private IEmailConversationRepository? _emailConversationRepository;
         private IEmailConversationMessageRepository? _emailConversationMessageRepository;
+        private ICocoMailCallbackEventRepository? _cocoMailCallbackEventRepository;
         private IQRStyleLibraryRepository? _qrStyleLibraryRepository;
 
         public IDbConnection Connection
@@ -68,6 +69,8 @@ namespace CocoQR.Infrastructure.Persistence.UnitOfWork
             => _emailConversationRepository ??= new EmailConversationRepository(this);
         public IEmailConversationMessageRepository EmailConversationMessages
             => _emailConversationMessageRepository ??= new EmailConversationMessageRepository(this);
+        public ICocoMailCallbackEventRepository CocoMailCallbackEvents
+            => _cocoMailCallbackEventRepository ??= new CocoMailCallbackEventRepository(this);
         public IQRStyleLibraryRepository QRStyleLibraries
             => _qrStyleLibraryRepository ??= new QRStyleLibraryRepository(this, _dbContext);
         // Expose DbContext for repositories that need it

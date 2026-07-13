@@ -57,17 +57,21 @@
         IGNORED
     }
 
-    public enum EmailConversationDirection
+    public enum EmailDirection
     {
         INBOUND,
         OUTBOUND
     }
 
-    public enum EmailConversationMessageStatus
+    public enum EmailDeliveryStatus
     {
         RECEIVED,
+        PENDING,
+        QUEUED,
+        SENDING,
         SENT,
-        FAILED
+        FAILED,
+        CANCELLED
     }
 
 }
