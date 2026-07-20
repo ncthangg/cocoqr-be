@@ -46,18 +46,18 @@ public class NapasQrBuilder : IQrPayloadBuilder
 
         // Inner nested: BIN + AccountNumber
         var accountBlock = TLVEncoder.EncodeMany(
-            (EMVTags.AccountBin, napasBin),                              // 00
-            (EMVTags.AccountNumber, request.AccountNumber)                  // 01
+            (EmvTags.AccountBin, napasBin),                              // 00
+            (EmvTags.AccountNumber, request.AccountNumber)                  // 01
         );
 
         // Merchant block: GUID + ServiceCode + AccountInfo
         var merchantBlock = TLVEncoder.EncodeMany(
-            (EMVTags.MerchantGuid, NapasRid.Value),
-            (EMVTags.MerchantAccountBlock, accountBlock),
-            (EMVTags.MerchantServiceCode, NapasServiceCodes.AccountTransfer)
+            (EmvTags.MerchantGuid, NapasRid.Value),
+            (EmvTags.MerchantAccountBlock, accountBlock),
+            (EmvTags.MerchantServiceCode, NapasServiceCodes.AccountTransfer)
         );
 
         // Field 38 = NAPAS bank transfer
-        return TLVEncoder.Encode(EMVTags.MerchantNapas, merchantBlock);
+        return TLVEncoder.Encode(EmvTags.MerchantNapas, merchantBlock);
     }
 }

@@ -177,7 +177,7 @@ namespace CocoQR.Infrastructure.DependencyInjection
                     options.ConnectRetry = configuration.GetValue<int>(RedisConfig.ConnectRetry);
                     options.ConnectTimeout = configuration.GetValue<int>(RedisConfig.ConnectTimeoutMs);
                     options.SyncTimeout = configuration.GetValue<int>(RedisConfig.SyncTimeoutMs);
-                    options.AsyncTimeout = configuration.GetValue<int>(RedisConfig.ASyncTimeoutMs);
+                    options.AsyncTimeout = configuration.GetValue<int>(RedisConfig.AsyncTimeoutMs);
 
                     options.ReconnectRetryPolicy = new LinearRetry(configuration.GetValue<int>(RedisConfig.ReconnectRetryIntervalMs));
 
@@ -218,3 +218,4 @@ namespace CocoQR.Infrastructure.DependencyInjection
 
     }
 }
+

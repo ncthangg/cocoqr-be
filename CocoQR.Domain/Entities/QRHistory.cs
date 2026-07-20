@@ -17,18 +17,18 @@ namespace CocoQR.Domain.Entities
         public string? NapasBinSnapshot { get; set; }
         // QR info
         public decimal? Amount { get; set; }
-        public Currency Currency { get; set; } = Currency.VND;
+        public Currency Currency { get; set; } = Currency.Vnd;
         public string? Description { get; set; }
 
         public string? QrData { get; set; }
         public string TransactionRef { get; set; } = null!;
 
         public Guid ProviderId { get; set; }
-        public QRReceiverType ReceiverType { get; set; }
+        public QrReceiverType ReceiverType { get; set; }
 
         public bool IsFixedAmount { get; set; }
         public QrMode QrMode { get; set; }
-        public QRStatus Status { get; set; } = QRStatus.CREATED;
+        public QrStatus Status { get; set; } = QrStatus.Created;
 
         public DateTime CreatedAt { get; set; }
         public DateTime? ExpiredAt { get; set; }
@@ -49,3 +49,4 @@ namespace CocoQR.Domain.Entities
         }
     }
 }
+

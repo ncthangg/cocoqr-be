@@ -48,7 +48,7 @@ namespace CocoQR.Infrastructure.Persistence.DbConfigurations
                 .IsRequired()
                 .HasConversion<string>()
                 .HasMaxLength(3)
-                .HasDefaultValue(Currency.VND);
+                .HasDefaultValue(Currency.Vnd);
 
             builder.Property(qr => qr.Description)
                 .HasMaxLength(500);
@@ -80,7 +80,7 @@ namespace CocoQR.Infrastructure.Persistence.DbConfigurations
                 .IsRequired()
                 .HasConversion<string>()
                 .HasMaxLength(20)
-                .HasDefaultValue(QRStatus.CREATED);
+                .HasDefaultValue(QrStatus.Created);
 
             builder.Property(qr => qr.CreatedAt)
                 .IsRequired()

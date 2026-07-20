@@ -41,13 +41,13 @@ namespace CocoQR.QR_Generator.Builders.DeepLink
         public string BuildMerchantInfo(QrGenerateRequest request)
         {
             var merchantBlock = TLVEncoder.EncodeMany(
-                (EMVTags.MerchantGuid, NapasRid.Value),
-                (EMVTags.MerchantAccountBlock, MomoNativeServiceCode)
-            // (EMVTags.MerchantAccountInfo, request.AccountNumber.Trim())
+                (EmvTags.MerchantGuid, NapasRid.Value),
+                (EmvTags.MerchantAccountBlock, MomoNativeServiceCode)
+            // (EmvTags.MerchantAccountInfo, request.AccountNumber.Trim())
             );
 
             // Field 27 = MoMo native (SĐT)
-            return TLVEncoder.Encode(EMVTags.MerchantMomoNative, merchantBlock);
+            return TLVEncoder.Encode(EmvTags.MerchantMomoNative, merchantBlock);
         }
     }
 }

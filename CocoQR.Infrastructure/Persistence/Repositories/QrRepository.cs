@@ -156,7 +156,7 @@ namespace CocoQR.Infrastructure.Persistence.Repositories
             int pageNumber, int pageSize,
             string? sortField, string? sortDirection,
             Guid? providerId,
-            QRReceiverType? receiverType,
+            QrReceiverType? receiverType,
             bool? isFixedAmount, bool? isPaid,
             string? searchValue)
         {
@@ -284,7 +284,7 @@ namespace CocoQR.Infrastructure.Persistence.Repositories
         public async Task<decimal> GetTotalQRAmountAsync(Guid accountId,
                                                          bool? isPaid,
                                                          Guid? providerId,
-                                                         QRReceiverType? receiverType)
+                                                         QrReceiverType? receiverType)
         {
             if (accountId == Guid.Empty)
                 throw new ArgumentException("Invalid account ID", nameof(accountId));
@@ -367,3 +367,4 @@ namespace CocoQR.Infrastructure.Persistence.Repositories
         }
     }
 }
+

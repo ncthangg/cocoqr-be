@@ -103,7 +103,7 @@ namespace CocoQR.Application.Services
                     user.Initialize(userId, userId);
                     await _unitOfWork.Users.AddAsync(user);
 
-                    var rolesExisted = await _unitOfWork.Roles.GetByNameAsync(RoleCategory.USER.ToString())
+                    var rolesExisted = await _unitOfWork.Roles.GetByNameAsync(RoleCategory.User.ToString())
                         ?? throw new ApplicationException(ErrorCode.NotFound, "Default role not found");
                     await _unitOfWork.UserRoles.AddUserToRoleAsync(_idGenerator.NewId(), user.Id, rolesExisted.Id);
 

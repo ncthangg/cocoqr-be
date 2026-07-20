@@ -46,7 +46,7 @@ namespace CocoQR.Application.Services
             var role = await _unitOfWork.Roles.GetByIdAsync(id)
                 ?? throw new ApplicationException(ErrorCode.NotFound, $"Role {id} not found");
 
-            if (role.Name.Trim().ToLower() == RoleCategory.ADMIN.ToString().ToLower() && req.Status == false)
+            if (role.Name.Trim().ToLower() == RoleCategory.Admin.ToString().ToLower() && req.Status == false)
                 throw new DomainException(ErrorCode.BusinessRuleViolation, "Admin role cannot be deactivated");
 
             role.Status = req.Status;

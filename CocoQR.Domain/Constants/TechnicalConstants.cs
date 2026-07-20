@@ -39,7 +39,7 @@
         public const string ConnectRetry = "Redis:ConnectRetry";
         public const string ConnectTimeoutMs = "Redis:ConnectTimeoutMs";
         public const string SyncTimeoutMs = "Redis:SyncTimeoutMs";
-        public const string ASyncTimeoutMs = "Redis:ASyncTimeoutMs";
+        public const string AsyncTimeoutMs = "Redis:ASyncTimeoutMs";
         public const string ReconnectRetryIntervalMs = "Redis:ReconnectRetryIntervalMs";
     }
     public static class Google

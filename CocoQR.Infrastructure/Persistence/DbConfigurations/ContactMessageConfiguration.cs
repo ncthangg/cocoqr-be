@@ -30,7 +30,7 @@ namespace CocoQR.Infrastructure.Persistence.DbConfigurations
                 .IsRequired()
                 .HasConversion<string>()
                 .HasMaxLength(20)
-                .HasDefaultValue(ContactMessageStatus.NEW);
+                .HasDefaultValue(ContactMessageStatus.New);
 
             builder.Property(x => x.CreatedAt)
                 .IsRequired()

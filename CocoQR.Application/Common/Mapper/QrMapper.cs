@@ -33,7 +33,7 @@ namespace CocoQR.Application.Common.Mapper
                 Currency = q.Currency ?? null,
                 Description = q.Description ?? null,
 
-                ReceiverType = q.ReceiverType ?? QRReceiverType.GUEST,
+                ReceiverType = q.ReceiverType ?? QrReceiverType.Guest,
                 IsFixedAmount = q.IsFixedAmount ?? null,
                 QrMode = q.QrMode ?? null,
                 QrStatus = q.QrStatus ?? null,
@@ -68,7 +68,7 @@ namespace CocoQR.Application.Common.Mapper
                 Currency = q.Currency ?? null,
                 Description = q.Description ?? null,
 
-                ReceiverType = q.ReceiverType ?? QRReceiverType.GUEST,
+                ReceiverType = q.ReceiverType ?? QrReceiverType.Guest,
                 IsFixedAmount = q.IsFixedAmount ?? null,
                 QrMode = q.QrMode ?? null,
                 QrStatus = q.QrStatus ?? null,

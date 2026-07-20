@@ -17,7 +17,7 @@ namespace CocoQR.Infrastructure.Persistence.Repositories
             _db = db;
         }
 
-        public async Task<IEnumerable<QRStyleLibrary>> GetAllAsync(Guid? userId, QRStyleType? type, bool? isActive, bool isAdmin)
+        public async Task<IEnumerable<QRStyleLibrary>> GetAllAsync(Guid? userId, QrStyleType? type, bool? isActive, bool isAdmin)
         {
             string sql;
             if (isAdmin)
@@ -71,7 +71,7 @@ namespace CocoQR.Infrastructure.Persistence.Repositories
         {
             if (entity.IsDefault)
             {
-                if (entity.Type == QRStyleType.USER)
+                if (entity.Type == QrStyleType.User)
                 {
                     await ExecuteAsync(
                         @"UPDATE QRStyleLibraries
@@ -100,7 +100,7 @@ namespace CocoQR.Infrastructure.Persistence.Repositories
         {
             if (entity.IsDefault)
             {
-                if (entity.Type == QRStyleType.USER)
+                if (entity.Type == QrStyleType.User)
                 {
                     await ExecuteAsync(
                         @"UPDATE QRStyleLibraries

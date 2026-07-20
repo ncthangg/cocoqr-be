@@ -11,7 +11,7 @@ namespace CocoQR.Application.DTOs.QRStyleLibrary.Responses
 
         public bool IsDefault { get; set; }
 
-        public QRStyleType Type { get; set; } // System / User
+        public QrStyleType Type { get; set; } // System / User
         public bool IsActive { get; set; }
         public DateTime CreatedAt { get; set; }
     }

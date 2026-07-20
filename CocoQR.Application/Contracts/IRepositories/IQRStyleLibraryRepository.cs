@@ -5,7 +5,7 @@ namespace CocoQR.Application.Contracts.IRepositories
 {
     public interface IQRStyleLibraryRepository
     {
-        Task<IEnumerable<QRStyleLibrary>> GetAllAsync(Guid? userId, QRStyleType? type, bool? isActive, bool isAdmin);
+        Task<IEnumerable<QRStyleLibrary>> GetAllAsync(Guid? userId, QrStyleType? type, bool? isActive, bool isAdmin);
 
         Task<QRStyleLibrary?> GetByIdAsync(Guid id);
         Task AddAsync(QRStyleLibrary entity);

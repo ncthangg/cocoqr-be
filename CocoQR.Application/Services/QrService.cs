@@ -171,7 +171,7 @@ namespace CocoQR.Application.Services
                 QrData = payloadResult.Payload,
                 TransactionRef = GenerateTransactionRef(),
 
-                ReceiverType = request.AccountId.HasValue ? QRReceiverType.PERSONAL : QRReceiverType.GUEST,
+                ReceiverType = request.AccountId.HasValue ? QrReceiverType.Personal : QrReceiverType.Guest,
                 ProviderId = provider.Id,
                 IsFixedAmount = request.IsFixedAmount,
                 QrMode = mode,
@@ -222,7 +222,7 @@ namespace CocoQR.Application.Services
 
         private static QrMode ResolveMode(ProviderCode providerCode, QrMode? requestedMode)
         {
-            if (providerCode == ProviderCode.MOMO && requestedMode == QrMode.MomoNative)
+            if (providerCode == ProviderCode.Momo && requestedMode == QrMode.MomoNative)
                 return QrMode.MomoNative;
 
             return QrMode.VietQR;
@@ -244,7 +244,7 @@ namespace CocoQR.Application.Services
                 if (!styleLib.IsActive)
                     throw new ApplicationException(ErrorCode.BadRequest, ErrorMessages.StyleLibraryInactive);
 
-                if (styleLib.Type == QRStyleType.USER)
+                if (styleLib.Type == QrStyleType.User)
                 {
                     var currentUserId = _userContext.UserId
                         ?? throw new ApplicationException(ErrorCode.Unauthorized, ErrorMessages.Unauthorized);

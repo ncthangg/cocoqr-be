@@ -31,11 +31,11 @@ namespace CocoQR.Application.Services
             _cacheService = cacheService;
         }
 
-        public async Task<IEnumerable<GetQrStyleLibraryRes>> GetAllAsync(QRStyleType? type, bool? isActive)
+        public async Task<IEnumerable<GetQrStyleLibraryRes>> GetAllAsync(QrStyleType? type, bool? isActive)
         {
             if (!_userContext.IsAuthenticated())
             {
-                if (type == QRStyleType.USER)
+                if (type == QrStyleType.User)
                     throw new ApplicationException(ErrorCode.Unauthorized, ErrorMessages.Unauthorized);
 
                 var publicResult = await GetSystemStylesAsync(false);
@@ -55,8 +55,8 @@ namespace CocoQR.Application.Services
 
                 result = type switch
                 {
-                    QRStyleType.SYSTEM => (await GetAllUserAvailableStyles(userId)).Where(x => x.Type == QRStyleType.SYSTEM),
-                    QRStyleType.USER => await GetUserStylesAsync(userId),
+                    QrStyleType.System => (await GetAllUserAvailableStyles(userId)).Where(x => x.Type == QrStyleType.System),
+                    QrStyleType.User => await GetUserStylesAsync(userId),
                     _ => await GetAllUserAvailableStyles(userId)
                 };
             }
@@ -81,7 +81,7 @@ namespace CocoQR.Application.Services
                 return cached;
             }
 
-            var items = await _unitOfWork.QRStyleLibraries.GetAllAsync(null, QRStyleType.SYSTEM, null, isAdmin);
+            var items = await _unitOfWork.QRStyleLibraries.GetAllAsync(null, QrStyleType.System, null, isAdmin);
             var mapped = MapToResponse(items);
 
             await _cacheService.SetAsync(SystemStylesCacheKey, mapped, QrStyleCacheExpiry);
@@ -100,8 +100,8 @@ namespace CocoQR.Application.Services
                 return cached;
             }
 
-            var items = await _unitOfWork.QRStyleLibraries.GetAllAsync(userId, QRStyleType.USER, null, false);
-            var mapped = MapToResponse(items).Where(x => x.Type == QRStyleType.USER).ToList();
+            var items = await _unitOfWork.QRStyleLibraries.GetAllAsync(userId, QrStyleType.User, null, false);
+            var mapped = MapToResponse(items).Where(x => x.Type == QrStyleType.User).ToList();
 
             await _cacheService.SetAsync(cacheKey, mapped, QrStyleCacheExpiry);
             return mapped;
@@ -171,7 +171,7 @@ namespace CocoQR.Application.Services
 
             if (_userContext.IsAdmin())
             {
-                if (style.Type != QRStyleType.SYSTEM)
+                if (style.Type != QrStyleType.System)
                     throw new ApplicationException(ErrorCode.Forbidden, "Admin can modify only system styles");
             }
             else if (_userContext.IsUser())
@@ -179,7 +179,7 @@ namespace CocoQR.Application.Services
                 var currentUserId = _userContext.UserId
                     ?? throw new ApplicationException(ErrorCode.Unauthorized, ErrorMessages.UserIDNotFoundInTheContext);
 
-                if (style.Type != QRStyleType.USER || style.UserId != currentUserId)
+                if (style.Type != QrStyleType.User || style.UserId != currentUserId)
                     throw new ApplicationException(ErrorCode.Forbidden, "User can modify only their own USER styles");
             }
             else
@@ -228,7 +228,7 @@ namespace CocoQR.Application.Services
 
             if (_userContext.IsAdmin())
             {
-                if (style.Type != QRStyleType.SYSTEM)
+                if (style.Type != QrStyleType.System)
                     throw new ApplicationException(ErrorCode.Forbidden, "Admin can delete only system styles");
             }
             else if (_userContext.IsUser())
@@ -236,7 +236,7 @@ namespace CocoQR.Application.Services
                 var currentUserId = _userContext.UserId
                     ?? throw new ApplicationException(ErrorCode.Unauthorized, ErrorMessages.UserIDNotFoundInTheContext);
 
-                if (style.Type != QRStyleType.USER || style.UserId != currentUserId)
+                if (style.Type != QrStyleType.User || style.UserId != currentUserId)
                     throw new ApplicationException(ErrorCode.Forbidden, "User can delete only their own USER styles");
             }
             else
@@ -249,24 +249,24 @@ namespace CocoQR.Application.Services
             await InvalidateCacheAfterWriteAsync(style.Type, style.UserId);
         }
 
-        private (Guid? userId, QRStyleType type, bool isAdmin) ResolveWriteScope()
+        private (Guid? userId, QrStyleType type, bool isAdmin) ResolveWriteScope()
         {
             if (_userContext.IsAdmin())
             {
-                return (null, QRStyleType.SYSTEM, true);
+                return (null, QrStyleType.System, true);
             }
 
             if (_userContext.IsUser())
             {
                 var userId = _userContext.UserId
                     ?? throw new ApplicationException(ErrorCode.Unauthorized, ErrorMessages.UserIDNotFoundInTheContext);
-                return (userId, QRStyleType.USER, false);
+                return (userId, QrStyleType.User, false);
             }
 
             throw new ApplicationException(ErrorCode.Unauthorized, ErrorMessages.Unauthorized);
         }
 
-        private async Task EnsureNameNotDuplicatedAsync(string name, Guid? userId, QRStyleType type, bool isAdmin, Guid? excludeId)
+        private async Task EnsureNameNotDuplicatedAsync(string name, Guid? userId, QrStyleType type, bool isAdmin, Guid? excludeId)
         {
             if (string.IsNullOrWhiteSpace(name))
                 throw new ArgumentException("Style name is required", nameof(name));
@@ -301,15 +301,15 @@ namespace CocoQR.Application.Services
 
         private static string BuildAllUserAvailableStylesCacheKey(Guid userId) => $"qr-style:all:{userId}";
 
-        private async Task InvalidateCacheAfterWriteAsync(QRStyleType type, Guid? userId)
+        private async Task InvalidateCacheAfterWriteAsync(QrStyleType type, Guid? userId)
         {
-            if (type == QRStyleType.SYSTEM)
+            if (type == QrStyleType.System)
             {
                 await _cacheService.RemoveAsync(SystemStylesCacheKey);
                 return;
             }
 
-            if (type == QRStyleType.USER && userId.HasValue)
+            if (type == QrStyleType.User && userId.HasValue)
             {
                 await _cacheService.RemoveAsync(BuildUserStylesCacheKey(userId.Value));
                 await _cacheService.RemoveAsync(BuildAllUserAvailableStylesCacheKey(userId.Value));

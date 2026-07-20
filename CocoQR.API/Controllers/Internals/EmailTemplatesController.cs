@@ -5,7 +5,7 @@ using CocoQR.Domain.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace CocoQR.API.Controllers
+namespace CocoQR.API.Controllers.Internals
 {
     [Route("api/admin/[controller]")]
     [ApiController]
@@ -29,6 +29,5 @@ namespace CocoQR.API.Controllers
                 data: result,
                 message: null));
         }
-
     }
 }

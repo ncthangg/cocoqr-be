@@ -20,7 +20,7 @@ namespace CocoQR.Application.Contracts.IRepositories
                                                          int pageNumber, int pageSize,
                                                          string? sortField, string? sortDirection,
                                                          Guid? providerId,
-                                                         QRReceiverType? receiverType,
+                                                         QrReceiverType? receiverType,
                                                          bool? isFixedAmount, bool? isPaid,
                                                          string? searchValue);
         Task<IEnumerable<QRHistory>> GetByUserIdAsync(Guid userId,
@@ -30,7 +30,7 @@ namespace CocoQR.Application.Contracts.IRepositories
         Task<decimal> GetTotalQRAmountAsync(Guid accountId,
                                             bool? isPaid,
                                             Guid? providerId,
-                                            QRReceiverType? receiverType);
+                                            QrReceiverType? receiverType);
 
 
         Task<long> Post(QRHistory req);

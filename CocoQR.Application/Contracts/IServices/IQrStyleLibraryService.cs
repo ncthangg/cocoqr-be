@@ -6,7 +6,7 @@ namespace CocoQR.Application.Contracts.IServices
 {
     public interface IQrStyleLibraryService
     {
-        Task<IEnumerable<GetQrStyleLibraryRes>> GetAllAsync(QRStyleType? type, bool? isActive);
+        Task<IEnumerable<GetQrStyleLibraryRes>> GetAllAsync(QrStyleType? type, bool? isActive);
         Task<Guid> PostUserStyleAsync(PostQRStyleReq request);
         Task PutUserStyleAsync(Guid styleId, PutQRStyleReq request);
         Task DeleteUserStyleAsync(Guid styleId);

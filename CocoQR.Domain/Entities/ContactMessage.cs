@@ -1,4 +1,4 @@
-using CocoQR.Domain.Constants.Enum;
+﻿using CocoQR.Domain.Constants.Enum;
 
 namespace CocoQR.Domain.Entities
 {
@@ -8,8 +8,9 @@ namespace CocoQR.Domain.Entities
         public string FullName { get; set; } = null!;
         public string Email { get; set; } = null!;
         public string Content { get; set; } = null!;
-        public ContactMessageStatus Status { get; set; } = ContactMessageStatus.NEW;
+        public ContactMessageStatus Status { get; set; } = ContactMessageStatus.New;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? RepliedAt { get; set; }
     }
 }
+

@@ -126,13 +126,13 @@ namespace CocoQR.Application.Services
 
             return value.Trim().ToUpperInvariant() switch
             {
-                "SENT" => EmailDeliveryStatus.SENT,
-                "FAILED" => EmailDeliveryStatus.FAILED,
-                "QUEUED" => EmailDeliveryStatus.QUEUED,
-                "PENDING" => EmailDeliveryStatus.PENDING,
-                "SENDING" => EmailDeliveryStatus.SENDING,
-                "CANCELLED" => EmailDeliveryStatus.CANCELLED,
-                _ => EmailDeliveryStatus.PENDING
+                "SENT" => EmailDeliveryStatus.Sent,
+                "FAILED" => EmailDeliveryStatus.Failed,
+                "QUEUED" => EmailDeliveryStatus.Queued,
+                "PENDING" => EmailDeliveryStatus.Pending,
+                "SENDING" => EmailDeliveryStatus.Sending,
+                "CANCELLED" => EmailDeliveryStatus.Cancelled,
+                _ => EmailDeliveryStatus.Pending
             };
         }
 

@@ -4,7 +4,7 @@
     /// EMVCo QR Payment tag IDs — theo spec v1.1
     /// Không thay đổi giá trị này trừ khi spec thay đổi.
     /// </summary>
-    public static class EMVTags
+    public static class EmvTags
     {
         // ── Root fields ──────────────────────────────────────────────────────────
         public const string PayloadFormatIndicator = "00"; // luôn = "01"
@@ -13,7 +13,7 @@
         public const string TransactionAmount = "54"; // optional
         public const string CountryCode = "58"; // "VN"
         public const string AdditionalData = "62";
-        public const string CRC = "63"; // phải là field cuối cùng
+        public const string Crc = "63"; // phải là field cuối cùng
 
         // ── Merchant account info fields (top-level) ─────────────────────────────
         /// <summary>Field 26 — MOMO interbank (VietQR profile)</summary>

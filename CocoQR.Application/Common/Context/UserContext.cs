@@ -139,12 +139,12 @@ namespace CocoQR.Application.Common.Context
         public bool IsAdmin()
         {
             return IsAuthenticated() && RoleNames.Any(r => Enum.TryParse<RoleCategory>(r, true, out var roleEnum)
-                                                          && roleEnum == RoleCategory.ADMIN);
+                                                          && roleEnum == RoleCategory.Admin);
         }
         public bool IsUser()
         {
             return IsAuthenticated() && RoleNames.Any(r => Enum.TryParse<RoleCategory>(r, true, out var roleEnum)
-                                                          && roleEnum == RoleCategory.USER);
+                                                          && roleEnum == RoleCategory.User);
         }
     }
 }

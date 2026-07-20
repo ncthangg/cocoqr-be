@@ -32,13 +32,13 @@ namespace CocoQR.QR_Generator.Builders
         public string BuildMerchantInfo(QrGenerateRequest request)
         {
             var merchantBlock = TLVEncoder.EncodeMany(
-                (EMVTags.MerchantGuid, VnPayRid.Value)
-            //(EMVTags.MerchantId, request.MerchantId), //mã định danh trên hệ thống vnpay
-            //(EMVTags.TerminalId, request.TerminalId), //điểm thanh toán (vị trí)
-            //(EMVTags.TransactionRef, request.TransactionRef) //mã giao dịch (tạo mỗi lần thanh toán)
+                (EmvTags.MerchantGuid, VnPayRid.Value)
+            //(EmvTags.MerchantId, request.MerchantId), //mã định danh trên hệ thống vnpay
+            //(EmvTags.TerminalId, request.TerminalId), //điểm thanh toán (vị trí)
+            //(EmvTags.TransactionRef, request.TransactionRef) //mã giao dịch (tạo mỗi lần thanh toán)
             );
 
-            return TLVEncoder.Encode(EMVTags.MerchantVietQR, merchantBlock); // Field 26
+            return TLVEncoder.Encode(EmvTags.MerchantVietQR, merchantBlock); // Field 26
         }
     }
 }

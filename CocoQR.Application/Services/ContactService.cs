@@ -56,7 +56,7 @@ namespace CocoQR.Application.Services
                 FullName = request.FullName.Trim(),
                 Email = request.Email.Trim(),
                 Content = request.Content.Trim(),
-                Status = ContactMessageStatus.NEW,
+                Status = ContactMessageStatus.New,
                 CreatedAt = DateTime.UtcNow,
                 RepliedAt = null
             };
@@ -89,8 +89,8 @@ namespace CocoQR.Application.Services
                 ToEmail = _emailConfiguration.AdminNotificationEmail ?? "cocoqr",
                 Subject = "Lien he moi tu nguoi dung",
                 Body = message.Content,
-                Direction = EmailDirection.INBOUND,
-                Status = EmailDeliveryStatus.RECEIVED
+                Direction = EmailDirection.Inbound,
+                Status = EmailDeliveryStatus.Received
             });
 
             var thankYouMail = await ResolveTemplateOrDefaultAsync(
@@ -114,10 +114,10 @@ namespace CocoQR.Application.Services
                 ToEmail = request.Email.Trim(),
                 Subject = thankYouMail.Subject,
                 Body = thankYouMail.Body,
-                Direction = EmailDirection.OUTBOUND,
+                Direction = EmailDirection.Outbound,
                 Status = thankYouResult.Error == null
                     ? MapAcceptedStatus(thankYouResult.Response?.Data?.Status)
-                    : EmailDeliveryStatus.FAILED,
+                    : EmailDeliveryStatus.Failed,
                 GatewayMessageId = thankYouResult.Response?.Data?.EmailMessageId,
                 CorrelationId = thankYouResult.Response?.Data?.CorrelationId,
                 ErrorMessage = thankYouResult.Error?.Message
@@ -300,10 +300,10 @@ namespace CocoQR.Application.Services
                 ToEmail = request.Email.Trim(),
                 Subject = subject,
                 Body = body,
-                Direction = EmailDirection.OUTBOUND,
+                Direction = EmailDirection.Outbound,
                 Status = sendError == null
                     ? MapAcceptedStatus(sendResponse?.Data?.Status)
-                    : EmailDeliveryStatus.FAILED,
+                    : EmailDeliveryStatus.Failed,
                 GatewayMessageId = sendResponse?.Data?.EmailMessageId,
                 CorrelationId = sendResponse?.Data?.CorrelationId,
                 ErrorMessage = sendError?.Message
@@ -317,7 +317,7 @@ namespace CocoQR.Application.Services
 
             if (contactMessage != null)
             {
-                contactMessage.Status = ContactMessageStatus.REPLIED;
+                contactMessage.Status = ContactMessageStatus.Replied;
                 contactMessage.RepliedAt = DateTime.UtcNow;
                 await _unitOfWork.ContactMessages.UpdateAsync(contactMessage);
             }
@@ -406,14 +406,14 @@ namespace CocoQR.Application.Services
             var message = await _unitOfWork.ContactMessages.GetByIdForAdminAsync(contactMessageId)
                 ?? throw new ApplicationException(ErrorCode.NotFound, ErrorMessages.ContactNotFound);
 
-            if (message.Status != ContactMessageStatus.NEW)
+            if (message.Status != ContactMessageStatus.New)
             {
                 throw new ApplicationException(
                     ErrorCode.BadRequest,
                     "Chi co the bo qua lien he dang o trang thai NEW.");
             }
 
-            message.Status = ContactMessageStatus.IGNORED;
+            message.Status = ContactMessageStatus.Ignored;
             await _unitOfWork.ContactMessages.UpdateAsync(message);
         }
 
@@ -560,7 +560,7 @@ namespace CocoQR.Application.Services
                 .GetByIdForAdminAsync(contactMessageId)
                 ?? throw new ApplicationException(ErrorCode.NotFound, ErrorMessages.ContactNotFound);
 
-            if (contactMessage.Status == ContactMessageStatus.IGNORED)
+            if (contactMessage.Status == ContactMessageStatus.Ignored)
             {
                 throw new ApplicationException(
                     ErrorCode.BadRequest,
@@ -590,18 +590,18 @@ namespace CocoQR.Application.Services
         {
             if (string.IsNullOrWhiteSpace(status))
             {
-                return EmailDeliveryStatus.QUEUED;
+                return EmailDeliveryStatus.Queued;
             }
 
             return status.Trim().ToUpperInvariant() switch
             {
-                "SENT" => EmailDeliveryStatus.SENT,
-                "FAILED" => EmailDeliveryStatus.FAILED,
-                "QUEUED" => EmailDeliveryStatus.QUEUED,
-                "PENDING" => EmailDeliveryStatus.PENDING,
-                "SENDING" => EmailDeliveryStatus.SENDING,
-                "CANCELLED" => EmailDeliveryStatus.CANCELLED,
-                _ => EmailDeliveryStatus.QUEUED
+                "SENT" => EmailDeliveryStatus.Sent,
+                "FAILED" => EmailDeliveryStatus.Failed,
+                "QUEUED" => EmailDeliveryStatus.Queued,
+                "PENDING" => EmailDeliveryStatus.Pending,
+                "SENDING" => EmailDeliveryStatus.Sending,
+                "CANCELLED" => EmailDeliveryStatus.Cancelled,
+                _ => EmailDeliveryStatus.Queued
             };
         }
 

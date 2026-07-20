@@ -2,22 +2,22 @@
 {
     public enum RoleCategory
     {
-        ADMIN,
-        USER
+        Admin,
+        User
     }
-    public enum QRStatus
+    public enum QrStatus
     {
-        CREATED,
-        PAID,
-        EXPIRED,
-        CANCELLED
+        Created,
+        Paid,
+        Expired,
+        Cancelled
     }
     public enum ProviderCode
     {
-        BANK,
-        MOMO,
-        VNPAY,
-        ZALOPAY
+        Bank,
+        Momo,
+        VnPay,
+        ZaloPay
     }
     public enum QrMode
     {
@@ -33,45 +33,45 @@
         /// </summary>
         MomoNative,
     }
-    public enum QRReceiverType
+    public enum QrReceiverType
     {
-        PERSONAL,
-        GUEST,
+        Personal,
+        Guest,
     }
     public enum Currency
     {
-        VND,
-        USD,
-        EUR
+        Vnd,
+        Usd,
+        Eur
     }
-    public enum QRStyleType
+    public enum QrStyleType
     {
-        SYSTEM,
-        USER
+        System,
+        User
     }
 
     public enum ContactMessageStatus
     {
-        NEW,
-        REPLIED,
-        IGNORED
+        New,
+        Replied,
+        Ignored
     }
 
     public enum EmailDirection
     {
-        INBOUND,
-        OUTBOUND
+        Inbound,
+        Outbound
     }
 
     public enum EmailDeliveryStatus
     {
-        RECEIVED,
-        PENDING,
-        QUEUED,
-        SENDING,
-        SENT,
-        FAILED,
-        CANCELLED
+        Received,
+        Pending,
+        Queued,
+        Sending,
+        Sent,
+        Failed,
+        Cancelled
     }
 
 }

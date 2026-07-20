@@ -30,10 +30,10 @@ namespace CocoQR.Application.DTOs.QR.Responses
         public string? ProviderName { get; set; }
         public string? ProviderLogoUrl { get; set; }
 
-        public QRReceiverType? ReceiverType { get; set; }
+        public QrReceiverType? ReceiverType { get; set; }
         public bool? IsFixedAmount { get; set; }
         public QrMode? QrMode { get; set; }
-        public QRStatus? QrStatus { get; set; }
+        public QrStatus? QrStatus { get; set; }
 
         public new DateTime? CreatedAt { get; set; }
         public DateTime? ExpiredAt { get; set; }
@@ -41,3 +41,4 @@ namespace CocoQR.Application.DTOs.QR.Responses
         public DateTime? DeletedAt { get; set; }
     }
 }
+

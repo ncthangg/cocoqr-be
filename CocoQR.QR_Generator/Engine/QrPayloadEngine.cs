@@ -43,40 +43,40 @@ namespace CocoQR.QR_Generator.Engine
             var payload = new StringBuilder();
 
             // Field 00 — Payload Format Indicator
-            payload.Append(TLVEncoder.Encode(EMVTags.PayloadFormatIndicator, EMVDefaults.PayloadFormatIndicator));
+            payload.Append(TLVEncoder.Encode(EmvTags.PayloadFormatIndicator, EmvDefaults.PayloadFormatIndicator));
 
             // Field 01 — Point of Initiation
             payload.Append(TLVEncoder.Encode(
-                EMVTags.PointOfInitiation,
-                request.IsStatic ? EMVDefaults.PointOfInitiationStatic : EMVDefaults.PointOfInitiationDynamic));
+                EmvTags.PointOfInitiation,
+                request.IsStatic ? EmvDefaults.PointOfInitiationStatic : EmvDefaults.PointOfInitiationDynamic));
 
             // Field 26/27/38 — Merchant Account Info (delegated to builder)
             payload.Append(builder.BuildMerchantInfo(request));
 
             // Field 53 — Transaction Currency (VND = 704)
-            payload.Append(TLVEncoder.Encode(EMVTags.TransactionCurrency, EMVDefaults.CurrencyVND));
+            payload.Append(TLVEncoder.Encode(EmvTags.TransactionCurrency, EmvDefaults.CurrencyVnd));
 
             // Field 54 — Transaction Amount (optional)
             if (request.Amount.HasValue && request.Amount.Value > 0)
             {
                 // EMVCo: amount là số nguyên không dấu phẩy, không có đơn vị
                 var amountStr = ((long)Math.Round(request.Amount.Value)).ToString();
-                payload.Append(TLVEncoder.Encode(EMVTags.TransactionAmount, amountStr));
+                payload.Append(TLVEncoder.Encode(EmvTags.TransactionAmount, amountStr));
             }
 
             // Field 58 — Country Code
-            payload.Append(TLVEncoder.Encode(EMVTags.CountryCode, EMVDefaults.CountryVN));
+            payload.Append(TLVEncoder.Encode(EmvTags.CountryCode, EmvDefaults.CountryVn));
 
             // Field 62 — Additional Data (optional description)
             if (!string.IsNullOrWhiteSpace(request.Description))
             {
                 var truncated = TLVEncoder.TruncateToByteLimit(request.Description, 99);
-                var additionalData = TLVEncoder.Encode(EMVTags.AdditionalPurpose, truncated);
-                payload.Append(TLVEncoder.Encode(EMVTags.AdditionalData, additionalData));
+                var additionalData = TLVEncoder.Encode(EmvTags.AdditionalPurpose, truncated);
+                payload.Append(TLVEncoder.Encode(EmvTags.AdditionalData, additionalData));
             }
 
             // Field 63 — CRC header (value chưa có)
-            payload.Append(EMVTags.CRC + "04");
+            payload.Append(EmvTags.Crc + "04");
 
             // Tính CRC trên toàn bộ payload kể cả "6304"
             var crc = CRC16Service.Compute(payload.ToString());

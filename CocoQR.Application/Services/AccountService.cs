@@ -135,7 +135,7 @@ namespace CocoQR.Application.Services
 
             BankInfo? bank = null;
 
-            if (provider.Code == Domain.Constants.Enum.ProviderCode.BANK)
+            if (provider.Code == Domain.Constants.Enum.ProviderCode.Bank)
             {
                 if (string.IsNullOrWhiteSpace(request.BankCode))
                     throw new ArgumentException(ValidationMessages.RequiredBankCode, nameof(request.BankCode));
